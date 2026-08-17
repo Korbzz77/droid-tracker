@@ -98,6 +98,19 @@ h2{font-size:var(--f1);letter-spacing:1.5px;text-transform:uppercase;color:var(-
 .rmeta{flex:1;min-width:0}
 .rname{font-weight:700;font-size:var(--f4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rtags{font-size:var(--f0);letter-spacing:.8px;text-transform:uppercase;font-weight:800;margin-top:4px}
+/* whether a requirement is a purchase or an upgrade, and from what */
+.rst{display:block;margin-top:5px;font-size:var(--f0);font-weight:800;
+  letter-spacing:.5px;text-transform:uppercase}
+.rst.none{color:var(--bad)}
+.rst.up{color:var(--warn)}
+
+/* NEXT is the "right now" screen: the current rebirth gets the main column and the
+   near horizon sits beside it, instead of below the fold. The whole cycle is ROADMAP. */
+.ncols{display:grid;grid-template-columns:1fr;gap:0 22px;align-items:start}
+@media(min-width:900px){
+  .ncols{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+  .ncols>div>h2:first-child{margin-top:0}
+}
 .dot{width:13px;height:13px;border-radius:50%;display:inline-block;vertical-align:-2px;margin-right:8px;
   box-shadow:0 0 0 1.5px #0006 inset}
 .badge{font-size:var(--f0);font-weight:800;padding:6px 10px;border-radius:9px;white-space:nowrap;
@@ -409,12 +422,27 @@ function reqRow(r,rbLevel){
   const [n,t,rar,nx]=r, have=has(n,t);
   const badge = nx ? `<span class="badge b-keep">KEEP &rarr; ${nx}</span>`
                    : `<span class="badge b-sell">SELL</span>`;
+  /* Whether this is something to buy or something you already own a lower quality of
+     changes the job completely. BUILD tracked that; this screen used to check only the
+     exact tier, so a droid you were one upgrade away from looked like one you had never
+     touched. Tiers can be ticked individually on the roadmap, so a higher-than-required
+     holding is possible too, and is reported as-is rather than called an upgrade. */
+  let status="";
+  if(!have){
+    const held=ladder(n).filter(x=>made.has(key(n,x.t))).pop();
+    status = !held
+      ? `<span class="rst none">Do not have</span>`
+      : (TIERS.indexOf(held.t)<TIERS.indexOf(t)
+          ? `<span class="rst up">Have ${ABBR[held.t]} &middot; upgrade to ${ABBR[t]}</span>`
+          : `<span class="rst up">Have ${ABBR[held.t]}</span>`);
+  }
   return `<div class="req ${have?'have':''}" data-k="${key(n,t)}">
     <div class="tick">&#10003;</div>
     <div class="rmeta">
       <div class="rname">${dot(t)}${n}</div>
       <div class="rtags"><span style="color:${TXT[t]}">${t}</span>
         <span style="color:${RC[rar]}"> &nbsp;${rar}</span></div>
+      ${status}
     </div>${badge}</div>`;
 }
 
@@ -425,29 +453,37 @@ function viewNext(){
   const done=rb.reqs.filter(r=>has(r[0],r[1])).length;
   const totalMade=made.size, totalReq=new Set(rbs().flatMap(r=>r.reqs.map(x=>key(x[0],x[1])))).size;
   el.innerHTML=`
-    <h2>Next rebirth</h2>
-    <div class="card hero">
-      <div class="flexline">
-        <div><div class="lvl">${rb.level}</div><div class="cost">${rb.cost}</div></div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:15px">${done} of 3 droids ready</div>
-          <div class="mini" style="margin-top:4px">Cycle ${cycle} &middot; ${totalMade}/${totalReq} droids made overall</div>
-          <div class="bar"><i style="width:${Math.round(done/3*100)}%"></i></div>
+  <div class="ncols">
+    <div>
+      <h2>Next rebirth</h2>
+      <div class="card hero">
+        <div class="flexline">
+          <div><div class="lvl">${rb.level}</div><div class="cost">${rb.cost}</div></div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px">${done} of 3 droids ready</div>
+            <div class="mini" style="margin-top:4px">Cycle ${cycle} &middot; ${totalMade}/${totalReq} droids made overall</div>
+            <div class="bar"><i style="width:${Math.round(done/3*100)}%"></i></div>
+          </div>
         </div>
+        ${rb.reqs.map(r=>reqRow(r,rb.level)).join("")}
+        <button class="btn" id="doneBtn" ${done<3?"disabled":""}>
+          ${done<3?`Need ${3-done} more`:`Rebirth to ${rb.level+1} &rarr;`}</button>
       </div>
-      ${rb.reqs.map(r=>reqRow(r,rb.level)).join("")}
-      <button class="btn" id="doneBtn" ${done<3?"disabled":""}>
-        ${done<3?`Need ${3-done} more`:`Rebirth to ${rb.level+1} &rarr;`}</button>
     </div>
-    <h2>Coming up</h2>
-    ${rbs().filter(r=>r.level>level+1&&r.level<=level+4).map(r=>{
-      const m=r.reqs.filter(x=>has(x[0],x[1])).length;
-      return `<div class="row"><div class="rbnum">${r.level}</div>
-        <div style="flex:1"><div style="font-weight:600;font-size:14px">${r.reqs.map(x=>x[0]).join(" &middot; ")}</div>
-        <div class="mini">${r.cost}</div></div>
-        <span class="pill" style="background:${m===3?'rgba(53,208,127,.15)':'#2a2a3a'};color:${m===3?'var(--ok)':'var(--dim)'}">${m}/3</span></div>`
-    }).join("")||`<div class="empty">Nothing further in this cycle.</div>`}
-    <div class="note">All five cycles are loaded, 525 requirements, each cross-checked against the in-game chart. Set your rebirth level in the top right to auto-fill everything up to that point, then correct the exceptions. Progress is saved per cycle.</div>`;
+    <div>
+      <h2>Coming up</h2>
+      ${rbs().filter(r=>r.level>level+1&&r.level<=level+8).map(r=>{
+        const m=r.reqs.filter(x=>has(x[0],x[1])).length;
+        return `<div class="row"><div class="rbnum">${r.level}</div>
+          <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">${r.reqs.map(x=>x[0]).join(" &middot; ")}</div>
+          <div class="mini">${r.cost}</div></div>
+          <span class="pill" style="background:${m===3?'rgba(53,208,127,.15)':'#2a2a3a'};color:${m===3?'var(--ok)':'var(--dim)'}">${m}/3</span></div>`
+      }).join("")||`<div class="empty">Nothing further in this cycle.</div>`}
+      <div class="note">All five cycles are loaded, 525 requirements, each cross-checked against
+        the in-game chart. On a cycle you have not started, picking your rebirth level fills in
+        everything up to that point and you correct the exceptions. Progress is saved per cycle.</div>
+    </div>
+  </div>`;
   const b=document.getElementById("doneBtn");
   if(b&&done===3) b.onclick=()=>{level=rb.level;save();buildLvlSel();render()};
 }

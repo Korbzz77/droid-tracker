@@ -257,6 +257,18 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   font-family:inherit;transition:background .15s,transform .1s}
 .sbtn:active{transform:scale(.96);background:var(--card3)}
 
+/* non-blocking confirmation, sits above the nav and gets out of the way on its own */
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 76px);z-index:40;
+  transform:translateX(-50%) translateY(16px);
+  background:var(--card3);border:1px solid var(--line2);border-radius:var(--r2);
+  box-shadow:var(--sh3);padding:12px 15px;display:flex;align-items:center;gap:16px;
+  width:max-content;max-width:min(560px,calc(100vw - 28px));
+  font-size:var(--f2);font-weight:600;line-height:1.45;color:var(--txt);
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast button{flex:0 0 auto;background:none;border:0;color:var(--accent);font-weight:800;
+  font-size:var(--f2);font-family:inherit;cursor:pointer;padding:4px 2px}
+
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
   background:var(--card);border:1px dashed var(--line2);border-radius:var(--r3)}
@@ -296,6 +308,8 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   <div id="v-sell" class="hide"></div>
   <div id="v-all" class="hide"></div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <nav>
   <button class="on" data-v="next"><i>&#9678;</i>NEXT</button>
@@ -633,6 +647,24 @@ function viewAll(){
 }
 
 
+/* ---- toast ---- */
+let toastT=null;
+function hideToast(){ clearTimeout(toastT);
+  const el=document.getElementById("toast"); if(el) el.classList.remove("on") }
+function toast(msg,actLabel,actFn){
+  const el=document.getElementById("toast"); if(!el) return;
+  el.textContent=""; el.appendChild(document.createTextNode(msg));
+  if(actLabel){
+    const b=document.createElement("button");
+    b.textContent=actLabel;
+    b.onclick=()=>{ hideToast(); actFn() };
+    el.appendChild(b);
+  }
+  el.classList.add("on");
+  clearTimeout(toastT);
+  toastT=setTimeout(hideToast, actLabel?8000:3500);
+}
+
 /* ---- settings and reset ---- */
 function cycleStats(c){
   const rbs=DATA[c].rebirths;
@@ -734,6 +766,16 @@ function renderSettings(){
       <div class="sub" style="margin:6px 0 12px">Progress is stored on this device only, nothing is sent anywhere.
         Cycles with progress: ${touched.length?touched.map(c=>"Cycle "+c).join(", "):"none yet"}.</div>
 
+      ${level>0?`
+      <div class="srow">
+        <div><div class="sname">Fill in everything up to rebirth ${level}</div>
+          <div class="mini">Ticks every droid cycle ${cycle} asks for at or below rebirth ${level}.
+            Handy when setting up, but it rebuilds the whole list, so anything you have corrected
+            by hand is overwritten.</div></div>
+        <button class="rbtn ${pending==="fill"?"armed":""}" data-reset="fill">
+          ${pending==="fill"?"Tap again to confirm":"Fill in"}</button>
+      </div>`:""}
+
       <div class="srow">
         <div><div class="sname">Back up progress</div>
           <div class="mini">Saves all five cycles to a file you keep. Worth doing occasionally:
@@ -773,7 +815,14 @@ function renderSettings(){
   el.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{
     const kind=b.dataset.reset;
     if(pending!==kind){ pending=kind; renderSettings(); setTimeout(()=>{if(pending===kind){pending=null;renderSettings()}},4000); return }
-    if(kind==="cycle") resetCycle(cycle); else [1,2,3,4,5].forEach(resetCycle);
+    if(kind==="fill"){
+      const prev=new Set(made);
+      autofill(level);
+      toast(`Marked ${made.size} droids as made, up to rebirth ${level}.`,
+        "Undo",()=>{ made=prev; save(); render() });
+    }
+    else if(kind==="cycle") resetCycle(cycle);
+    else [1,2,3,4,5].forEach(resetCycle);
     pending=null; save(); buildLvlSel(); render();
   });
   document.getElementById("closeSet").onclick=()=>{settingsOpen=false;pending=null;render()};
@@ -819,8 +868,17 @@ document.getElementById("cycleSel").onchange=e=>{cycle=+e.target.value;
   level=store.get("dt_level_"+cycle,0);
   showOwned=false; searchQ=""; applyTheme(); buildLvlSel(); save(); render(); window.scrollTo(0,0)};
 document.getElementById("lvlSel").onchange=e=>{
+  const prev=new Set(made);
   level=+e.target.value;
-  if(confirm("Auto-fill every droid required up to rebirth "+level+" as already made?")) autofill(level);
+  /* Offering to auto-fill only makes sense when there is nothing to lose. Once you have
+     ticked anything yourself, changing the rebirth number just changes the rebirth number,
+     because auto-fill replaces the whole list and would wipe your corrections. Setting it
+     up from scratch is still one tap: pick your level and it fills itself in. */
+  if(level>0 && made.size===0){
+    autofill(level);
+    toast(`Marked ${made.size} droids as made, up to rebirth ${level}. Correct any that are wrong below.`,
+      "Undo",()=>{ made=prev; save(); render() });
+  }
   save(); render();
 };
 applyTheme(); buildLvlSel(); render();

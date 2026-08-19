@@ -159,6 +159,10 @@ h2{font-size:var(--f1);letter-spacing:1.5px;text-transform:uppercase;color:var(-
 .row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--r2);
   background:var(--card2);border:1px solid var(--line);margin-bottom:8px}
 .row.sellable{border-color:rgba(255,84,112,.4);background:rgba(255,84,112,.06)}
+.row.tap{cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.row.tap:active{transform:scale(.99);background:var(--card3)}
+@media(hover:hover){.row.tap:hover{border-color:var(--dim2)}}
+.pill.act{border:1.5px solid currentColor;padding:7px 12px}
 .pill{font-size:var(--f0);font-weight:800;padding:5px 10px;border-radius:8px;letter-spacing:.4px;
   font-variant-numeric:tabular-nums}
 
@@ -523,6 +527,19 @@ function futureNeeds(name){
   rbs().forEach(rb=>{ if(rb.level>level) rb.reqs.forEach(([n,t])=>{ if(n===name) out.push({lvl:rb.level,tier:t}) }) });
   return out;
 }
+/* Droids are owned across every cycle, so "safe to sell" has to mean safe everywhere, not
+   just here. Each cycle is measured against its own rebirth number. */
+function allFutureNeeds(name){
+  const out=[];
+  [1,2,3,4,5].forEach(c=>{
+    const lv=store.get("dt_level_"+c,0);
+    DATA[c].rebirths.forEach(rb=>{
+      if(rb.level<=lv) return;
+      rb.reqs.forEach(([n,t])=>{ if(n===name) out.push({cycle:c,lvl:rb.level,tier:t}) });
+    });
+  });
+  return out;
+}
 const oIdx=n=>{const t=owned[n];return t==null?-1:TIERS.indexOf(t)};
 const ownedTier=n=>owned[n]||null;
 /* owning a higher quality satisfies every requirement below it */
@@ -764,28 +781,38 @@ function viewBuild(){
 }
 
 function viewSell(){
-  const held=new Map();
-  Object.keys(owned).forEach(n=>held.set(n,owned[n]));
   const sellable=[],keep=[];
-  [...held.entries()].sort().forEach(([n,t])=>{
-    const f=futureNeeds(n);
-    if(!f.length) sellable.push({n,t});
-    else keep.push({n,t,f});
+  Object.keys(owned).sort().forEach(n=>{
+    const f=allFutureNeeds(n);
+    if(!f.length) sellable.push({n,t:owned[n]});
+    else keep.push({n,t:owned[n],f});
   });
+  const needLabel=f=>f.slice(0,3).map(y=>
+    (y.cycle===cycle?"":"C"+y.cycle+" ")+"RB"+y.lvl+" "+y.tier).join(", ")
+    +(f.length>3?" +"+(f.length-3):"");
+  const row=(x,cls,pill,col,bg,note)=>`
+    <div class="row tap ${cls}" data-sell="${x.n.replace(/"/g,"&quot;")}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:15px">${dot(x.t)}${x.n}</div>
+        <div class="mini" style="margin-left:21px">${note}</div>
+      </div>
+      <span class="pill act" style="background:${bg};color:${col}">${pill}</span>
+    </div>`;
   document.getElementById("v-sell").innerHTML=`
     <h2>Safe to sell &middot; ${sellable.length}</h2>
-    <div class="sub">Nothing in cycle ${cycle} needs these again after rebirth ${level}.</div>
-    ${sellable.length?sellable.map(x=>`<div class="row sellable">
-      <div style="flex:1"><div style="font-weight:700;font-size:15px">${dot(x.t)}${x.n}</div>
-      <div class="mini" style="margin-left:20px">holding ${x.t}</div></div>
-      <span class="pill" style="background:rgba(255,84,112,.15);color:var(--bad)">SELL</span></div>`).join("")
+    <div class="sub">No cycle asks for these again from where you are in it. Tap one to sell it:
+      it stops counting as owned everywhere, and comes back on the build list if something
+      needs it later.</div>
+    ${sellable.length?sellable.map(x=>row(x,"sellable","SELL","var(--bad)",
+        "rgba(255,84,112,.15)","holding "+x.t)).join("")
       :`<div class="empty">Nothing safe to sell yet.</div>`}
+
     <h2>Hold on to &middot; ${keep.length}</h2>
-    ${keep.map(x=>`<div class="row">
-      <div style="flex:1"><div style="font-weight:700;font-size:15px">${dot(x.t)}${x.n}</div>
-      <div class="mini" style="margin-left:20px">holding ${x.t} &rarr; ${x.f.slice(0,3).map(y=>`RB${y.lvl} ${y.tier}`).join(", ")}${x.f.length>3?" +"+(x.f.length-3):""}</div></div>
-      <span class="pill" style="background:rgba(255,204,51,.15);color:var(--warn)">KEEP</span></div>`).join("")
-      ||`<div class="empty">Nothing held.</div>`}`;
+    <div class="sub">Still wanted somewhere. You can sell one anyway by tapping it, and undo
+      if that was a mistake.</div>
+    ${keep.length?keep.map(x=>row(x,"","KEEP","var(--warn)",
+        "rgba(255,204,51,.15)","holding "+x.t+" &rarr; "+needLabel(x.f))).join("")
+      :`<div class="empty">Nothing held.</div>`}`;
 }
 
 /* tier a droid is required at, at a given rebirth level */
@@ -1283,6 +1310,15 @@ document.body.addEventListener("click",e=>{
     return}
   const la=e.target.closest("[data-la]");
   if(la){lookahead=+la.dataset.la; render(); return}
+  const sell=e.target.closest("[data-sell]");
+  if(sell){
+    const n=sell.dataset.sell, prev=owned[n], f=allFutureNeeds(n);
+    setOwned(n,null); render();
+    const warn=f.length
+      ? ` Still wanted at ${f[0].cycle===cycle?"":"cycle "+f[0].cycle+" "}rebirth ${f[0].lvl}.`
+      : "";
+    toast(`${n} sold.${warn}`,"Undo",()=>{ setOwned(n,prev); render() });
+    return}
   const cf=e.target.closest("[data-cls]");
   if(cf){clsFilter=cf.dataset.cls; viewBuild(); return}
   const head=e.target.closest(".rbhead");

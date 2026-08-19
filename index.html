@@ -527,8 +527,9 @@ function futureNeeds(name){
   rbs().forEach(rb=>{ if(rb.level>level) rb.reqs.forEach(([n,t])=>{ if(n===name) out.push({lvl:rb.level,tier:t}) }) });
   return out;
 }
-/* Droids are owned across every cycle, so "safe to sell" has to mean safe everywhere, not
-   just here. Each cycle is measured against its own rebirth number. */
+/* Used for a footnote, not for the safe/keep decision. Sorting on all five cycles at once
+   buries the sell list, because almost every droid is wanted somewhere eventually. The
+   split follows the cycle you are playing; this just says who else will want it back. */
 function allFutureNeeds(name){
   const out=[];
   [1,2,3,4,5].forEach(c=>{
@@ -783,13 +784,18 @@ function viewBuild(){
 function viewSell(){
   const sellable=[],keep=[];
   Object.keys(owned).sort().forEach(n=>{
-    const f=allFutureNeeds(n);
-    if(!f.length) sellable.push({n,t:owned[n]});
-    else keep.push({n,t:owned[n],f});
+    const f=futureNeeds(n);                                  /* this cycle, from where you are */
+    const other=allFutureNeeds(n).filter(x=>x.cycle!==cycle); /* who else wants it back */
+    if(!f.length) sellable.push({n,t:owned[n],other});
+    else keep.push({n,t:owned[n],f,other});
   });
-  const needLabel=f=>f.slice(0,3).map(y=>
-    (y.cycle===cycle?"":"C"+y.cycle+" ")+"RB"+y.lvl+" "+y.tier).join(", ")
+  const needLabel=f=>f.slice(0,3).map(y=>"RB"+y.lvl+" "+y.tier).join(", ")
     +(f.length>3?" +"+(f.length-3):"");
+  const otherLabel=o=>{
+    if(!o.length) return "";
+    const cs=[...new Set(o.map(x=>x.cycle))].sort();
+    return `<span style="color:var(--dim2)"> &middot; cycle ${cs.join(", ")} want${cs.length>1?"":"s"} it back</span>`;
+  };
   const row=(x,cls,pill,col,bg,note)=>`
     <div class="row tap ${cls}" data-sell="${x.n.replace(/"/g,"&quot;")}">
       <div style="flex:1;min-width:0">
@@ -800,16 +806,16 @@ function viewSell(){
     </div>`;
   document.getElementById("v-sell").innerHTML=`
     <h2>Safe to sell &middot; ${sellable.length}</h2>
-    <div class="sub">No cycle asks for these again from where you are in it. Tap one to sell it:
-      it stops counting as owned everywhere, and comes back on the build list if something
-      needs it later.</div>
+    <div class="sub">Cycle ${cycle} does not ask for these again after rebirth ${level}.
+      Tap one to sell it and it stops counting as owned everywhere. If another cycle wants it
+      back later the row says so, but that is not a reason to hold it now.</div>
     ${sellable.length?sellable.map(x=>row(x,"sellable","SELL","var(--bad)",
-        "rgba(255,84,112,.15)","holding "+x.t)).join("")
+        "rgba(255,84,112,.15)","holding "+x.t+otherLabel(x.other))).join("")
       :`<div class="empty">Nothing safe to sell yet.</div>`}
 
     <h2>Hold on to &middot; ${keep.length}</h2>
-    <div class="sub">Still wanted somewhere. You can sell one anyway by tapping it, and undo
-      if that was a mistake.</div>
+    <div class="sub">Cycle ${cycle} still wants these. You can sell one anyway by tapping it,
+      and undo if that was a mistake.</div>
     ${keep.length?keep.map(x=>row(x,"","KEEP","var(--warn)",
         "rgba(255,204,51,.15)","holding "+x.t+" &rarr; "+needLabel(x.f))).join("")
       :`<div class="empty">Nothing held.</div>`}`;
@@ -1312,11 +1318,9 @@ document.body.addEventListener("click",e=>{
   if(la){lookahead=+la.dataset.la; render(); return}
   const sell=e.target.closest("[data-sell]");
   if(sell){
-    const n=sell.dataset.sell, prev=owned[n], f=allFutureNeeds(n);
+    const n=sell.dataset.sell, prev=owned[n], f=futureNeeds(n);
     setOwned(n,null); render();
-    const warn=f.length
-      ? ` Still wanted at ${f[0].cycle===cycle?"":"cycle "+f[0].cycle+" "}rebirth ${f[0].lvl}.`
-      : "";
+    const warn=f.length ? ` Cycle ${cycle} wants it again at rebirth ${f[0].lvl}.` : "";
     toast(`${n} sold.${warn}`,"Undo",()=>{ setOwned(n,prev); render() });
     return}
   const cf=e.target.closest("[data-cls]");

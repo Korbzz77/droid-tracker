@@ -201,7 +201,7 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
    At two columns a card is ~472px and the widest strip in any cycle is five chips. */
 .blist{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:9px}
 @media(min-width:760px){.blist{grid-template-columns:1fr 1fr}}
-.blist .brow{margin-bottom:0}
+.blist .brow{margin-bottom:0;min-width:0}
 .brow{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);
   padding:11px 12px;margin-bottom:9px;box-shadow:var(--sh1)}
 .brow.owned{border-color:#3a4a5e}
@@ -232,8 +232,11 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 .gwrap{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:700px){.gwrap{grid-template-columns:1fr 1fr}}
 @media(min-width:1080px){.gwrap{grid-template-columns:1fr 1fr 1fr}}
+/* min-width:0 or the grid tracks refuse to shrink below the rows' min-content width,
+   which pushes the whole grid wider than its container */
 .gcard{background:var(--accent);border-radius:var(--r4);padding:10px;display:flex;gap:10px;
-  align-items:stretch;position:relative;box-shadow:var(--sh2);transition:box-shadow .2s}
+  align-items:stretch;position:relative;box-shadow:var(--sh2);transition:box-shadow .2s;
+  min-width:0}
 .gcard.done{background:linear-gradient(160deg,#2c2c3d,#232331);box-shadow:var(--sh1)}
 .gcard.done .gcost,.gcard.done .gnum{color:#c7c7d6}
 .gcard.next{box-shadow:0 0 0 3px rgba(255,255,255,.18),0 0 30px -4px rgba(255,122,24,.6),var(--sh3)}
@@ -296,11 +299,16 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   font-size:var(--f2);font-family:inherit;cursor:pointer;padding:4px 2px}
 
 /* tappable quality swatch: padded out to a real touch target without growing visually */
-.qbtn{background:none;border:0;padding:10px 9px 10px 0;margin:-10px 0;cursor:pointer;
-  display:inline-flex;align-items:center;line-height:0;vertical-align:middle;
-  border-radius:10px;transition:background .15s}
-.qbtn:active{background:#ffffff14}
-.rname .qbtn{margin-right:-1px}
+/* The swatch is a control, so it needs to look like one and be big enough to hit.
+   Negative margins keep the 40x44 target from pushing the row layout around. */
+.qbtn{background:#ffffff0f;border:0;padding:0;cursor:pointer;
+  min-width:40px;min-height:44px;margin:-8px 2px -8px -8px;
+  display:inline-flex;align-items:center;justify-content:center;line-height:0;
+  vertical-align:middle;border-radius:12px;transition:background .15s}
+.qbtn:active{background:#ffffff2b}
+.qbtn .dot,.qbtn .gdot{margin-right:0;
+  box-shadow:0 0 0 1.5px #0006 inset,0 0 0 2px #ffffff3d}
+@media(hover:hover){.qbtn:hover{background:#ffffff21}}
 
 /* quality picker */
 .sheetbg{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.62);

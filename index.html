@@ -229,9 +229,11 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 .brow.later{background:var(--bg2);opacity:.7}
 
 /* ---- in-game style rebirth cards ---- */
+/* Two columns only, for the same reason as the build list: .wrap caps content at 980px,
+   so a third column takes width from the droid names rather than adding any. At three
+   columns the name box was 82px and most names were cut off. */
 .gwrap{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:700px){.gwrap{grid-template-columns:1fr 1fr}}
-@media(min-width:1080px){.gwrap{grid-template-columns:1fr 1fr 1fr}}
 /* min-width:0 or the grid tracks refuse to shrink below the rows' min-content width,
    which pushes the whole grid wider than its container */
 .gcard{background:var(--accent);border-radius:var(--r4);padding:10px;display:flex;gap:10px;

@@ -253,6 +253,7 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   padding:8px;cursor:pointer;border:1.5px solid transparent;min-width:0;
   transition:background .15s,border-color .15s,transform .1s}
 .grow.have{border-color:var(--ok);background:#0c1c15}
+.grow.qmatch{box-shadow:0 0 0 2px var(--accent),0 0 14px -4px var(--accent)}
 .grow:active{transform:scale(.98);background:#1b1b27}
 .gdot{width:15px;height:15px;flex:0 0 15px;border-radius:50%;box-shadow:0 0 0 1.5px #0006 inset}
 .gmeta{flex:1;min-width:0;display:block}
@@ -449,7 +450,7 @@ let level=store.get("dt_level_"+cycle,0);
    cycle, because that genuinely is per cycle. */
 let owned=loadOwnership();
 let view="next", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
-let searchQ="", clsFilter="all", showLater=false;
+let searchQ="", clsFilter="all", showLater=false, roadQ="";
 
 const key=(n,t)=>n+"|"+t;
 /* declared, not assigned to a const, because loadOwnership() runs before this line */
@@ -760,7 +761,7 @@ function tierPill(t,label){
   return `<span class="gb" style="background:${TC[t]};color:${dark?'#fff':'#14141c'}">
     <span class="gbi">&#8635;</span>${label}</span>`;
 }
-function gameCard(rb){
+function gameCard(rb,q){
   const m=rb.reqs.filter(x=>has(x[0],x[1])).length;
   const state = rb.level<=level ? "done" : (rb.level===level+1 ? "next" : "");
   return `<div class="gcard ${state}">
@@ -775,7 +776,7 @@ function gameCard(rb){
         const badge = nx
           ? tierPill(tierAt(n,nx)||t, nx)
           : `<span class="gb gsell"><span class="gbi">&#9673;</span>SELL</span>`;
-        return `<div class="grow req ${have?'have':''}" data-k="${key(n,t)}">
+        return `<div class="grow req ${have?'have':''} ${q&&n.indexOf(q)>-1?'qmatch':''}" data-k="${key(n,t)}">
           ${qdot(n,t,"gdot")}
           <span class="gmeta">
             <span class="gname">${n}</span>
@@ -789,12 +790,43 @@ function gameCard(rb){
   </div>`;
 }
 function viewAll(){
+  const q=roadQ.trim().toUpperCase();
+  const all=rbs();
+  /* searching the roadmap answers "which rebirths want this droid", so keep whole cards
+     rather than filtering rows: the other two requirements are the context you need */
+  const shown=q?all.filter(rb=>rb.reqs.some(r=>r[0].indexOf(q)>-1)):all;
+  const esc=s=>s.replace(/</g,"&lt;");
   document.getElementById("v-all").innerHTML=`
     <h2>Cycle ${cycle} roadmap</h2>
     <div class="sub">Same layout as the in-game rebirth chart. Tap a droid to tick just that
       one quality. Tap its <b style="color:var(--txt)">colour dot</b> to say what quality you
       actually own, and every requirement at or below it fills in across the whole cycle.</div>
-    <div class="gwrap">${rbs().map(gameCard).join("")}</div>`;
+    <div class="btools">
+      <div class="searchwrap">
+        <span class="si">&#9906;</span>
+        <input class="search" id="rsearch" type="search" inputmode="search"
+          placeholder="Find a droid, e.g. R7 or WLKR" value="${roadQ.replace(/"/g,"&quot;")}"
+          autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+        <button class="searchclr ${roadQ?"on":""}" id="rclear" aria-label="Clear search">&times;</button>
+      </div>
+      ${q?`<div class="mini" style="padding-bottom:9px">${shown.length} of ${all.length}
+        rebirths need a droid matching &ldquo;${esc(roadQ)}&rdquo;</div>`:""}
+    </div>
+    ${shown.length
+      ? `<div class="gwrap">${shown.map(rb=>gameCard(rb,q)).join("")}</div>`
+      : `<div class="empty">Nothing in cycle ${cycle} needs a droid matching
+           &ldquo;${esc(roadQ)}&rdquo;.<br>It may belong to one of the other cycles.</div>`}`;
+  const si=document.getElementById("rsearch");
+  if(si) si.oninput=e=>{
+    const pos=e.target.selectionStart;
+    roadQ=e.target.value;
+    viewAll();
+    const n=document.getElementById("rsearch");
+    if(n){ n.focus(); try{ n.setSelectionRange(pos,pos) }catch(err){} }
+  };
+  const cb=document.getElementById("rclear");
+  if(cb) cb.onclick=()=>{ roadQ=""; viewAll();
+    const n=document.getElementById("rsearch"); if(n) n.focus(); };
 }
 
 
@@ -1095,7 +1127,7 @@ document.getElementById("cycleSel").innerHTML=[1,2,3,4,5]
   .map(c=>`<option value="${c}" ${c===cycle?"selected":""} >Cycle ${c}</option>`).join("");
 document.getElementById("cycleSel").onchange=e=>{cycle=+e.target.value;
   level=store.get("dt_level_"+cycle,0);
-  showOwned=false; searchQ=""; applyTheme(); buildLvlSel(); save(); render(); window.scrollTo(0,0)};
+  showOwned=false; searchQ=""; roadQ=""; applyTheme(); buildLvlSel(); save(); render(); window.scrollTo(0,0)};
 document.getElementById("lvlSel").onchange=e=>{
   const prev={...owned};
   level=+e.target.value;
@@ -1122,7 +1154,21 @@ addEventListener("orientationchange",()=>setTimeout(syncHeaderH,250));
 applyTheme(); buildLvlSel(); render(); syncHeaderH();
 
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  /* Registering alone was not enough: a home screen app that iOS keeps suspended can go on
+     showing an old build for days. Check for an update on every launch, and when a new
+     worker takes over, reload once so the new version is actually what you are looking at.
+     hadController keeps the very first install from reloading needlessly. */
+  const hadController=!!navigator.serviceWorker.controller;
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(!hadController||refreshing) return;
+    refreshing=true; location.reload();
+  });
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js")
+      .then(reg=>{ reg.update(); setInterval(()=>reg.update(),60*60*1000); })
+      .catch(()=>{});
+  });
 }
 </script>
 </body>

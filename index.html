@@ -344,6 +344,21 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 .qtick{flex:0 0 auto;color:var(--ok);font-weight:900;font-size:17px}
 .qnone{border-style:dashed}
 
+/* blueprint countdowns */
+.bps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.bp{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--bp);
+  border-radius:var(--r2);padding:10px 11px;min-width:0;box-shadow:var(--sh1);
+  transition:border-color .2s,background .2s}
+.bp.soon{background:color-mix(in srgb,var(--bp) 13%,var(--card));
+  border-color:color-mix(in srgb,var(--bp) 45%,var(--line))}
+@supports not (background:color-mix(in srgb,red,blue)){.bp.soon{background:var(--card2)}}
+.bpname{font-size:var(--f0);font-weight:800;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--bp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bptime{font-size:var(--f6);font-weight:800;letter-spacing:-.5px;margin-top:3px;
+  font-variant-numeric:tabular-nums}
+.bpat{font-size:var(--f0);color:var(--dim);font-weight:600;margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
   background:var(--card);border:1px dashed var(--line2);border-radius:var(--r3)}
@@ -558,6 +573,7 @@ function viewNext(){
       </div>
     </div>
     <div>
+      ${blueprintHTML()}
       <h2>Coming up</h2>
       ${rbs().filter(r=>r.level>level+1&&r.level<=level+8).map(r=>{
         const m=r.reqs.filter(x=>has(x[0],x[1])).length;
@@ -571,6 +587,7 @@ function viewNext(){
         everything up to that point and you correct the exceptions. Progress is saved per cycle.</div>
     </div>
   </div>`;
+  tickBlueprints();
   const b=document.getElementById("doneBtn");
   if(b&&done===3) b.onclick=()=>{level=rb.level;save();buildLvlSel();render()};
 }
@@ -829,6 +846,53 @@ function viewAll(){
     const n=document.getElementById("rsearch"); if(n) n.focus(); };
 }
 
+
+/* ---- blueprint countdowns ----
+   Spawn times come from droid-tycoon.pages.dev, which defines them as minutes past the
+   hour in UTC and renders them in local time. Doing the same keeps it right in the
+   half-hour offset timezones, where a UTC :00 is a local :30. */
+const BLUEPRINTS=[
+  {id:"stellar", label:"Stellar",  mins:[0],     col:"#ffd23f"},
+  {id:"mythic",  label:"Mythic",   mins:[55],    col:"#ff5470"},
+  {id:"galactic",label:"Galactic", mins:[15,45], col:"#b975f9"}
+];
+function nextSpawn(mins,now){
+  let best=null;
+  mins.forEach(m=>{
+    const d=new Date(now.getTime());
+    d.setUTCSeconds(0,0); d.setUTCMinutes(m);
+    if(d.getTime()<=now.getTime()) d.setUTCHours(d.getUTCHours()+1);
+    if(!best||d.getTime()<best.getTime()) best=d;
+  });
+  return best;
+}
+const fmtGap=ms=>{
+  const s=Math.max(0,Math.round(ms/1000));
+  return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+};
+const fmtAt=d=>d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+function blueprintHTML(){
+  return `<h2>Blueprint spawns</h2>
+    <div class="bps">${BLUEPRINTS.map(b=>`
+      <div class="bp" id="bpc-${b.id}" style="--bp:${b.col}">
+        <div class="bpname">${b.label}</div>
+        <div class="bptime" id="bp-${b.id}">--:--</div>
+        <div class="bpat">at <span id="bpat-${b.id}">--</span></div>
+      </div>`).join("")}</div>`;
+}
+/* only the numbers are rewritten each second, never the view, so nothing else loses focus */
+function tickBlueprints(){
+  const now=new Date();
+  BLUEPRINTS.forEach(b=>{
+    const t=document.getElementById("bp-"+b.id); if(!t) return;
+    const at=nextSpawn(b.mins,now), left=at.getTime()-now.getTime();
+    t.textContent=fmtGap(left);
+    const a=document.getElementById("bpat-"+b.id); if(a) a.textContent=fmtAt(at);
+    const card=document.getElementById("bpc-"+b.id);
+    if(card) card.classList.toggle("soon",left<=120000);
+  });
+}
+setInterval(tickBlueprints,1000);
 
 /* ---- quality picker ----
    Every tier is offered, not just the ones this cycle asks for, so a galactic A-LT can be

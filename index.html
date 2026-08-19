@@ -804,6 +804,19 @@ function viewSell(){
       </div>
       <span class="pill act" style="background:${bg};color:${col}">${pill}</span>
     </div>`;
+  /* An empty list has two very different causes and the screen used to look identical for
+     both, which reads as broken. Say which one it is. */
+  const ownCount=Object.keys(owned).length;
+  const lastNeed=n=>{let m=0;
+    rbs().forEach(rb=>rb.reqs.forEach(([nm])=>{ if(nm===n&&rb.level>m) m=rb.level }));
+    return m};
+  const freesAt=keep.length?Math.min(...keep.map(x=>lastNeed(x.n))):null;
+  const emptyMsg = ownCount===0
+    ? `You do not own any droids yet, so there is nothing to sell.<br>
+       Mark what you own on BUILD or ROADMAP and they will appear here.`
+    : `Cycle ${cycle} still wants all ${ownCount} droids you own.<br>
+       The first frees up once you pass rebirth ${freesAt}.`;
+
   document.getElementById("v-sell").innerHTML=`
     <h2>Safe to sell &middot; ${sellable.length}</h2>
     <div class="sub">Cycle ${cycle} does not ask for these again after rebirth ${level}.
@@ -811,14 +824,16 @@ function viewSell(){
       back later the row says so, but that is not a reason to hold it now.</div>
     ${sellable.length?sellable.map(x=>row(x,"sellable","SELL","var(--bad)",
         "rgba(255,84,112,.15)","holding "+x.t+otherLabel(x.other))).join("")
-      :`<div class="empty">Nothing safe to sell yet.</div>`}
+      :`<div class="empty">${emptyMsg}</div>`}
 
     <h2>Hold on to &middot; ${keep.length}</h2>
     <div class="sub">Cycle ${cycle} still wants these. You can sell one anyway by tapping it,
       and undo if that was a mistake.</div>
     ${keep.length?keep.map(x=>row(x,"","KEEP","var(--warn)",
         "rgba(255,204,51,.15)","holding "+x.t+" &rarr; "+needLabel(x.f))).join("")
-      :`<div class="empty">Nothing held.</div>`}`;
+      :`<div class="empty">${ownCount===0
+          ? "Nothing owned yet."
+          : `Cycle ${cycle} is done with every droid you own. All ${ownCount} are safe to sell.`}</div>`}`;
 }
 
 /* tier a droid is required at, at a given rebirth level */

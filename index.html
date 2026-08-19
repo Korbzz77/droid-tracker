@@ -433,20 +433,43 @@ const store={
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){(this._m=this._m||{})[k]=v}}
 };
 let cycle=store.get("dt_cycle",1);
-let level=store.get("dt_level_"+store.get("dt_cycle",1),0);
-let made=new Set(store.get("dt_made_"+cycle,[]));
+let level=store.get("dt_level_"+cycle,0);
+/* Ownership is global. In the game you own one droid at one quality, and that quality
+   satisfies every requirement at or below it in every cycle. Rebirth level stays per
+   cycle, because that genuinely is per cycle. */
+let owned=loadOwnership();
 let view="next", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
 let searchQ="", clsFilter="all", showLater=false;
 
 const key=(n,t)=>n+"|"+t;
+/* declared, not assigned to a const, because loadOwnership() runs before this line */
+function splitKey(k){const i=k.lastIndexOf("|");return i<1?null:[k.slice(0,i),k.slice(i+1)]}
 const rbs=()=>DATA[cycle].rebirths;
 const save=()=>{store.set("dt_cycle",cycle);store.set("dt_level_"+cycle,level);
-  store.set("dt_made_"+cycle,[...made])};
+  store.set("dt_owned",owned)};
 
-/* everything required at or below level L, that is still needed later, is assumed owned */
+/* Progress used to live in per-cycle sets of NAME|tier keys, which meant a droid you owned
+   in cycle 1 was invisible in cycle 3. Fold those into one ownership map, best quality wins.
+   The old keys are left in storage untouched, so an older build still reads its own data. */
+function loadOwnership(){
+  const cur=store.get("dt_owned",null);
+  if(cur&&typeof cur==="object"&&!Array.isArray(cur)) return cur;
+  const m={};
+  [1,2,3,4,5].forEach(c=>(store.get("dt_made_"+c,[])||[]).forEach(k=>{
+    const s=splitKey(k); if(!s) return;
+    const n=s[0],t=s[1]; if(TIERS.indexOf(t)<0) return;
+    if(!m[n]||TIERS.indexOf(t)>TIERS.indexOf(m[n])) m[n]=t;
+  }));
+  store.set("dt_owned",m);
+  return m;
+}
+
+/* Reaching rebirth L means you owned everything asked for along the way, so raise anything
+   short of that. It never lowers a quality and never touches droids this cycle omits,
+   because those are the same droids you own everywhere else. */
 function autofill(L){
-  made=new Set();
-  rbs().forEach(rb=>{ if(rb.level<=L) rb.reqs.forEach(([n,t])=>made.add(key(n,t))) });
+  rbs().forEach(rb=>{ if(rb.level<=L) rb.reqs.forEach(([n,t])=>{
+    if(oIdx(n)<TIERS.indexOf(t)) owned[n]=t; }) });
   save();
 }
 function futureNeeds(name){
@@ -454,7 +477,14 @@ function futureNeeds(name){
   rbs().forEach(rb=>{ if(rb.level>level) rb.reqs.forEach(([n,t])=>{ if(n===name) out.push({lvl:rb.level,tier:t}) }) });
   return out;
 }
-const has=(n,t)=>made.has(key(n,t));
+const oIdx=n=>{const t=owned[n];return t==null?-1:TIERS.indexOf(t)};
+const ownedTier=n=>owned[n]||null;
+/* owning a higher quality satisfies every requirement below it */
+const has=(n,t)=>oIdx(n)>=TIERS.indexOf(t);
+function setOwned(name,tier){
+  if(tier==null) delete owned[name]; else owned[name]=tier;
+  save();
+}
 
 /* ---- render helpers ---- */
 const dot=t=>`<span class="dot" style="background:${TC[t]}"></span>`;
@@ -473,12 +503,10 @@ function reqRow(r,rbLevel){
      holding is possible too, and is reported as-is rather than called an upgrade. */
   let status="";
   if(!have){
-    const held=ladder(n).filter(x=>made.has(key(n,x.t))).pop();
-    status = !held
-      ? `<span class="rst none">Do not have</span>`
-      : (TIERS.indexOf(held.t)<TIERS.indexOf(t)
-          ? `<span class="rst up">Have ${ABBR[held.t]} &middot; upgrade to ${ABBR[t]}</span>`
-          : `<span class="rst up">Have ${ABBR[held.t]}</span>`);
+    const ot=ownedTier(n);
+    status = ot
+      ? `<span class="rst up">Have ${ABBR[ot]} &middot; upgrade to ${ABBR[t]}</span>`
+      : `<span class="rst none">Do not have</span>`;
   }
   return `<div class="req ${have?'have':''}" data-k="${key(n,t)}">
     <div class="tick">&#10003;</div>
@@ -495,9 +523,11 @@ function viewNext(){
   const el=document.getElementById("v-next");
   if(!rb){el.innerHTML=`<div class="empty">Cycle ${cycle} complete.<br>All 35 rebirths done.</div>`;return}
   const done=rb.reqs.filter(r=>has(r[0],r[1])).length;
-  /* made can hold qualities this cycle never asks for, so count against what it does ask for */
+  /* count only what this cycle actually asks for, not everything you own */
   const reqKeys=new Set(rbs().flatMap(r=>r.reqs.map(x=>key(x[0],x[1]))));
-  const totalReq=reqKeys.size, totalMade=[...made].filter(k=>reqKeys.has(k)).length;
+  let totalMade=0;
+  reqKeys.forEach(k=>{const s=splitKey(k); if(s&&has(s[0],s[1])) totalMade++});
+  const totalReq=reqKeys.size;
   el.innerHTML=`
   <div class="ncols">
     <div>
@@ -554,16 +584,6 @@ const LIGHT={gold:1,diamond:1,rainbow:1,beskar:1,stellar:1};
    current cycle happens to ask for. Owning a galactic A-LT is worth recording even in
    a cycle that never asks for more than diamond. The extra keys are harmless: every
    requirement lookup is still has(name,tier). */
-function setOwned(name,tier){
-  const i = tier==null ? -1 : TIERS.indexOf(tier);
-  TIERS.forEach((t,ix)=>{ ix<=i ? made.add(key(name,t)) : made.delete(key(name,t)) });
-  save();
-}
-function ownedTier(name){
-  let best=null;
-  TIERS.forEach(t=>{ if(made.has(key(name,t))) best=t });
-  return best;
-}
 /* build screen tier chips: tapping the quality you already own clears it */
 function setHeld(name,tier){
   setOwned(name, ownedTier(name)===tier ? null : tier);
@@ -572,8 +592,8 @@ function setHeld(name,tier){
 function droidInfo(n){
   const L=ladder(n);
   return {n,L,rar:L[0].rar,
-    held:L.filter(x=>made.has(key(n,x.t))).pop()||null,
-    nextNeed:L.find(x=>!made.has(key(n,x.t)))};
+    held:L.filter(x=>has(n,x.t)).pop()||null,
+    nextNeed:L.find(x=>!has(n,x.t))};
 }
 function buildRow(x,extra){
   const status = !x.held
@@ -592,7 +612,7 @@ function buildRow(x,extra){
       <span class="bspace"></span>${need}
     </div>
     <div class="tstrip">${x.L.map(s=>{
-      const have=made.has(key(x.n,s.t));
+      const have=has(x.n,s.t);
       const isNext=x.nextNeed&&x.nextNeed.t===s.t;
       return `<button class="tchip ${have?'have':''} ${isNext?'next':''}"
         data-d="${x.n}" data-t="${s.t}"
@@ -697,8 +717,7 @@ function viewBuild(){
 
 function viewSell(){
   const held=new Map();
-  made.forEach(k=>{const [n,t]=k.split("|");
-    if(!held.has(n)||TIERS.indexOf(t)>TIERS.indexOf(held.get(n))) held.set(n,t)});
+  Object.keys(owned).forEach(n=>held.set(n,owned[n]));
   const sellable=[],keep=[];
   [...held.entries()].sort().forEach(([n,t])=>{
     const f=futureNeeds(n);
@@ -786,7 +805,8 @@ function renderSheet(){
     <div class="grab"></div>
     <div class="qhead">${n}</div>
     <div class="qsub">${[cls,rar].filter(Boolean).join(" &middot; ")}${cls||rar?" &middot; ":""}What
-      quality do you own? Everything cycle ${cycle} asks for at or below it gets ticked.</div>
+      quality do you own? This is shared across all five cycles, and covers every requirement
+      at or below it.</div>
     ${TIERS.map(t=>{
       const at=needsAt(n,t), sel=own===t;
       return `<button class="qrow ${sel?"on":""} ${at.length?"":"off"}" data-qt="${t}">
@@ -806,9 +826,9 @@ function renderSheet(){
   el.querySelectorAll("[data-qt]").forEach(b=>b.onclick=()=>{
     const t=b.dataset.qt||null, prev=ownedTier(n);
     setOwned(n,t);
-    const filled=TIERS.filter(x=>made.has(key(n,x))).length;
+    const covered=rbs().filter(rb=>rb.reqs.some(r=>r[0]===n&&has(r[0],r[1]))).length;
     closeSheet(); render();
-    toast(t?`${n} set to ${ABBR[t]}. ${filled} qualit${filled===1?"y":"ies"} ticked.`
+    toast(t?`${n} set to ${ABBR[t]} everywhere. Covers ${covered} rebirth${covered===1?"":"s"} in cycle ${cycle}.`
            :`${n} cleared.`,
       "Undo",()=>{ setOwned(n,prev); render() });
   });
@@ -839,25 +859,30 @@ function toast(msg,actLabel,actFn){
 function cycleStats(c){
   const rbs=DATA[c].rebirths;
   const req=new Set(rbs.flatMap(r=>r.reqs.map(x=>x[0]+"|"+x[1])));
-  const total=req.size;
-  const m=(store.get("dt_made_"+c,[])||[]).filter(k=>req.has(k)).length;
-  const l=store.get("dt_level_"+c,0);
-  return {total,made:m,level:l};
+  let m=0;
+  req.forEach(k=>{const s=splitKey(k); if(s&&has(s[0],s[1])) m++});
+  return {total:req.size,made:m,level:store.get("dt_level_"+c,0)};
 }
-function resetCycle(c){
-  store.set("dt_made_"+c,[]); store.set("dt_level_"+c,0);
-  if(c===cycle){ made=new Set(); level=0; }
+/* Droids are shared across cycles now, so resetting a cycle can only mean its rebirth
+   level. Wiping what you own is a separate, clearly labelled thing. */
+function resetCycleLevel(c){
+  store.set("dt_level_"+c,0);
+  if(c===cycle) level=0;
+}
+function resetEverything(){
+  owned={}; level=0;
+  [1,2,3,4,5].forEach(c=>store.set("dt_level_"+c,0));
+  save();
 }
 
 /* ---- backup ----
    Progress lives in localStorage, which goes away if the home screen app is deleted.
    These give you a copy you actually own. */
 function exportData(){
-  const cycles={};
-  [1,2,3,4,5].forEach(c=>cycles[c]={
-    level:store.get("dt_level_"+c,0), made:store.get("dt_made_"+c,[])||[]});
-  return JSON.stringify({app:"droid-tycoon-tracker",v:1,
-    exported:new Date().toISOString(),cycle,cycles});
+  const levels={};
+  [1,2,3,4,5].forEach(c=>levels[c]=store.get("dt_level_"+c,0));
+  return JSON.stringify({app:"droid-tycoon-tracker",v:2,
+    exported:new Date().toISOString(),cycle,owned,levels});
 }
 function backupName(){
   const d=new Date(), p=n=>String(n).padStart(2,"0");
@@ -891,19 +916,31 @@ async function copyBackup(){
 function applyBackup(text){
   let d;
   try{ d=JSON.parse(text) }catch(e){ alert("That file is not readable as a backup."); return false }
-  if(!d||d.app!=="droid-tycoon-tracker"||!d.cycles){
+  if(!d||d.app!=="droid-tycoon-tracker"){
     alert("That is not a Droid Tycoon Tracker backup."); return false }
-  const n=[1,2,3,4,5].reduce((a,c)=>a+(((d.cycles[c]||{}).made)||[]).length,0);
+  const newOwned={}, newLevels={};
+  if(d.owned&&typeof d.owned==="object"){
+    Object.keys(d.owned).forEach(nm=>{ if(TIERS.indexOf(d.owned[nm])>-1) newOwned[nm]=d.owned[nm] });
+    [1,2,3,4,5].forEach(c=>newLevels[c]=Number((d.levels||{})[c])||0);
+  } else if(d.cycles){
+    /* a backup from before droids were shared across cycles: fold it in the same way */
+    [1,2,3,4,5].forEach(c=>{
+      const e=d.cycles[c]||{};
+      newLevels[c]=Number(e.level)||0;
+      (Array.isArray(e.made)?e.made:[]).forEach(k=>{
+        const s=splitKey(k); if(!s) return;
+        const nm=s[0], t=s[1]; if(TIERS.indexOf(t)<0) return;
+        if(!newOwned[nm]||TIERS.indexOf(t)>TIERS.indexOf(newOwned[nm])) newOwned[nm]=t;
+      });
+    });
+  } else { alert("That is not a Droid Tycoon Tracker backup."); return false }
+  const n=Object.keys(newOwned).length;
   const when=(d.exported||"").slice(0,10);
   if(!confirm(`Restore ${n} droids${when?" from "+when:""}?\n\nThis replaces everything currently saved on this device.`)) return false;
-  [1,2,3,4,5].forEach(c=>{
-    const e=d.cycles[c]; if(!e) return;
-    store.set("dt_made_"+c, Array.isArray(e.made)?e.made:[]);
-    store.set("dt_level_"+c, Number(e.level)||0);
-  });
+  owned=newOwned;
+  [1,2,3,4,5].forEach(c=>store.set("dt_level_"+c,newLevels[c]||0));
   cycle=Number(d.cycle)||1;
-  made=new Set(store.get("dt_made_"+cycle,[]));
-  level=store.get("dt_level_"+cycle,0);
+  level=newLevels[cycle]||0;
   save();
   return true;
 }
@@ -934,17 +971,17 @@ function renderSettings(){
   el.innerHTML=`
     <div class="card" style="margin-top:14px">
       <div style="font-weight:800;font-size:15px;margin-bottom:2px">Settings</div>
-      <div class="sub" style="margin:6px 0 12px">Progress is stored on this device only, nothing is sent anywhere.
-        Cycles with progress: ${touched.length?touched.map(c=>"Cycle "+c).join(", "):"none yet"}.</div>
+      <div class="sub" style="margin:6px 0 12px">Droids you own are shared across all five cycles,
+        the way they are in the game. Only the rebirth number is per cycle. Everything is stored on
+        this device only, nothing is sent anywhere. You own ${Object.keys(owned).length} droids.
+        Cycles started: ${touched.length?touched.map(c=>"Cycle "+c).join(", "):"none yet"}.</div>
 
       ${level>0?`
       <div class="srow">
         <div><div class="sname">Fill in everything up to rebirth ${level}</div>
-          <div class="mini">Ticks every droid cycle ${cycle} asks for at or below rebirth ${level}.
-            Handy when setting up, but it rebuilds the whole list, so anything you have corrected
-            by hand is overwritten.</div></div>
-        <button class="rbtn ${pending==="fill"?"armed":""}" data-reset="fill">
-          ${pending==="fill"?"Tap again to confirm":"Fill in"}</button>
+          <div class="mini">Raises any droid cycle ${cycle} asks for at or below rebirth ${level}
+            up to the quality it wants. It only ever raises, so nothing you own is lost.</div></div>
+        <button class="sbtn" id="fillBtn">Fill in</button>
       </div>`:""}
 
       <div class="srow">
@@ -963,37 +1000,40 @@ function renderSettings(){
       </div>
 
       <div class="srow">
-        <div><div class="sname">Reset cycle ${cycle}</div>
-          <div class="mini">Clears ${here.made} of ${here.total} droids and sends you back to rebirth 0.
-            Other cycles are untouched.</div></div>
+        <div><div class="sname">Back to rebirth 0 on cycle ${cycle}</div>
+          <div class="mini">Sets this cycle's rebirth number back to 0. Your droids are shared with
+            the other cycles, so they are left alone. You have ${here.made} of the ${here.total}
+            qualities cycle ${cycle} asks for.</div></div>
         <button class="rbtn ${pending==="cycle"?"armed":""}" data-reset="cycle">
           ${pending==="cycle"?"Tap again to confirm":"Reset"}</button>
       </div>
 
       <div class="srow">
-        <div><div class="sname">Reset all five cycles</div>
-          <div class="mini">Clears ${totMade} droids across every cycle and all five rebirth levels.
-            This cannot be undone.</div></div>
+        <div><div class="sname">Start over completely</div>
+          <div class="mini">Forgets all ${Object.keys(owned).length} droids you own and sets every
+            cycle back to rebirth 0. This cannot be undone.</div></div>
         <button class="rbtn ${pending==="all"?"armed":""}" data-reset="all">
-          ${pending==="all"?"Tap again to confirm":"Reset all"}</button>
+          ${pending==="all"?"Tap again to confirm":"Start over"}</button>
       </div>
 
       <button class="btn ghost" id="closeSet">Close</button>
     </div>`;
+  const fb=document.getElementById("fillBtn");
+  if(fb) fb.onclick=()=>{
+    const prev={...owned};
+    autofill(level);
+    const gained=Object.keys(owned).length-Object.keys(prev).length;
+    buildLvlSel(); render();
+    toast(`Filled in up to rebirth ${level}. ${gained} new droid${gained===1?"":"s"}.`,
+      "Undo",()=>{ owned=prev; save(); render() });
+  };
   document.getElementById("bkSave").onclick=saveBackup;
   document.getElementById("bkCopy").onclick=copyBackup;
   document.getElementById("bkLoad").onclick=loadBackup;
   el.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{
     const kind=b.dataset.reset;
     if(pending!==kind){ pending=kind; renderSettings(); setTimeout(()=>{if(pending===kind){pending=null;renderSettings()}},4000); return }
-    if(kind==="fill"){
-      const prev=new Set(made);
-      autofill(level);
-      toast(`Marked ${made.size} droids as made, up to rebirth ${level}.`,
-        "Undo",()=>{ made=prev; save(); render() });
-    }
-    else if(kind==="cycle") resetCycle(cycle);
-    else [1,2,3,4,5].forEach(resetCycle);
+    if(kind==="cycle") resetCycleLevel(cycle); else resetEverything();
     pending=null; save(); buildLvlSel(); render();
   });
   document.getElementById("closeSet").onclick=()=>{settingsOpen=false;pending=null;render()};
@@ -1017,11 +1057,15 @@ document.body.addEventListener("click",e=>{
   if(tc){setHeld(tc.dataset.d,tc.dataset.t); render(); return}
   const req=e.target.closest(".req");
   if(req){
-    if(req.dataset.keys){const ks=req.dataset.keys.split(",");
-      const all=ks.every(k=>made.has(k));
-      ks.forEach(k=>all?made.delete(k):made.add(k));
-    } else {const k=req.dataset.k; made.has(k)?made.delete(k):made.add(k)}
-    save(); render(); return}
+    const s=splitKey(req.dataset.k);
+    if(s){
+      const n=s[0], t=s[1], i=TIERS.indexOf(t);
+      /* One droid, one quality. Ticking means you own at least this much; unticking means
+         you own less than this, so drop to the quality just below rather than to nothing. */
+      setOwned(n, has(n,t) ? (i>0?TIERS[i-1]:null) : t);
+      render();
+    }
+    return}
   const la=e.target.closest("[data-la]");
   if(la){lookahead=+la.dataset.la; render(); return}
   const cf=e.target.closest("[data-cls]");
@@ -1040,20 +1084,19 @@ function buildLvlSel(){
 document.getElementById("cycleSel").innerHTML=[1,2,3,4,5]
   .map(c=>`<option value="${c}" ${c===cycle?"selected":""} >Cycle ${c}</option>`).join("");
 document.getElementById("cycleSel").onchange=e=>{cycle=+e.target.value;
-  made=new Set(store.get("dt_made_"+cycle,[]));
   level=store.get("dt_level_"+cycle,0);
   showOwned=false; searchQ=""; applyTheme(); buildLvlSel(); save(); render(); window.scrollTo(0,0)};
 document.getElementById("lvlSel").onchange=e=>{
-  const prev=new Set(made);
+  const prev={...owned};
   level=+e.target.value;
   /* Offering to auto-fill only makes sense when there is nothing to lose. Once you have
      ticked anything yourself, changing the rebirth number just changes the rebirth number,
      because auto-fill replaces the whole list and would wipe your corrections. Setting it
      up from scratch is still one tap: pick your level and it fills itself in. */
-  if(level>0 && made.size===0){
+  if(level>0 && Object.keys(owned).length===0){
     autofill(level);
-    toast(`Marked ${made.size} droids as made, up to rebirth ${level}. Correct any that are wrong below.`,
-      "Undo",()=>{ made=prev; save(); render() });
+    toast(`Filled in ${Object.keys(owned).length} droids, up to rebirth ${level}. Correct any that are wrong below.`,
+      "Undo",()=>{ owned=prev; save(); render() });
   }
   save(); render();
 };

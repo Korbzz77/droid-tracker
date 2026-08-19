@@ -344,11 +344,30 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 .qtick{flex:0 0 auto;color:var(--ok);font-weight:900;font-size:17px}
 .qnone{border-style:dashed}
 
+/* blueprint alert banner: above the header and the nav, so it lands on any screen */
+.bpalert{position:fixed;left:0;right:0;top:0;z-index:60;cursor:pointer;
+  padding:calc(env(safe-area-inset-top) + 12px) 16px 13px;
+  background:linear-gradient(180deg,var(--bpa),color-mix(in srgb,var(--bpa) 78%,#000));
+  color:#0d0d14;display:flex;align-items:center;gap:14px;
+  box-shadow:0 8px 28px -6px #000c;
+  transform:translateY(-102%);transition:transform .3s cubic-bezier(.2,.7,.3,1)}
+@supports not (background:color-mix(in srgb,red,blue)){.bpalert{background:var(--bpa)}}
+.bpalert.on{transform:translateY(0)}
+.bpalert .bat{font-size:var(--f0);font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
+  opacity:.75}
+.bpalert .bmain{font-size:var(--f5);font-weight:800;letter-spacing:.2px;margin-top:2px}
+.bpalert .bclose{margin-left:auto;font-weight:800;font-size:var(--f2);opacity:.7;
+  border:1.5px solid #0d0d1447;border-radius:99px;padding:7px 13px;white-space:nowrap}
+
 /* blueprint countdowns */
 .bps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
 .bp{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--bp);
   border-radius:var(--r2);padding:10px 11px;min-width:0;box-shadow:var(--sh1);
-  transition:border-color .2s,background .2s}
+  transition:border-color .2s,background .2s,transform .1s;
+  font-family:inherit;text-align:left;color:var(--txt);cursor:pointer;display:block;width:100%}
+.bp:active{transform:scale(.97)}
+.bp.armed{border-color:var(--bp);box-shadow:var(--sh1),0 0 0 1px var(--bp),0 0 16px -6px var(--bp)}
+.bp.armed .bpat{color:var(--bp);font-weight:800}
 .bp.soon{background:color-mix(in srgb,var(--bp) 13%,var(--card));
   border-color:color-mix(in srgb,var(--bp) 45%,var(--line))}
 @supports not (background:color-mix(in srgb,red,blue)){.bp.soon{background:var(--card2)}}
@@ -399,6 +418,7 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   <div id="v-all" class="hide"></div>
 </div>
 
+<div class="bpalert" id="bpAlert"></div>
 <div class="toast" id="toast"></div>
 <div class="sheetbg" id="sheetBg"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Droid quality"></div>
@@ -871,27 +891,113 @@ const fmtGap=ms=>{
   return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
 };
 const fmtAt=d=>d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+const BP_LEAD=20000;                       /* how far ahead to warn */
+let bpAlerts=store.get("dt_bp_alerts",{}); /* which spawns you want warning about */
+let bpFired={};                            /* spawn instants already announced */
+let bpShown=null;                          /* blueprint currently on the banner */
+
+/* The tap that arms an alert is also the gesture that lets iOS play sound at all, so the
+   audio context is created there rather than at the moment the alert fires. */
+let actx=null;
+function unlockAudio(){
+  try{
+    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==="suspended") actx.resume();
+  }catch(e){}
+}
+function beep(times){
+  if(!actx) return;
+  for(let i=0;i<(times||2);i++){
+    try{
+      const t0=actx.currentTime+i*0.28;
+      const o=actx.createOscillator(), g=actx.createGain();
+      o.type="sine"; o.frequency.setValueAtTime(i?1170:880,t0);
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.3,t0+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+0.24);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t0); o.stop(t0+0.26);
+    }catch(e){}
+  }
+}
+function toggleAlert(id){
+  if(bpAlerts[id]){ delete bpAlerts[id]; if(bpShown===id) hideBpAlert(); }
+  else { bpAlerts[id]=true; unlockAudio(); }
+  store.set("dt_bp_alerts",bpAlerts);
+  const b=BLUEPRINTS.find(x=>x.id===id);
+  const card=document.getElementById("bpc-"+id);
+  if(card) card.classList.toggle("armed",!!bpAlerts[id]);
+  tickBlueprints();
+  toast(bpAlerts[id]
+    ? `${b.label} alert on. You will get a warning ${BP_LEAD/1000} seconds before every spawn.`
+    : `${b.label} alert off.`);
+}
+function hideBpAlert(){
+  bpShown=null;
+  const el=document.getElementById("bpAlert");
+  if(el) el.classList.remove("on");
+}
+function showBpAlert(b){
+  bpShown=b.id;
+  const el=document.getElementById("bpAlert");
+  if(!el) return;
+  el.style.setProperty("--bpa",b.col);
+  el.classList.add("on");
+  beep(2);
+}
 function blueprintHTML(){
   return `<h2>Blueprint spawns</h2>
+    <div class="sub" style="margin-top:-2px">Tap one to be warned ${BP_LEAD/1000} seconds
+      before it spawns, on whichever screen you are on.</div>
     <div class="bps">${BLUEPRINTS.map(b=>`
-      <div class="bp" id="bpc-${b.id}" style="--bp:${b.col}">
+      <button class="bp ${bpAlerts[b.id]?"armed":""}" id="bpc-${b.id}" data-bp="${b.id}"
+        style="--bp:${b.col}">
         <div class="bpname">${b.label}</div>
         <div class="bptime" id="bp-${b.id}">--:--</div>
-        <div class="bpat">at <span id="bpat-${b.id}">--</span></div>
-      </div>`).join("")}</div>`;
+        <div class="bpat" id="bpat-${b.id}">--</div>
+      </button>`).join("")}</div>`;
 }
 /* only the numbers are rewritten each second, never the view, so nothing else loses focus */
 function tickBlueprints(){
   const now=new Date();
   BLUEPRINTS.forEach(b=>{
-    const t=document.getElementById("bp-"+b.id); if(!t) return;
     const at=nextSpawn(b.mins,now), left=at.getTime()-now.getTime();
-    t.textContent=fmtGap(left);
-    const a=document.getElementById("bpat-"+b.id); if(a) a.textContent=fmtAt(at);
-    const card=document.getElementById("bpc-"+b.id);
-    if(card) card.classList.toggle("soon",left<=120000);
+
+    /* Alerts are checked before any DOM lookup, so they still fire while you are on BUILD,
+       SELL or ROADMAP, where the tiles do not exist. */
+    if(bpAlerts[b.id] && left<=BP_LEAD && bpFired[b.id]!==at.getTime()){
+      bpFired[b.id]=at.getTime();
+      showBpAlert(b);
+    }
+
+    const t=document.getElementById("bp-"+b.id);
+    if(t){
+      t.textContent=fmtGap(left);
+      const a=document.getElementById("bpat-"+b.id);
+      if(a) a.textContent=(bpAlerts[b.id]?"alert on \u00b7 ":"at ")+fmtAt(at);
+      const card=document.getElementById("bpc-"+b.id);
+      if(card){ card.classList.toggle("soon",left<=120000);
+                card.classList.toggle("armed",!!bpAlerts[b.id]); }
+    }
   });
+
+  /* keep the banner counting down, then let it sit briefly on the spawn before clearing */
+  if(bpShown){
+    const b=BLUEPRINTS.find(x=>x.id===bpShown);
+    const at=nextSpawn(b.mins,now), left=at.getTime()-now.getTime();
+    const el=document.getElementById("bpAlert");
+    const secs=Math.max(0,Math.round(left/1000));
+    const justGone=left>BP_LEAD;   /* the spawn passed and the clock rolled to the next one */
+    if(el) el.innerHTML=`<div style="min-width:0">
+      <div class="bat">Blueprint spawn</div>
+      <div class="bmain">${b.label} ${justGone?"is up now":`in ${secs} second${secs===1?"":"s"}`}</div>
+    </div><div class="bclose">Dismiss</div>`;
+    if(justGone && !bpGoneAt) bpGoneAt=now.getTime();
+    if(bpGoneAt && now.getTime()-bpGoneAt>10000){ bpGoneAt=null; hideBpAlert(); }
+    if(!justGone) bpGoneAt=null;
+  }
 }
+let bpGoneAt=null;
 setInterval(tickBlueprints,1000);
 
 /* ---- quality picker ----
@@ -1156,7 +1262,10 @@ function render(){
 /* ---- events ---- */
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{view=b.dataset.v;settingsOpen=false;pending=null;render();window.scrollTo(0,0)});
 document.getElementById("gearBtn").onclick=()=>{settingsOpen=!settingsOpen;pending=null;render();window.scrollTo(0,0)};
+document.getElementById("bpAlert").onclick=hideBpAlert;
 document.body.addEventListener("click",e=>{
+  const bpb=e.target.closest("[data-bp]");
+  if(bpb){ toggleAlert(bpb.dataset.bp); return }
   const qb=e.target.closest(".qbtn");
   if(qb){ e.stopPropagation(); openSheet(qb.dataset.q); return }
   const tc=e.target.closest(".tchip");

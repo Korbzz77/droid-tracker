@@ -653,7 +653,13 @@ function viewBuild(){
   const hit=x=>!q||x.n.indexOf(q)>-1;
   const shown=active.filter(hit);
   const maxed=maxedAll.filter(hit);
-  const own=active.filter(x=>x.held).length;
+  const own=active.filter(x=>x.held).length, toBuy=active.length-own;
+  /* A count you cannot get by looking: the rows tell you which are purchases and which are
+     upgrades, but not how the work splits overall. */
+  const split=!active.length ? "" : " " + [
+    toBuy ? `${toBuy} to buy` : null,
+    own ? `${own} you already own that just need${own===1?"s":""} upgrading` : null
+  ].filter(Boolean).join(", ") + ".";
 
   /* One row per droid, two lines tall. Quality is set through the colour swatch, which opens
      the same picker as everywhere else, so the tall strip of tier chips is no longer needed. */
@@ -685,9 +691,7 @@ function viewBuild(){
   document.getElementById("v-build").innerHTML=`
     <h2>Build list</h2>
     <div class="sub">What cycle ${cycle} still needs, split by class. Tap a droid's
-      <b class="hi">colour dot</b> to set the quality you own.${own?` You already have
-      ${own===1?"one of these, so it only needs upgrading":`${own} of these, so they only need
-      upgrading`} rather than buying again.`:""}</div>
+      <b class="hi">colour dot</b> to set the quality you own.${split}</div>
 
     <div class="btools">
       <div class="searchwrap">

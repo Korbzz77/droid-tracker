@@ -401,6 +401,26 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .ic{width:1em;height:1em;display:inline-block;vertical-align:-.13em;flex:0 0 auto;
   fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
+/* Small classes for what used to be repeated inline style attributes. Inline styles meant
+   every colour and spacing fix had to be made in two places, which is how the palette drifted
+   in the first place. Tier and rarity colours stay inline: those are data, not styling. */
+.colnote{padding:10px 2px}
+.collater{padding:12px 2px 2px}
+.countline{padding-bottom:9px}
+.fill{flex:1;min-width:0}
+.hi{color:var(--txt)}
+.dim2{color:var(--dim2)}
+.sellname{font-weight:700;font-size:var(--f4)}
+.sellsub{margin-left:21px}
+.stitle{font-weight:700;font-size:var(--f4);margin-bottom:2px}
+.ssub{margin:6px 0 12px}
+.cneed.done{background:var(--card3);color:var(--dim)}
+.pill.sell{background:rgba(255,84,112,.15);color:var(--bad)}
+.pill.keep{background:rgba(255,204,51,.15);color:var(--warn)}
+.qnone .qsw{background:var(--card3)}
+.frule{flex-wrap:wrap}
+.mt14{margin-top:14px}
+
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
   background:var(--card);border:1px dashed var(--line2);border-radius:var(--r3)}
@@ -626,7 +646,7 @@ function viewBuild(){
                     : `<span class="cst done">Fully upgraded</span>`);
     const need=x.nextNeed
       ? `<span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">RB ${x.nextNeed.lvl}</span>`
-      : `<span class="cneed" style="background:#2a2a3a;color:var(--dim)">DONE</span>`;
+      : `<span class="cneed done">DONE</span>`;
     return `<div class="crow ${x.held?(x.nextNeed?"owned":"done"):""} ${later?"later":""}">
       ${qdot(x.n,(x.held||x.nextNeed||x.L[0]).t,"gdot")}
       <span class="cmeta"><span class="cname">${x.n}</span>${st}</span>${need}</div>`;
@@ -637,8 +657,8 @@ function viewBuild(){
     const later=mine.filter(x=>x.nextNeed.lvl>upto);
     return `<div>
       <div class="bcolhead">${CLS_LABEL[cls]}<b>${mine.length}</b></div>
-      ${due.map(x=>crow(x)).join("")||`<div class="mini" style="padding:10px 2px">Nothing due.</div>`}
-      ${later.length?`<div class="mini" style="padding:12px 2px 2px">${later.length} needed later in cycle ${cycle}</div>
+      ${due.map(x=>crow(x)).join("")||`<div class="mini colnote">Nothing due.</div>`}
+      ${later.length?`<div class="mini collater">${later.length} needed later in cycle ${cycle}</div>
         ${later.map(x=>crow(x,true)).join("")}`:""}
     </div>`;
   };
@@ -673,7 +693,7 @@ function viewBuild(){
       <div class="bcols">${["worker","astromech","battle"].map(cls=>{
         const mine=maxed.filter(x=>DCLASS[x.n]===cls);
         return `<div><div class="bcolhead">${CLS_LABEL[cls]}<b>${mine.length}</b></div>
-          ${mine.map(x=>crow(x)).join("")||`<div class="mini" style="padding:10px 2px">None.</div>`}</div>`;
+          ${mine.map(x=>crow(x)).join("")||`<div class="mini colnote">None.</div>`}</div>`;
       }).join("")}</div>`:""}`;
 
   const ob=document.getElementById("ownedBtn");
@@ -703,15 +723,15 @@ function viewSell(){
   const otherLabel=o=>{
     if(!o.length) return "";
     const cs=[...new Set(o.map(x=>x.cycle))].sort();
-    return `<span style="color:var(--dim2)"> &middot; cycle ${cs.join(", ")} want${cs.length>1?"":"s"} it back</span>`;
+    return `<span class="dim2"> &middot; cycle ${cs.join(", ")} want${cs.length>1?"":"s"} it back</span>`;
   };
-  const row=(x,cls,pill,col,bg,note)=>`
+  const row=(x,cls,pill,pillCls,note)=>`
     <div class="row tap ${cls}" data-sell="${x.n.replace(/"/g,"&quot;")}">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:15px">${dot(x.t)}${x.n}</div>
-        <div class="mini" style="margin-left:21px">${note}</div>
+      <div class="fill">
+        <div class="sellname">${dot(x.t)}${x.n}</div>
+        <div class="mini sellsub">${note}</div>
       </div>
-      <span class="pill act" style="background:${bg};color:${col}">${pill}</span>
+      <span class="pill act ${pillCls}">${pill}</span>
     </div>`;
   /* An empty list has two very different causes and the screen used to look identical for
      both, which reads as broken. Say which one it is. */
@@ -731,15 +751,15 @@ function viewSell(){
     <div class="sub">Cycle ${cycle} does not ask for these again after rebirth ${level}.
       Tap one to sell it and it stops counting as owned everywhere. If another cycle wants it
       back later the row says so, but that is not a reason to hold it now.</div>
-    ${sellable.length?`<div class="srows">${sellable.map(x=>row(x,"sellable","SELL","var(--bad)",
-        "rgba(255,84,112,.15)","holding "+x.t+otherLabel(x.other))).join("")}</div>`
+    ${sellable.length?`<div class="srows">${sellable.map(x=>row(x,"sellable","SELL","sell",
+        "holding "+x.t+otherLabel(x.other))).join("")}</div>`
       :`<div class="empty">${emptyMsg}</div>`}
 
     <h2>Hold on to &middot; ${keep.length}</h2>
     <div class="sub">Cycle ${cycle} still wants these. You can sell one anyway by tapping it,
       and undo if that was a mistake.</div>
-    ${keep.length?`<div class="srows">${keep.map(x=>row(x,"","KEEP","var(--warn)",
-        "rgba(255,204,51,.15)","holding "+x.t+" &rarr; "+needLabel(x.f))).join("")}</div>`
+    ${keep.length?`<div class="srows">${keep.map(x=>row(x,"","KEEP","keep",
+        "holding "+x.t+" &rarr; "+needLabel(x.f))).join("")}</div>`
       :`<div class="empty">${ownCount===0
           ? "Nothing owned yet."
           : `Cycle ${cycle} is done with every droid you own. All ${ownCount} are safe to sell.`}</div>`}`;
@@ -793,7 +813,7 @@ function viewAll(){
   document.getElementById("v-all").innerHTML=`
     <h2>Cycle ${cycle} roadmap</h2>
     <div class="sub">Tap a droid to tick that one quality. Tap its
-      <b style="color:var(--txt)">colour dot</b> to set the quality you own, and everything at
+      <b class="hi">colour dot</b> to set the quality you own, and everything at
       or below it fills in across all five cycles.</div>
     <div class="btools">
       <div class="searchwrap">
@@ -803,7 +823,7 @@ function viewAll(){
           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
         <button class="searchclr ${roadQ?"on":""}" id="rclear" aria-label="Clear search">&times;</button>
       </div>
-      ${q?`<div class="mini" style="padding-bottom:9px">${shown.length} of ${all.length}
+      ${q?`<div class="mini countline">${shown.length} of ${all.length}
         rebirths need a droid matching &ldquo;${esc(roadQ)}&rdquo;</div>`:""}
     </div>
     ${shown.length
@@ -971,7 +991,7 @@ function tickBlueprints(){
     const el=document.getElementById("bpAlert");
     const secs=Math.max(0,Math.round(left/1000));
     const justGone=left>BP_LEAD;   /* the spawn passed and the clock rolled to the next one */
-    if(el) el.innerHTML=`<div style="min-width:0">
+    if(el) el.innerHTML=`<div class="fill">
       <div class="bat">Blueprint spawn</div>
       <div class="bmain">${b.label} ${justGone?"is up now":`in ${secs} second${secs===1?"":"s"}`}</div>
     </div><div class="bclose">Dismiss</div>`;
@@ -1012,7 +1032,7 @@ function renderSheet(){
         </span>
         ${sel?`<span class="qtick">&#10003;</span>`:""}</button>`}).join("")}
     <button class="qrow qnone ${own?"":"on"}" data-qt="">
-      <span class="qsw" style="background:var(--card3)"></span>
+      <span class="qsw"></span>
       <span class="qmeta"><span class="qname">DO NOT OWN</span>
         <span class="qneed">clears every quality of this droid</span></span>
       ${own?"":`<span class="qtick">&#10003;</span>`}</button>
@@ -1092,7 +1112,7 @@ function viewFuse(){
     <h2>Fusion recipes</h2>
     <div class="sub">Three droids go into the Workshop's fusion machine. A known combination
       makes a specific droid; anything else that qualifies gives a random one a rarity higher.
-      The result always comes out at the <b style="color:var(--txt)">lowest quality</b> of the
+      The result always comes out at the <b class="hi">lowest quality</b> of the
       three you put in, so fusing a base into it wastes the good ones.</div>
 
     <div class="btools">
@@ -1103,7 +1123,7 @@ function viewFuse(){
           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
         <button class="searchclr ${fuseQ?"on":""}" id="fclear" aria-label="Clear search">&times;</button>
       </div>
-      ${q?`<div class="mini" style="padding-bottom:9px">${shown.length} of ${FUSIONS.length}
+      ${q?`<div class="mini countline">${shown.length} of ${FUSIONS.length}
         recipes match &ldquo;${esc(fuseQ)}&rdquo;</div>`:``}
     </div>
 
@@ -1114,12 +1134,12 @@ function viewFuse(){
 
     <h2>Without a recipe</h2>
     <div class="fcard">
-      <div class="fins" style="flex-wrap:wrap">
+      <div class="fins frule">
         <span class="fin">3 of the same droid, same quality</span>
         <span class="fplus">or</span>
         <span class="fin">3 of the same rarity</span>
         <span class="farrow">&rarr;</span>
-        <span class="fout" style="background:var(--accent);color:var(--onAccent)">RANDOM, ONE RARITY UP</span>
+        <span class="fout">RANDOM, ONE RARITY UP</span>
       </div>
       <div class="fnote">common &rarr; rare &rarr; epic &rarr; legendary &rarr; mythic &rarr; iconic.
         Mixed rarities that are not all the same droid will not fuse at all.</div>
@@ -1255,9 +1275,9 @@ function renderSettings(){
   const totMade=[1,2,3,4,5].reduce((a,c)=>a+cycleStats(c).made,0);
   const touched=[1,2,3,4,5].filter(c=>{const s=cycleStats(c);return s.made||s.level});
   el.innerHTML=`
-    <div class="card" style="margin-top:14px">
-      <div style="font-weight:700;font-size:var(--f4);margin-bottom:2px">Settings</div>
-      <div class="sub" style="margin:6px 0 12px">Droids you own are shared across all five cycles,
+    <div class="card mt14">
+      <div class="stitle">Settings</div>
+      <div class="sub ssub">Droids you own are shared across all five cycles,
         the way they are in the game. Only the rebirth number is per cycle. Everything is stored on
         this device only, nothing is sent anywhere. You own ${Object.keys(owned).length} droids.
         Cycles started: ${touched.length?touched.map(c=>"Cycle "+c).join(", "):"none yet"}.</div>

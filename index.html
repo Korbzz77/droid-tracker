@@ -9,6 +9,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&display=swap">
 <title>Droid Tycoon Tracker</title>
 <style>
 :root{
@@ -25,6 +28,12 @@
   --t-default:#9aa0ae; --t-gold:#f0b429; --t-diamond:#4fc3f7;
   --t-beskar:#d8dbe2; --t-galactic:#a855f7; --t-stellar:#ffd23f;
 
+  /* Chakra Petch is squarish and technical, which suits a droid workshop, and it carries the
+     numbers this app is full of. Restricted to the logo, headings, droid names and figures;
+     body copy and status text stay on the system face, which is more legible at small sizes.
+     display=swap means text paints in the fallback first, and the service worker caches the
+     font after the first online load so it survives offline. */
+  --display:"Chakra Petch",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   /* type scale: 11 is the floor, everything lands on a step */
   --f0:11px; --f1:12px; --f2:13px; --f3:14px; --f4:15px; --f5:17px; --f6:20px;
   /* radii + depth */
@@ -48,7 +57,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(8,8,14,.86);
   border-bottom:1px solid var(--line);
   padding:calc(env(safe-area-inset-top) + 10px) 14px 11px}
 .hrow{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:8px}
-.logo{font-weight:700;font-size:var(--f5);letter-spacing:.4px;white-space:nowrap}
+.logo{font-weight:700;font-family:var(--display);font-size:var(--f5);letter-spacing:.4px;white-space:nowrap}
 .logo span{color:var(--accent)}
 .spacer{flex:1}
 select,button{font-family:inherit;font-size:var(--f4)}
@@ -60,7 +69,7 @@ select,button{font-family:inherit;font-size:var(--f4)}
   background-repeat:no-repeat;background-position:right 9px center;
   transition:border-color .15s,background-color .15s}
 .sel:active{background-color:var(--card3)}
-h2{font-size:var(--f1);letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);
+h2{font-size:var(--f1);font-family:var(--display);letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);
   margin:28px 0 10px;font-weight:600}
 .sub{color:var(--dim);font-size:var(--f2);font-weight:400;line-height:1.6;margin:-4px 0 12px}
 .card{background:var(--card);border:0;border-radius:var(--r3);
@@ -89,7 +98,7 @@ h2{font-size:var(--f1);letter-spacing:1.4px;text-transform:uppercase;color:var(-
 .search::-webkit-search-decoration,.search::-webkit-search-cancel-button{-webkit-appearance:none}
 .search:focus{outline:none;border-color:var(--accent);background:var(--card3)}
 .si{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--dim2);
-  font-size:15px;pointer-events:none}
+  font-size:15px;pointer-events:none;display:flex}
 .searchclr{position:absolute;right:9px;top:50%;transform:translateY(-50%);display:none;
   background:var(--card3);border:0;color:var(--dim);border-radius:50%;width:27px;height:27px;
   font-size:16px;line-height:1;cursor:pointer;font-family:inherit;padding:0}
@@ -183,10 +192,10 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .gcard.done .gmade{background:rgba(0,0,0,.3);color:rgba(255,255,255,.62)}
 .gcard.next{box-shadow:0 0 0 3px rgba(255,255,255,.3),0 0 32px -4px var(--accent),var(--sh3)}
 .gleft{flex:0 0 62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
-.gnum{background:#0b0b12;border-radius:15px;width:62px;height:62px;display:grid;place-items:center;
+.gnum{background:#0b0b12;font-family:var(--display);border-radius:15px;width:62px;height:62px;display:grid;place-items:center;
   font-size:27px;font-weight:800;color:#fff;letter-spacing:-1px;
   font-variant-numeric:tabular-nums}
-.gcost{font-size:var(--f0);font-weight:700;color:#fff;letter-spacing:.3px;
+.gcost{font-size:var(--f0);font-family:var(--display);font-weight:700;color:#fff;letter-spacing:.3px;
   font-variant-numeric:tabular-nums;text-shadow:0 1px 2px rgba(0,0,0,.35)}
 .grows{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
 .grow{display:flex;align-items:center;gap:8px;background:#0b0b12;border-radius:12px;
@@ -201,7 +210,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .gcard .qbtn{min-width:32px;margin:-8px 0 -8px -5px}
 .gcard .gname{font-size:13.5px}
 .gmeta{flex:1;min-width:0;display:block}
-.gname{display:block;font-size:var(--f3);font-weight:700;letter-spacing:.2px;
+.gname{display:block;font-family:var(--display);font-size:var(--f3);font-weight:700;letter-spacing:.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
 .gtags{display:block;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
   margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -209,7 +218,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .gtags .grar{color:rgba(255,255,255,.42)}
 .gb{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;border-radius:9px;
   padding:5px 9px;font-size:var(--f1);font-weight:600;letter-spacing:.2px}
-.gbi{font-style:normal;font-size:var(--f0);opacity:.85}
+.gbi{font-style:normal;font-size:12px;opacity:.85;display:inline-flex;align-items:center}
 .gsell{background:#0b0b12;color:#fff;border:1.5px solid #33334a;font-size:var(--f0)}
 .gcheck{flex:0 0 auto;color:var(--ok);font-weight:900;font-size:14px;width:0;overflow:hidden;
   transition:width .16s}
@@ -270,7 +279,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
   transition:transform .24s cubic-bezier(.2,.7,.3,1)}
 .sheet.on{transform:translateX(-50%) translateY(0)}
 .grab{width:38px;height:4px;border-radius:99px;background:var(--line2);margin:6px auto 12px}
-.qhead{font-weight:700;font-size:var(--f5);letter-spacing:.3px}
+.qhead{font-weight:700;font-family:var(--display);font-size:var(--f5);letter-spacing:.3px}
 .qsub{color:var(--dim);font-size:var(--f2);margin:4px 0 12px;line-height:1.5}
 .qrow{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--r2);
   background:var(--card2);border:1.5px solid var(--line);margin-top:8px;cursor:pointer;
@@ -298,7 +307,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .bpalert.on{transform:translateY(0)}
 .bpalert .bat{font-size:var(--f0);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
   opacity:.75}
-.bpalert .bmain{font-size:var(--f5);font-weight:700;letter-spacing:.2px;margin-top:2px}
+.bpalert .bmain{font-family:var(--display);font-size:var(--f5);font-weight:700;letter-spacing:.2px;margin-top:2px}
 .bpalert .bclose{margin-left:auto;font-weight:600;font-size:var(--f2);opacity:.7;
   border:1.5px solid #0d0d1447;border-radius:99px;padding:7px 13px;white-space:nowrap}
 
@@ -310,7 +319,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
   transition:background .18s,border-color .18s,color .18s,transform .1s}
 .hbp:active{transform:scale(.96)}
 .hbp i{font-style:normal;font-weight:800;font-size:var(--f2);color:var(--bp);letter-spacing:.5px}
-.hbp span{font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.hbp span{font-family:var(--display);font-variant-numeric:tabular-nums;letter-spacing:-.2px}
 .hbp.armed{border-color:var(--bp);color:var(--txt)}
 .hbp.soon{background:var(--bp);color:#14141c;border-color:var(--bp)}
 .hbp.soon i{color:#14141c}
@@ -332,7 +341,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
   min-width:0;box-shadow:var(--sh1)}
 .fcard.ready{background:rgba(53,208,127,.07);box-shadow:inset 3px 0 0 var(--ok),var(--sh1)}
 .fhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
-.fname{font-weight:700;font-size:var(--f4);letter-spacing:.2px}
+.fname{font-weight:700;font-family:var(--display);font-size:var(--f4);letter-spacing:.2px}
 .frar{font-size:var(--f0);font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--dim2)}
 .fcls{font-size:var(--f0);font-weight:500;color:var(--dim2);letter-spacing:.5px;text-transform:uppercase}
 .fready{font-size:var(--f0);font-weight:600;letter-spacing:.5px;color:var(--ok)}
@@ -379,7 +388,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .crow:not(.owned):not(.done) .gdot{opacity:.26}
 .crow.owned .cname{color:var(--txt)}
 .cmeta{flex:1;min-width:0}
-.cname{display:block;font-weight:600;font-size:var(--f2);letter-spacing:.2px;
+.cname{display:block;font-family:var(--display);font-weight:600;font-size:var(--f2);letter-spacing:.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cst{display:block;font-size:var(--f0);font-weight:500;letter-spacing:.3px;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -388,6 +397,10 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .cst.done{color:var(--ok)}
 .cneed{flex:0 0 auto;font-size:var(--f0);font-weight:600;padding:4px 7px;border-radius:6px;
   white-space:nowrap}
+/* one stroke icon style, sized to the text it sits with */
+.ic{width:1em;height:1em;display:inline-block;vertical-align:-.13em;flex:0 0 auto;
+  fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
   background:var(--card);border:1px dashed var(--line2);border-radius:var(--r3)}
@@ -418,13 +431,13 @@ nav button:hover{color:var(--txt)}
     <div class="hbps" id="hbps"></div>
     <select class="sel" id="cycleSel"></select>
     <select class="sel" id="lvlSel" title="Rebirth you are on"></select>
-    <button class="sel gear" id="gearBtn" title="Settings" aria-label="Settings">&#9881;</button>
+    <button class="sel gear" id="gearBtn" title="Settings" aria-label="Settings"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h9M15.5 6H17M3 14h1.5M8 14h9"/><circle cx="13.7" cy="6" r="2"/><circle cx="6.3" cy="14" r="2"/></svg></button>
   </div>
   <nav>
-  <button class="on" data-v="all"><i>&#9776;</i>ROADMAP</button>
-  <button data-v="build"><i>&#9874;</i>BUILD</button>
-  <button data-v="sell"><i>&#36;</i>SELL</button>
-  <button data-v="fuse"><i>&#10042;</i>FUSION</button>
+  <button class="on" data-v="all"><i><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h9"/></svg></i>ROADMAP</button>
+  <button data-v="build"><i><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M12.2 3.6 16.4 7.8 14.3 9.9 10.1 5.7z"/><path d="M10.1 5.7 3.6 12.2v4.2h4.2l6.5-6.5"/></svg></i>BUILD</button>
+  <button data-v="sell"><i><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M10.2 2.8H17v6.8l-7.4 7.4a1.4 1.4 0 0 1-2 0l-4.8-4.8a1.4 1.4 0 0 1 0-2z"/><circle cx="13.6" cy="6.4" r="1.15"/></svg></i>SELL</button>
+  <button data-v="fuse"><i><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 4.5h2.2c1.5 0 2.9.8 3.7 2.1l1.2 2c.8 1.3 2.2 2.1 3.7 2.1h2.2"/><path d="M3.5 15.5h2.2c1.5 0 2.9-.8 3.7-2.1l.5-.9"/><path d="M14.2 8.1 16.5 10.7 14.2 13.3"/></svg></i>FUSION</button>
 </nav>
 </header>
 
@@ -638,7 +651,7 @@ function viewBuild(){
 
     <div class="btools">
       <div class="searchwrap">
-        <span class="si">&#9906;</span>
+        <span class="si"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.1"/><path d="M12.4 12.4 16.8 16.8"/></svg></span>
         <input class="search" id="dsearch" type="search" inputmode="search"
           placeholder="Search droids, e.g. R7 or WLKR" value="${searchQ.replace(/"/g,"&quot;")}"
           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
@@ -740,7 +753,7 @@ function tierAt(name,lvl){
 function tierPill(t,label){
   const dark = t==="default"||t==="galactic";
   return `<span class="gb" style="background:${TC[t]};color:${dark?'#fff':'#14141c'}">
-    <span class="gbi">&#8635;</span>${label}</span>`;
+    <span class="gbi"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.9-4.4"/><path d="M16.4 3.6V7h-3.4"/></svg></span>${label}</span>`;
 }
 function gameCard(rb,q){
   const m=rb.reqs.filter(x=>has(x[0],x[1])).length;
@@ -756,7 +769,7 @@ function gameCard(rb,q){
         const have=has(n,t);
         const badge = nx
           ? tierPill(tierAt(n,nx)||t, nx)
-          : `<span class="gb gsell"><span class="gbi">&#9673;</span>SELL</span>`;
+          : `<span class="gb gsell"><span class="gbi"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M10.2 3.4H16v5.8l-6.3 6.3a1.2 1.2 0 0 1-1.7 0l-4.1-4.1a1.2 1.2 0 0 1 0-1.7z"/></svg></span>SELL</span>`;
         return `<div class="grow req ${have?'have':''} ${q&&n.indexOf(q)>-1?'qmatch':''}" data-k="${key(n,t)}">
           ${qdot(n,t,"gdot")}
           <span class="gmeta">
@@ -784,7 +797,7 @@ function viewAll(){
       or below it fills in across all five cycles.</div>
     <div class="btools">
       <div class="searchwrap">
-        <span class="si">&#9906;</span>
+        <span class="si"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.1"/><path d="M12.4 12.4 16.8 16.8"/></svg></span>
         <input class="search" id="rsearch" type="search" inputmode="search"
           placeholder="Find a droid, e.g. R7 or WLKR" value="${roadQ.replace(/"/g,"&quot;")}"
           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
@@ -1084,7 +1097,7 @@ function viewFuse(){
 
     <div class="btools">
       <div class="searchwrap">
-        <span class="si">&#9906;</span>
+        <span class="si"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.1"/><path d="M12.4 12.4 16.8 16.8"/></svg></span>
         <input class="search" id="fsearch" type="search" inputmode="search"
           placeholder="Find a recipe or an ingredient" value="${fuseQ.replace(/"/g,"&quot;")}"
           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">

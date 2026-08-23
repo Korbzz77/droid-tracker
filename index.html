@@ -40,13 +40,13 @@ body{background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
   body{background-image:radial-gradient(1200px 600px at 50% -200px,
     color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%);
     background-attachment:fixed}}
-.wrap{max-width:980px;margin:0 auto;padding:0 14px 124px}
+.wrap{max-width:980px;margin:0 auto;padding:0 14px 40px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 header{position:sticky;top:0;z-index:20;background:rgba(8,8,14,.86);
   backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
   border-bottom:1px solid var(--line);
-  padding:calc(env(safe-area-inset-top) + 10px) 14px 10px}
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 11px}
 .hrow{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:8px}
 .logo{font-weight:700;font-size:var(--f5);letter-spacing:.4px;white-space:nowrap}
 .logo span{color:var(--accent)}
@@ -120,37 +120,31 @@ h2{font-size:var(--f1);letter-spacing:1.4px;text-transform:uppercase;color:var(-
   font-variant-numeric:tabular-nums}
 .mini{font-size:var(--f1);color:var(--dim);font-weight:400}
 
-/* bottom nav: an inset floating capsule rather than a full width bar pinned to the edge,
-   which is how current iOS presents a tab bar. Content scrolls underneath it. Sized to its
-   contents and centred, capped so it never touches the screen edges. */
-nav{position:fixed;left:50%;transform:translateX(-50%);
-  bottom:calc(env(safe-area-inset-bottom) + 12px);z-index:30;
-  display:flex;gap:3px;padding:6px;
-  width:max-content;max-width:calc(100% - 24px);
-  background:rgba(27,27,37,.74);
-  backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
-  border:1px solid rgba(255,255,255,.09);border-radius:999px;
-  box-shadow:0 10px 34px -10px rgba(0,0,0,.75),0 2px 8px rgba(0,0,0,.45)}
-nav button{position:relative;background:none;border:0;color:var(--dim2);
-  padding:8px 15px 9px;border-radius:999px;min-width:0;
-  font-weight:600;font-size:var(--f0);letter-spacing:.5px;cursor:pointer;
-  transition:color .2s,background .2s,transform .1s}
-nav button:active{transform:scale(.95)}
-nav button i{display:block;font-size:18px;font-style:normal;margin-bottom:3px;
-  transition:transform .22s cubic-bezier(.34,1.6,.64,1)}
-/* the selected tab is a filled pill, the same language as the filter chips elsewhere.
-   A top edge marker cannot work on a capsule that has no top edge to sit against. */
+/* Tabs sit in the header rather than floating over the page. A floating bar means content
+   scrolls underneath it, which on a dense chart is just something covering the rows you are
+   reading. Living in the header also means --hh, measured from the header element, already
+   accounts for them, so the sticky search bar needs no extra coordination. */
+nav{display:flex;gap:3px;max-width:980px;margin:10px auto 0;padding:3px;width:100%;
+  background:var(--card2);border-radius:999px}
+nav button{flex:1;min-width:0;background:none;border:0;color:var(--dim2);
+  padding:13px 8px;border-radius:999px;cursor:pointer;
+  font-weight:600;font-size:var(--f0);letter-spacing:.5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .18s,background .18s}
+nav button i{font-style:normal;font-size:14px;margin-right:6px;vertical-align:-1px;
+  display:inline-block}
 nav button.on{background:var(--accent);color:var(--onAccent)}
-nav button.on i{transform:scale(1.06)}
-@media(hover:hover){nav button:not(.on):hover{color:var(--txt);background:rgba(255,255,255,.06)}}
-@media(max-width:400px){
-  nav button{padding:8px 11px 9px;letter-spacing:.2px}
+@media(hover:hover){nav button:not(.on):hover{color:var(--txt)}}
+/* on a narrow screen the labels go and the glyphs carry the tabs */
+@media(max-width:520px){
+  nav button{font-size:0;padding:13px 6px}
+  nav button i{font-size:17px;margin-right:0}
 }
 
-/* search and filters stay put while the list scrolls under them.
-   --hh is the live header height, measured in JS since safe-area insets change it. */
+/* search and filters stay put while the list scrolls under them. --hh is the live header
+   height, measured in JS because the safe-area inset and the tab row both change it. */
 .btools{position:sticky;top:var(--hh,64px);z-index:15;margin:0 -14px 4px;padding:10px 14px 1px;
-  background:rgba(8,8,14,.92);
+  background:rgba(17,17,25,.94);
   backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%)}
 
 /* ---- build rows with quality selector ---- */
@@ -239,7 +233,7 @@ nav button.on i{transform:scale(1.06)}
 .sbtn:active{transform:scale(.96);background:var(--card3)}
 
 /* non-blocking confirmation, sits above the nav and gets out of the way on its own */
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 96px);z-index:40;
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);z-index:40;
   transform:translateX(-50%) translateY(16px);
   background:var(--card3);border:1px solid var(--line2);border-radius:var(--r2);
   box-shadow:var(--sh3);padding:12px 15px;display:flex;align-items:center;gap:16px;
@@ -419,6 +413,12 @@ nav button:hover{color:var(--txt)}
     <select class="sel" id="lvlSel" title="Rebirth you are on"></select>
     <button class="sel gear" id="gearBtn" title="Settings" aria-label="Settings">&#9881;</button>
   </div>
+  <nav>
+  <button class="on" data-v="all"><i>&#9776;</i>ROADMAP</button>
+  <button data-v="build"><i>&#9874;</i>BUILD</button>
+  <button data-v="sell"><i>&#36;</i>SELL</button>
+  <button data-v="fuse"><i>&#10042;</i>FUSION</button>
+</nav>
 </header>
 
 <div class="wrap">
@@ -434,12 +434,6 @@ nav button:hover{color:var(--txt)}
 <div class="sheetbg" id="sheetBg"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Droid quality"></div>
 
-<nav>
-  <button class="on" data-v="all"><i>&#9776;</i>ROADMAP</button>
-  <button data-v="build"><i>&#9874;</i>BUILD</button>
-  <button data-v="sell"><i>&#36;</i>SELL</button>
-  <button data-v="fuse"><i>&#10042;</i>FUSION</button>
-</nav>
 
 <script>
 const TIERS=["default","gold","diamond","rainbow","beskar","galactic","stellar"];
@@ -778,9 +772,9 @@ function viewAll(){
   const esc=s=>s.replace(/</g,"&lt;");
   document.getElementById("v-all").innerHTML=`
     <h2>Cycle ${cycle} roadmap</h2>
-    <div class="sub">Same layout as the in-game rebirth chart. Tap a droid to tick just that
-      one quality. Tap its <b style="color:var(--txt)">colour dot</b> to say what quality you
-      actually own, and every requirement at or below it fills in across the whole cycle.</div>
+    <div class="sub">Tap a droid to tick that one quality. Tap its
+      <b style="color:var(--txt)">colour dot</b> to set the quality you own, and everything at
+      or below it fills in across all five cycles.</div>
     <div class="btools">
       <div class="searchwrap">
         <span class="si">&#9906;</span>

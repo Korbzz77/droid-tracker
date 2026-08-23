@@ -337,15 +337,24 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .fgrid{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:6px}
 @media(min-width:760px){.fgrid{grid-template-columns:1fr 1fr}}
 @media(min-width:1220px){.fgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.fcard{background:var(--card);border:0;border-radius:var(--r2);padding:11px 12px;
-  min-width:0;box-shadow:var(--sh1)}
-.fcard.ready{background:rgba(53,208,127,.07);box-shadow:inset 3px 0 0 var(--ok),var(--sh1)}
+/* --fr is the rarity colour, set per card. Readiness then overrides the border and adds the
+   green edge, so a recipe you can make reads first and its rarity still reads second. */
+.fcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);
+  padding:11px 12px;min-width:0;box-shadow:var(--sh1)}
+@supports(background:color-mix(in srgb,red,blue)){
+  .fcard{background:color-mix(in srgb,var(--fr,var(--accent)) 11%,var(--card));
+    border-color:color-mix(in srgb,var(--fr,var(--accent)) 30%,transparent)}
+}
+.fcard.ready{border-color:var(--ok);box-shadow:inset 3px 0 0 var(--ok),var(--sh1)}
+.frhead{color:var(--fr)}
 .fhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
 .fname{font-weight:700;font-family:var(--display);font-size:var(--f4);letter-spacing:.2px}
 .frar{font-size:var(--f0);font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--dim2)}
 .fcls{font-size:var(--f0);font-weight:500;color:var(--dim2);letter-spacing:.5px;text-transform:uppercase}
-.fready{font-size:var(--f0);font-weight:600;letter-spacing:.5px;color:var(--ok)}
+.fready{font-size:var(--f0);font-weight:600;letter-spacing:.4px;color:var(--ok);
+  background:rgba(53,208,127,.16);border-radius:99px;padding:3px 10px}
 .fhave{font-size:var(--f0);font-weight:600;letter-spacing:.4px;color:var(--dim2);
+  background:var(--card3);border-radius:99px;padding:3px 10px;
   font-variant-numeric:tabular-nums}
 .fins{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 /* An ingredient you have and one you do not should differ in shape, not just shade: a
@@ -362,7 +371,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .fdot{width:11px;height:11px;border-radius:50%;flex:0 0 11px;box-shadow:0 0 0 1.5px #0006 inset}
 .fplus,.farrow{color:var(--dim2);font-weight:500;font-size:var(--f1)}
 .fout{display:inline-flex;align-items:center;border-radius:8px;padding:6px 11px;
-  font-size:var(--f1);font-weight:700;color:var(--onAccent);background:var(--accent);
+  font-size:var(--f1);font-weight:700;color:#14141c;background:var(--fr,var(--accent));
   white-space:nowrap}
 .fnote{font-size:var(--f0);color:var(--dim2);font-weight:500;margin-top:8px;line-height:1.5}
 
@@ -895,6 +904,11 @@ const FUSIONS=[
   {out:"LOW-MO",  cls:null,        rar:"mythic",    ins:["A-LT","A-LT","LOADLIFTER"]}
 ];
 const RARORDER=["common","rare","epic","legendary","mythic"];
+/* Rarity gets its colour back on this screen only. The values are shifted off the quality
+   palette on purpose: legendary reads orange rather than gold so it cannot be mistaken for a
+   gold quality dot, and mythic is pink rather than the red used for "do not have". */
+const FRC={common:"#8f95a3",rare:"#3d9dff",epic:"#c05cff",legendary:"#ff9a2b",mythic:"#ff4d8d"};
+const canMake=f=>f.ins.every(i=>ownedTier(i));
 
 /* ---- blueprint countdowns ----
    Spawn times come from droid-tycoon.pages.dev, which defines them as minutes past the
@@ -1110,13 +1124,13 @@ function viewFuse(){
     f.ins.forEach(i=>counts[i]=(counts[i]||0)+1);
     const dupes=Object.keys(counts).filter(k=>counts[k]>1);
     const haveAll=f.ins.every(i=>ownedTier(i));
-    return `<div class="fcard ${haveAll?"ready":""}">
+    return `<div class="fcard ${haveAll?"ready":""}" style="--fr:${FRC[f.rar]}">
       <div class="fhead">
         <span class="fname">${f.out}</span>
         <span class="frar">${f.rar}</span>
         ${f.cls?`<span class="fcls">${CLS_LABEL[f.cls]}</span>`:``}
         <span class="bspace"></span>
-        ${haveAll?`<span class="fready">HAVE ALL 3</span>`
+        ${haveAll?`<span class="fready">Ready</span>`
                  :`<span class="fhave">${f.ins.filter(i=>ownedTier(i)).length} of 3</span>`}
       </div>
       <div class="fins">
@@ -1150,12 +1164,16 @@ function viewFuse(){
         <button class="searchclr ${fuseQ?"on":""}" id="fclear" aria-label="Clear search">&times;</button>
       </div>
       ${q?`<div class="mini countline">${shown.length} of ${FUSIONS.length}
-        recipes match &ldquo;${esc(fuseQ)}&rdquo;</div>`:``}
+        recipes match &ldquo;${esc(fuseQ)}&rdquo;</div>`
+         :`<div class="mini countline">${FUSIONS.filter(canMake).length} of ${FUSIONS.length}
+        ready to craft</div>`}
     </div>
 
-    ${shown.length?groups.map(r=>`
-      <h2>${r} &middot; ${shown.filter(f=>f.rar===r).length}</h2>
-      <div class="fgrid">${shown.filter(f=>f.rar===r).map(card).join("")}</div>`).join("")
+    ${shown.length?groups.map(r=>{
+      /* what you can make now goes to the top of its group, so it is never scrolled past */
+      const inRar=shown.filter(f=>f.rar===r).sort((a,b)=>canMake(b)-canMake(a));
+      return `<h2 class="frhead" style="--fr:${FRC[r]}">${r} &middot; ${inRar.length}</h2>
+      <div class="fgrid">${inRar.map(card).join("")}</div>`}).join("")
       :`<div class="empty">No recipe matches &ldquo;${esc(fuseQ)}&rdquo;.</div>`}
 
     <h2>Without a recipe</h2>

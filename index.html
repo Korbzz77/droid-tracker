@@ -13,10 +13,13 @@
 <style>
 :root{
   /* surfaces: a deliberate elevation ladder rather than three ad-hoc greys */
-  --bg:#08080e; --bg2:#0d0d15;
-  --card:#14141d; --card2:#1b1b26; --card3:#22222f;
-  --line:#252533; --line2:#2e2e3e;
-  --txt:#f4f4f8; --dim:#9494a8; --dim2:#6f6f82;
+  /* Lifted off pure black. Near-black under near-white causes halation, where text seems
+     to glow and smear, and it is tiring across a long session. Surfaces separate by
+     lightness now, which is what lets most of the borders go. */
+  --bg:#111119; --bg2:#161620;
+  --card:#1b1b25; --card2:#22222e; --card3:#2b2b39;
+  --line:#282834; --line2:#33333f;
+  --txt:#e8e8ef; --dim:#9a9aab; --dim2:#71717f;
   --accent:#ff7a18; --onAccent:#170a02;
   --ok:#35d07f; --warn:#ffcc33; --bad:#ff5470;
   --t-default:#9aa0ae; --t-gold:#f0b429; --t-diamond:#4fc3f7;
@@ -40,13 +43,12 @@ body{background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
 .wrap{max-width:980px;margin:0 auto;padding:0 14px 118px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
-
 header{position:sticky;top:0;z-index:20;background:rgba(8,8,14,.86);
   backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
   border-bottom:1px solid var(--line);
   padding:calc(env(safe-area-inset-top) + 10px) 14px 10px}
 .hrow{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:8px}
-.logo{font-weight:800;font-size:var(--f5);letter-spacing:.4px;white-space:nowrap}
+.logo{font-weight:700;font-size:var(--f5);letter-spacing:.4px;white-space:nowrap}
 .logo span{color:var(--accent)}
 .spacer{flex:1}
 select,button{font-family:inherit;font-size:var(--f4)}
@@ -58,74 +60,25 @@ select,button{font-family:inherit;font-size:var(--f4)}
   background-repeat:no-repeat;background-position:right 9px center;
   transition:border-color .15s,background-color .15s}
 .sel:active{background-color:var(--card3)}
-
-h2{font-size:var(--f1);letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);
-  margin:28px 0 10px;font-weight:800}
-.sub{color:var(--dim);font-size:var(--f2);line-height:1.55;margin:-4px 0 12px}
-
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r3);
+h2{font-size:var(--f1);letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);
+  margin:28px 0 10px;font-weight:600}
+.sub{color:var(--dim);font-size:var(--f2);font-weight:400;line-height:1.6;margin:-4px 0 12px}
+.card{background:var(--card);border:0;border-radius:var(--r3);
   padding:15px;margin-bottom:12px;box-shadow:var(--sh2)}
 
 /* hero: the one place that gets to be loud */
 .hero{position:relative;overflow:hidden;background:#1a1622;border-color:#3a3a4a;
   box-shadow:var(--sh3)}
-.hero .lvl{font-size:52px;font-weight:800;line-height:.92;letter-spacing:-2px;
-  font-variant-numeric:tabular-nums}
-.hero .cost{color:var(--accent);font-weight:800;font-size:var(--f4);margin-top:6px;
-  font-variant-numeric:tabular-nums}
-.flexline{display:flex;align-items:flex-start;gap:16px}
 @supports(background:color-mix(in srgb,red,blue)){
   .hero{background:linear-gradient(158deg,color-mix(in srgb,var(--accent) 22%,var(--card)),var(--card) 55%);
     border-color:color-mix(in srgb,var(--accent) 30%,var(--line2));
     box-shadow:var(--sh3),0 0 40px -12px color-mix(in srgb,var(--accent) 45%,transparent)}
-  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:radial-gradient(420px 200px at 88% -30%,
-      color-mix(in srgb,var(--accent) 20%,transparent),transparent 70%)}
-  .hero>*{position:relative;z-index:1}
-}
-
-/* requirement rows */
-.req{display:flex;align-items:center;gap:12px;background:var(--card2);
-  border:1px solid var(--line);border-radius:var(--r2);padding:12px;margin-top:8px;
-  cursor:pointer;user-select:none;
-  transition:border-color .16s,background .16s,transform .1s}
-.req:active{transform:scale(.985);background:var(--card3)}
-.req.have{border-color:rgba(53,208,127,.45);background:rgba(53,208,127,.08)}
-.tick{width:27px;height:27px;flex:0 0 27px;border-radius:9px;border:2px solid var(--line2);
-  display:grid;place-items:center;font-size:15px;font-weight:800;color:transparent;
-  transition:background .16s,border-color .16s,transform .18s cubic-bezier(.34,1.7,.64,1)}
-.req.have .tick{background:var(--ok);border-color:var(--ok);color:#06301a;transform:scale(1.06)}
-.rmeta{flex:1;min-width:0}
-.rname{font-weight:700;font-size:var(--f4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rtags{font-size:var(--f0);letter-spacing:.8px;text-transform:uppercase;font-weight:800;margin-top:4px}
-/* whether a requirement is a purchase or an upgrade, and from what */
-.rst{display:block;margin-top:5px;font-size:var(--f0);font-weight:800;
-  letter-spacing:.5px;text-transform:uppercase}
-.rst.none{color:var(--bad)}
-.rst.up{color:var(--warn)}
-
-/* NEXT is the "right now" screen: the current rebirth gets the main column and the
-   near horizon sits beside it, instead of below the fold. The whole cycle is ROADMAP. */
-.ncols{display:grid;grid-template-columns:1fr;gap:0 22px;align-items:start}
 @media(min-width:900px){
   .ncols{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
-  .ncols>div>h2:first-child{margin-top:0}
-}
 .dot{width:13px;height:13px;border-radius:50%;display:inline-block;vertical-align:-2px;margin-right:8px;
   box-shadow:0 0 0 1.5px #0006 inset}
-.badge{font-size:var(--f0);font-weight:800;padding:6px 10px;border-radius:9px;white-space:nowrap;
-  letter-spacing:.4px}
-.b-sell{background:var(--card3);color:var(--dim)}
-.b-keep{background:rgba(255,204,51,.16);color:var(--warn)}
-
-.bar{height:8px;background:rgba(0,0,0,.4);border-radius:99px;overflow:hidden;margin-top:12px;
-  box-shadow:0 1px 2px #0006 inset}
-.bar i{display:block;height:100%;border-radius:99px;
-  background:linear-gradient(90deg,var(--accent),#ffb347);
-  box-shadow:0 0 12px -2px var(--accent);transition:width .35s cubic-bezier(.4,0,.2,1)}
-
 .btn{background:var(--accent);color:var(--onAccent);border:0;border-radius:var(--r2);
-  padding:14px 16px;font-weight:800;font-size:var(--f4);width:100%;margin-top:14px;cursor:pointer;
+  padding:14px 16px;font-weight:700;font-size:var(--f4);width:100%;margin-top:14px;cursor:pointer;
   letter-spacing:.2px;box-shadow:0 4px 14px -6px #000;
   transition:transform .1s,filter .15s,box-shadow .15s}
 .btn:active{transform:scale(.985);filter:brightness(1.06)}
@@ -148,33 +101,23 @@ h2{font-size:var(--f1);letter-spacing:1.5px;text-transform:uppercase;color:var(-
   font-size:16px;line-height:1;cursor:pointer;font-family:inherit;padding:0}
 .searchclr.on{display:block}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.chip b{font-weight:800;opacity:.65;margin-left:5px;font-variant-numeric:tabular-nums}
+.chip b{font-weight:700;opacity:.6;margin-left:6px;font-variant-numeric:tabular-nums}
 .chip.on b{opacity:.8}
-.chip{background:var(--card2);border:1px solid var(--line2);color:var(--dim);
-  border-radius:99px;padding:9px 15px;font-weight:700;font-size:var(--f2);cursor:pointer;
+.chip{background:var(--card2);border:0;color:var(--dim);
+  border-radius:99px;padding:9px 15px;font-weight:500;font-size:var(--f2);cursor:pointer;
   transition:background .15s,color .15s,border-color .15s,transform .1s}
 .chip:active{transform:scale(.95)}
-.chip.on{background:var(--accent);border-color:var(--accent);color:var(--onAccent)}
-
+.chip.on{background:var(--accent);color:var(--onAccent);font-weight:700}
 .row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--r2);
-  background:var(--card2);border:1px solid var(--line);margin-bottom:8px}
+  background:var(--card);border:1px solid transparent;margin-bottom:8px}
 .row.sellable{border-color:rgba(255,84,112,.4);background:rgba(255,84,112,.06)}
 .row.tap{cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
 .row.tap:active{transform:scale(.99);background:var(--card3)}
 @media(hover:hover){.row.tap:hover{border-color:var(--dim2)}}
 .pill.act{border:1.5px solid currentColor;padding:7px 12px}
-.pill{font-size:var(--f0);font-weight:800;padding:5px 10px;border-radius:8px;letter-spacing:.4px;
+.pill{font-size:var(--f0);font-weight:600;padding:5px 10px;border-radius:8px;letter-spacing:.4px;
   font-variant-numeric:tabular-nums}
-
-.rb{border:1px solid var(--line);border-radius:var(--r2);margin-bottom:8px;overflow:hidden;background:var(--card)}
-.rbhead{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
-.rbnum{width:42px;flex:0 0 42px;text-align:center;font-weight:800;font-size:var(--f6);
-  font-variant-numeric:tabular-nums;color:var(--dim)}
-.rb.done .rbnum{color:var(--ok)}
-.rb.next{border-color:var(--accent);box-shadow:0 0 0 1px rgba(255,122,24,.3)}
-.rbbody{padding:0 12px 12px;display:none}
-.rb.open .rbbody{display:block}
-.mini{font-size:var(--f1);color:var(--dim);font-weight:600}
+.mini{font-size:var(--f1);color:var(--dim);font-weight:400}
 
 /* bottom nav */
 nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
@@ -182,7 +125,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
   backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
   border-top:1px solid var(--line2);padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;position:relative;background:none;border:0;color:var(--dim2);
-  padding:12px 4px 13px;font-weight:800;font-size:var(--f0);letter-spacing:.6px;cursor:pointer;
+  padding:12px 4px 13px;font-weight:600;font-size:var(--f0);letter-spacing:.6px;cursor:pointer;
   transition:color .18s}
 nav button i{display:block;font-size:20px;font-style:normal;margin-bottom:4px;
   transition:transform .22s cubic-bezier(.34,1.6,.64,1)}
@@ -205,91 +148,63 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
    At two columns a card is ~472px and the widest strip in any cycle is five chips. */
 .blist{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:9px}
 @media(min-width:760px){.blist{grid-template-columns:1fr 1fr}}
-.blist .brow{margin-bottom:0;min-width:0}
-.brow{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);
-  padding:11px 12px;margin-bottom:9px;box-shadow:var(--sh1)}
-.brow.owned{border-color:#3a4a5e}
-.bhead{display:flex;align-items:center;gap:8px}
-.bname{font-weight:800;font-size:var(--f4);letter-spacing:.2px;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis}
-.brar{font-size:var(--f0);font-weight:800;letter-spacing:.7px;text-transform:uppercase;opacity:.9}
 .bspace{flex:1}
-.bneed{font-size:var(--f0);font-weight:800;padding:5px 9px;border-radius:8px;white-space:nowrap}
-.tstrip{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.tchip{flex:0 1 auto;width:78px;background:var(--card2);border:1.5px solid var(--line2);
-  color:var(--dim);border-radius:var(--r1);padding:7px 4px 6px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit;
-  transition:transform .1s,border-color .15s,background .15s}
-.tchip i{font-style:normal;font-size:var(--f0);font-weight:900;letter-spacing:.4px}
-.tchip u{text-decoration:none;font-size:10px;font-weight:700;opacity:.7}
-.tchip.next{border-color:var(--accent);color:var(--accent);border-style:dashed}
-.tchip.have{box-shadow:0 2px 10px -3px #000a}
-.tchip:active{transform:scale(.94)}
-.bst{display:inline-block;margin-top:8px;font-size:var(--f0);font-weight:800;
-  letter-spacing:.6px;text-transform:uppercase}
-.bst.none{color:var(--bad)}
-.bst.up{color:var(--warn)}
-.bst.done{color:var(--ok)}
-.brow.later{background:var(--bg2);opacity:.7}
-
-/* ---- in-game style rebirth cards ---- */
-/* Two columns only, for the same reason as the build list: .wrap caps content at 980px,
-   so a third column takes width from the droid names rather than adding any. At three
-   columns the name box was 82px and most names were cut off. */
-.gwrap{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:700px){.gwrap{grid-template-columns:1fr 1fr}}
 /* min-width:0 or the grid tracks refuse to shrink below the rows' min-content width,
    which pushes the whole grid wider than its container */
-.gcard{background:var(--accent);border-radius:var(--r4);padding:10px;display:flex;gap:10px;
-  align-items:stretch;position:relative;box-shadow:var(--sh2);transition:box-shadow .2s;
+/* Thirty-five saturated fills was a wall of colour, and it forced dark-on-light rows in an
+   otherwise dark-on-dark app. Only the rebirth you are actually on gets the full accent. */
+.gcard{background:var(--card);border-radius:var(--r4);padding:10px;display:flex;gap:10px;
+  align-items:stretch;position:relative;box-shadow:var(--sh1);transition:box-shadow .2s;
   min-width:0}
-.gcard.done{background:linear-gradient(160deg,#2c2c3d,#232331);box-shadow:var(--sh1)}
-.gcard.done .gcost,.gcard.done .gnum{color:#c7c7d6}
-.gcard.next{box-shadow:0 0 0 3px rgba(255,255,255,.18),0 0 30px -4px rgba(255,122,24,.6),var(--sh3)}
+.gcard.done{background:var(--bg2);box-shadow:none;opacity:.72}
+.gcard.next{background:var(--accent);box-shadow:0 0 34px -8px var(--accent),var(--sh2)}
+.gcard.next .gcost{color:var(--onAccent)}
+.gcard.next .gnum{background:rgba(0,0,0,.28);color:#fff}
+.gcard.next .gmade{background:rgba(0,0,0,.22);color:rgba(0,0,0,.66)}
 .gleft{flex:0 0 64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
-.gnum{background:#0b0b12;border-radius:15px;width:64px;height:64px;display:grid;place-items:center;
-  font-size:29px;font-weight:800;font-style:italic;color:#fff;letter-spacing:-1.5px;
-  font-variant-numeric:tabular-nums;box-shadow:0 2px 8px #0007 inset}
-.gcost{font-size:var(--f0);font-weight:800;color:#fff;letter-spacing:.3px;
-  font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #0005}
+.gnum{background:var(--bg);border-radius:14px;width:64px;height:64px;display:grid;place-items:center;
+  font-size:28px;font-weight:800;color:var(--txt);letter-spacing:-1px;
+  font-variant-numeric:tabular-nums}
+.gcost{font-size:var(--f0);font-weight:600;color:var(--dim);letter-spacing:.3px;
+  font-variant-numeric:tabular-nums}
 .grows{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
-.grow{display:flex;align-items:center;gap:8px;background:#0b0b12;border-radius:12px;
+.grow{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:12px;
   padding:8px;cursor:pointer;border:1.5px solid transparent;min-width:0;
   transition:background .15s,border-color .15s,transform .1s}
-.grow.have{border-color:var(--ok);background:#0c1c15}
+.grow.have{border-color:rgba(53,208,127,.5);background:var(--bg2)}
 .grow.qmatch{box-shadow:0 0 0 2px var(--accent),0 0 14px -4px var(--accent)}
 .grow:active{transform:scale(.98);background:#1b1b27}
 .gdot{width:15px;height:15px;flex:0 0 15px;border-radius:50%;box-shadow:0 0 0 1.5px #0006 inset}
 .gmeta{flex:1;min-width:0;display:block}
-.gname{display:block;font-size:var(--f3);font-weight:800;font-style:italic;letter-spacing:.2px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
-.gtags{display:block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+.gname{display:block;font-size:var(--f3);font-weight:700;letter-spacing:.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}
+.gtags{display:block;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
   margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gtags b{margin-right:5px;font-weight:800}
-.gb{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;border-radius:10px;
-  padding:5px 9px;font-size:var(--f1);font-weight:800;font-style:italic;letter-spacing:.2px}
+.gtags b{margin-right:6px;font-weight:600}
+.gtags .grar{color:rgba(255,255,255,.42)}
+.gb{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;border-radius:9px;
+  padding:5px 9px;font-size:var(--f1);font-weight:600;letter-spacing:.2px}
 .gbi{font-style:normal;font-size:var(--f0);opacity:.85}
-.gsell{background:#0b0b12;color:#fff;border:1.5px solid #33334a;font-size:var(--f0)}
+.gsell{background:transparent;color:var(--dim2);border:1px solid var(--line2);font-size:var(--f0)}
 .gcheck{flex:0 0 auto;color:var(--ok);font-weight:900;font-size:14px;width:0;overflow:hidden;
   transition:width .16s}
 .grow.have .gcheck{width:15px}
-.gmade{font-size:10px;font-weight:900;color:rgba(0,0,0,.72);letter-spacing:.5px;
-  background:rgba(0,0,0,.22);border-radius:7px;padding:3px 8px;font-variant-numeric:tabular-nums}
-.gmade.ok{background:#0b3a24;color:#5cf0a8}
-.gcard.done .gmade{background:rgba(0,0,0,.3);color:rgba(255,255,255,.66)}
-
+.gmade{font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.5px;
+  background:var(--bg2);border-radius:7px;padding:3px 8px;font-variant-numeric:tabular-nums}
+.gmade.ok{background:rgba(53,208,127,.14);color:var(--ok)}
 .gear{font-size:17px;line-height:1;padding:9px 11px;cursor:pointer;background-image:none}
 .srow{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line2)}
-.sname{font-weight:700;font-size:var(--f3);margin-bottom:4px}
+.sname{font-weight:600;font-size:var(--f3);margin-bottom:4px}
 .srow .mini{font-weight:500;line-height:1.5}
 .rbtn{flex:0 0 auto;background:var(--card2);border:1.5px solid var(--bad);color:var(--bad);
-  border-radius:var(--r1);padding:10px 14px;font-weight:800;font-size:var(--f2);cursor:pointer;
+  border-radius:var(--r1);padding:10px 14px;font-weight:600;font-size:var(--f2);cursor:pointer;
   font-family:inherit;transition:background .15s,color .15s,transform .1s}
 .rbtn:active{transform:scale(.96)}
 .rbtn.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
 /* neutral variant for non-destructive settings actions (backup) */
-.sbtn{flex:0 0 auto;background:var(--card2);border:1.5px solid var(--line2);color:var(--txt);
-  border-radius:var(--r1);padding:10px 14px;font-weight:800;font-size:var(--f2);cursor:pointer;
+.sbtn{flex:0 0 auto;background:var(--card2);border:1px solid var(--line2);color:var(--txt);
+  border-radius:var(--r1);padding:10px 14px;font-weight:600;font-size:var(--f2);cursor:pointer;
   font-family:inherit;transition:background .15s,transform .1s}
 .sbtn:active{transform:scale(.96);background:var(--card3)}
 
@@ -302,7 +217,7 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   font-size:var(--f2);font-weight:600;line-height:1.45;color:var(--txt);
   opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
-.toast button{flex:0 0 auto;background:none;border:0;color:var(--accent);font-weight:800;
+.toast button{flex:0 0 auto;background:none;border:0;color:var(--accent);font-weight:700;
   font-size:var(--f2);font-family:inherit;cursor:pointer;padding:4px 2px}
 
 /* tappable quality swatch: padded out to a real touch target without growing visually */
@@ -331,7 +246,7 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   transition:transform .24s cubic-bezier(.2,.7,.3,1)}
 .sheet.on{transform:translateX(-50%) translateY(0)}
 .grab{width:38px;height:4px;border-radius:99px;background:var(--line2);margin:6px auto 12px}
-.qhead{font-weight:800;font-size:var(--f5);letter-spacing:.3px}
+.qhead{font-weight:700;font-size:var(--f5);letter-spacing:.3px}
 .qsub{color:var(--dim);font-size:var(--f2);margin:4px 0 12px;line-height:1.5}
 .qrow{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--r2);
   background:var(--card2);border:1.5px solid var(--line);margin-top:8px;cursor:pointer;
@@ -342,7 +257,7 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 .qrow.off{opacity:.5}
 .qsw{width:26px;height:26px;flex:0 0 26px;border-radius:9px;box-shadow:0 0 0 1.5px #0006 inset}
 .qmeta{flex:1;min-width:0}
-.qname{font-weight:800;font-size:var(--f3);letter-spacing:.4px}
+.qname{font-weight:600;font-size:var(--f3);letter-spacing:.4px}
 .qneed{font-size:var(--f0);color:var(--dim);font-weight:600;margin-top:3px;
   text-transform:uppercase;letter-spacing:.5px}
 .qtick{flex:0 0 auto;color:var(--ok);font-weight:900;font-size:17px}
@@ -357,25 +272,25 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   transform:translateY(-102%);transition:transform .3s cubic-bezier(.2,.7,.3,1)}
 @supports not (background:color-mix(in srgb,red,blue)){.bpalert{background:var(--bpa)}}
 .bpalert.on{transform:translateY(0)}
-.bpalert .bat{font-size:var(--f0);font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
+.bpalert .bat{font-size:var(--f0);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
   opacity:.75}
-.bpalert .bmain{font-size:var(--f5);font-weight:800;letter-spacing:.2px;margin-top:2px}
-.bpalert .bclose{margin-left:auto;font-weight:800;font-size:var(--f2);opacity:.7;
+.bpalert .bmain{font-size:var(--f5);font-weight:700;letter-spacing:.2px;margin-top:2px}
+.bpalert .bclose{margin-left:auto;font-weight:600;font-size:var(--f2);opacity:.7;
   border:1.5px solid #0d0d1447;border-radius:99px;padding:7px 13px;white-space:nowrap}
 
 /* blueprint countdowns */
 .bps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
-.bp{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--bp);
+.bp{background:var(--card);border:0;border-left:3px solid var(--bp);
   border-radius:var(--r2);padding:10px 11px;min-width:0;box-shadow:var(--sh1);
   transition:border-color .2s,background .2s,transform .1s;
   font-family:inherit;text-align:left;color:var(--txt);cursor:pointer;display:block;width:100%}
 .bp:active{transform:scale(.97)}
 .bp.armed{border-color:var(--bp);box-shadow:var(--sh1),0 0 0 1px var(--bp),0 0 16px -6px var(--bp)}
-.bp.armed .bpat{color:var(--bp);font-weight:800}
+.bp.armed .bpat{color:var(--bp);font-weight:600}
 .bp.soon{background:color-mix(in srgb,var(--bp) 13%,var(--card));
   border-color:color-mix(in srgb,var(--bp) 45%,var(--line))}
 @supports not (background:color-mix(in srgb,red,blue)){.bp.soon{background:var(--card2)}}
-.bpname{font-size:var(--f0);font-weight:800;letter-spacing:.9px;text-transform:uppercase;
+.bpname{font-size:var(--f0);font-weight:600;letter-spacing:.9px;text-transform:uppercase;
   color:var(--bp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bptime{font-size:var(--f6);font-weight:800;letter-spacing:-.5px;margin-top:3px;
   font-variant-numeric:tabular-nums}
@@ -385,24 +300,25 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 /* fusion */
 .fgrid{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:6px}
 @media(min-width:760px){.fgrid{grid-template-columns:1fr 1fr}}
-.fcard{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--fr,var(--line2));
+.fcard{background:var(--card);border:0;
   border-radius:var(--r2);padding:11px 12px;min-width:0;box-shadow:var(--sh1)}
 .fcard.ready{border-color:rgba(53,208,127,.45);background:rgba(53,208,127,.05)}
 .fhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
-.fname{font-weight:800;font-size:var(--f4);font-style:italic;letter-spacing:.3px}
-.frar{font-size:var(--f0);font-weight:800;letter-spacing:.7px;text-transform:uppercase}
-.fcls{font-size:var(--f0);font-weight:700;color:var(--dim);letter-spacing:.5px;text-transform:uppercase}
-.fready{font-size:var(--f0);font-weight:800;letter-spacing:.5px;color:var(--ok)}
+.fname{font-weight:700;font-size:var(--f4);letter-spacing:.2px}
+.frar{font-size:var(--f0);font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--dim2)}
+.fcls{font-size:var(--f0);font-weight:500;color:var(--dim2);letter-spacing:.5px;text-transform:uppercase}
+.fready{font-size:var(--f0);font-weight:600;letter-spacing:.5px;color:var(--ok)}
 .fins{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .fin{display:inline-flex;align-items:center;gap:6px;background:var(--card2);
-  border:1px solid var(--line);border-radius:9px;padding:5px 9px;
-  font-size:var(--f1);font-weight:700;color:var(--dim);white-space:nowrap}
-.fin.got{color:var(--txt);border-color:rgba(53,208,127,.4)}
-.fin b{font-size:9.5px;font-weight:800;opacity:.7;letter-spacing:.4px}
+  border:0;border-radius:8px;padding:6px 10px;
+  font-size:var(--f1);font-weight:500;color:var(--dim);white-space:nowrap}
+.fin.got{color:var(--txt);font-weight:600;background:var(--card3)}
+.fin b{font-size:var(--f0);font-weight:600;opacity:.6;letter-spacing:.4px}
 .fdot{width:11px;height:11px;border-radius:50%;flex:0 0 11px;box-shadow:0 0 0 1.5px #0006 inset}
-.fplus,.farrow{color:var(--dim2);font-weight:800;font-size:var(--f1)}
-.fout{display:inline-flex;align-items:center;border-radius:9px;padding:5px 10px;
-  font-size:var(--f1);font-weight:800;font-style:italic;color:#14141c;white-space:nowrap}
+.fplus,.farrow{color:var(--dim2);font-weight:500;font-size:var(--f1)}
+.fout{display:inline-flex;align-items:center;border-radius:8px;padding:6px 11px;
+  font-size:var(--f1);font-weight:700;color:var(--onAccent);background:var(--accent);
+  white-space:nowrap}
 .fnote{font-size:var(--f0);color:var(--dim2);font-weight:600;margin-top:8px;line-height:1.5}
 
 /* compact build rows, grouped into a column per droid class */
@@ -410,26 +326,25 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 @media(min-width:820px){.bcols{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .bcolhead{position:sticky;top:calc(var(--hh,64px) + 1px);z-index:14;
   background:rgba(8,8,14,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  font-size:var(--f0);letter-spacing:1.4px;text-transform:uppercase;font-weight:800;
+  font-size:var(--f0);letter-spacing:1.4px;text-transform:uppercase;font-weight:600;
   color:var(--dim);padding:9px 0 8px;margin-top:6px;
   border-bottom:1px solid var(--line)}
-.bcolhead b{color:var(--txt);margin-left:6px}
+.bcolhead b{color:var(--txt);margin-left:7px;font-weight:700}
 .crow{display:flex;align-items:center;gap:9px;background:var(--card);
-  border:1px solid var(--line);border-radius:var(--r1);padding:7px 9px;margin-top:7px;
+  border:1px solid transparent;border-radius:var(--r1);padding:8px 9px;margin-top:7px;
   min-width:0;box-shadow:var(--sh1)}
 .crow.later{background:var(--bg2);opacity:.62}
 .crow.owned{border-color:#3a4a5e}
 .cmeta{flex:1;min-width:0}
-.cname{font-weight:800;font-size:var(--f2);letter-spacing:.2px;white-space:nowrap;
+.cname{font-weight:600;font-size:var(--f2);letter-spacing:.2px;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
-.cst{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-top:2px;
+.cst{font-size:var(--f0);font-weight:500;letter-spacing:.3px;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cst.none{color:var(--bad)}
 .cst.up{color:var(--warn)}
 .cst.done{color:var(--ok)}
-.cneed{flex:0 0 auto;font-size:9.5px;font-weight:800;padding:4px 7px;border-radius:6px;
+.cneed{flex:0 0 auto;font-size:var(--f0);font-weight:600;padding:4px 7px;border-radius:6px;
   white-space:nowrap}
-
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
   background:var(--card);border:1px dashed var(--line2);border-radius:var(--r3)}
@@ -438,15 +353,16 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
   border-radius:var(--r1);padding:12px 14px;margin-top:16px}
 
 /* view enters with a small settle so switching tabs feels intentional */
-@keyframes vin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes vin{from{opacity:0;transform:translateY(6px)}
+to{opacity:1;transform:none}}
 #v-all,#v-build,#v-sell,#v-fuse{animation:vin .22s cubic-bezier(.2,.7,.3,1)}
 
 /* pointer devices (Magic Keyboard / trackpad) get hover affordances */
 @media(hover:hover){
   .req:hover,.grow:hover{border-color:var(--dim2)}
-  .chip:hover,.tchip:hover,.sel:hover{border-color:var(--dim2)}
-  .btn:hover{filter:brightness(1.07)}
-  nav button:hover{color:var(--txt)}
+.chip:hover,.tchip:hover,.sel:hover{border-color:var(--dim2)}
+.btn:hover{filter:brightness(1.07)}
+nav button:hover{color:var(--txt)}
 }
 </style>
 </head>
@@ -520,7 +436,6 @@ function applyTheme(){const [a,on]=THEME[cycle]||THEME[1];
   document.documentElement.style.setProperty("--accent",a);
   document.documentElement.style.setProperty("--onAccent",on);
   const m=document.querySelector('meta[name="theme-color"]'); if(m)m.setAttribute("content","#0b0b12");}
-const RC={common:"#9aa0ae",rare:"#4fc3f7",epic:"#a855f7",legendary:"#f0b429",mythic:"#ff5470"};
 
 /* ---- DATA: cycle 1 transcribed from the in-game rebirth chart ---- */
 const DATA={"1":{"rebirths":[{"level":1,"cost":"10K","reqs":[["CB","default","common",null],["PIT","default","common",null],["DRK-1 PROBE","default","common",null]]},{"level":2,"cost":"150K","reqs":[["BDX EXPLORER","default","rare",null],["2BB","default","rare",null],["BAL-CORE","default","rare",null]]},{"level":3,"cost":"975K","reqs":[["A-LT","default","rare",6],["B-U4D","default","rare",5],["R9","default","rare",5]]},{"level":4,"cost":"2.95M","reqs":[["ARG","gold","rare",6],["B1 SECURITY","gold","rare",7],["GROUNDMECH","default","epic",6]]},{"level":5,"cost":"5.35M","reqs":[["B-U4D","gold","rare",7],["HOV-R","gold","rare",8],["R9","diamond","rare",null]]},{"level":6,"cost":"9.85M","reqs":[["A-LT","diamond","rare",null],["ARG","diamond","rare",null],["GROUNDMECH","gold","epic",9]]},{"level":7,"cost":"14.5M","reqs":[["B-U4D","diamond","rare",null],["B1 SECURITY","diamond","rare",null],["BB","gold","epic",21]]},{"level":8,"cost":"36M","reqs":[["HOV-R","diamond","rare",null],["LO","gold","epic",10],["UTIL-TEC","gold","epic",null]]},{"level":9,"cost":"89M","reqs":[["TRAK-R","gold","epic",null],["R6","gold","epic",null],["GROUNDMECH","rainbow","epic",21]]},{"level":10,"cost":"220M","reqs":[["STRIKE-ORB","gold","epic",null],["HAUL-R","rainbow","epic",null],["LO","rainbow","epic",null]]},{"level":11,"cost":"550M","reqs":[["AMP WALKER","rainbow","epic",22],["B1 HEAVY","rainbow","epic",22],["BB9","default","legendary",15]]},{"level":12,"cost":"1.36B","reqs":[["PROTO-ROLLER","gold","legendary",16],["MECHA-DROID","default","legendary",14],["MONO-WLKR","default","legendary",14]]},{"level":13,"cost":"3.4B","reqs":[["R7","default","legendary",15],["CYCLO-GRAV","default","legendary",17],["B2-RP","default","legendary",15]]},{"level":14,"cost":"8.45B","reqs":[["OPTI-STRK","default","legendary",16],["MONO-WLKR","gold","legendary",16],["MECHA-DROID","gold","legendary",17]]},{"level":15,"cost":"21B","reqs":[["B2-RP","gold","legendary",17],["BB9","gold","legendary",18],["R7","gold","legendary",18]]},{"level":16,"cost":"52B","reqs":[["OPTI-STRK","gold","legendary",20],["MONO-WLKR","diamond","legendary",18],["PROTO-ROLLER","diamond","legendary",19]]},{"level":17,"cost":"130B","reqs":[["B2-RP","diamond","legendary",19],["CYCLO-GRAV","diamond","legendary",19],["MECHA-DROID","diamond","legendary",20]]},{"level":18,"cost":"325B","reqs":[["BB9","diamond","legendary",24],["R7","diamond","legendary",20],["MONO-WLKR","rainbow","legendary",23]]},{"level":19,"cost":"810B","reqs":[["B2-RP","rainbow","legendary",25],["CYCLO-GRAV","rainbow","legendary",24],["PROTO-ROLLER","rainbow","legendary",22]]},{"level":20,"cost":"2T","reqs":[["R7","rainbow","legendary",23],["OPTI-STRK","rainbow","legendary",23],["MECHA-DROID","rainbow","legendary",29]]},{"level":21,"cost":"3T","reqs":[["BB","beskar","epic",34],["ORB-WALKER","beskar","epic",32],["GROUNDMECH","beskar","epic",34]]},{"level":22,"cost":"4.5T","reqs":[["AMP WALKER","beskar","epic",null],["B1 HEAVY","beskar","epic",33],["PROTO-ROLLER","beskar","legendary",28]]},{"level":23,"cost":"6T","reqs":[["OPTI-STRK","beskar","legendary",null],["MONO-WLKR","beskar","legendary",29],["R7","beskar","legendary",null]]},{"level":24,"cost":"9T","reqs":[["BB9","beskar","legendary",35],["CYCLO-GRAV","beskar","legendary",33],["MO-TRAK","default","mythic",28]]},{"level":25,"cost":"13.5T","reqs":[["B2-RP","beskar","legendary",30],["IG","default","mythic",29],["DRFT-R","gold","mythic",28]]},{"level":26,"cost":"21T","reqs":[["CYCLENS","gold","mythic",30],["LOADLIFTER","diamond","mythic",30],["RIC-1200","rainbow","mythic",null]]},{"level":27,"cost":"32T","reqs":[["KX","diamond","mythic",31],["TRI-TEK","rainbow","mythic",null],["SNOW MOUSE","beskar","mythic",35]]},{"level":28,"cost":"45T","reqs":[["PROTO-ROLLER","galactic","legendary",31],["MO-TRAK","rainbow","mythic",null],["DRFT-R","beskar","mythic",33]]},{"level":29,"cost":"68T","reqs":[["MONO-WLKR","galactic","legendary",null],["MECHA-DROID","galactic","legendary",null],["IG","beskar","mythic",35]]},{"level":30,"cost":"100T","reqs":[["B2-RP","galactic","legendary",null],["CYCLENS","beskar","mythic",34],["LOADLIFTER","galactic","mythic",null]]},{"level":31,"cost":"150T","reqs":[["SEN-TRI","stellar","epic",null],["PROTO-ROLLER","beskar","legendary",null],["KX","beskar","mythic",null]]},{"level":32,"cost":"230T","reqs":[["ORB-WALKER","galactic","epic",null],["OPTI-POD","galactic","legendary",null],["RIC","beskar","mythic",null]]},{"level":33,"cost":"345T","reqs":[["B1 HEAVY","stellar","epic",null],["CYCLO-GRAV","galactic","legendary",null],["DRFT-R","galactic","mythic",null]]},{"level":34,"cost":"520T","reqs":[["GROUNDMECH","stellar","epic",null],["BB","stellar","epic",null],["CYCLENS","galactic","mythic",null]]},{"level":35,"cost":"778T","reqs":[["BB9","stellar","legendary",null],["IG","stellar","mythic",null],["SNOW MOUSE","stellar","mythic",null]]}]},"2":{"rebirths":[{"level":1,"cost":"10K","reqs":[["ID10","default","common",null],["MOUSE","default","common",null],["GONK","default","common",null]]},{"level":2,"cost":"150K","reqs":[["ROLL-R","default","rare",7],["SENATE HOVERCAM","default","rare",null],["NAV-EX","default","rare",5]]},{"level":3,"cost":"975K","reqs":[["R4","default","rare",5],["VECT-ARM","default","rare",5],["BDX EXPLORER","default","rare",7]]},{"level":4,"cost":"2.95M","reqs":[["2BB","gold","rare",6],["BAL-CORE","gold","rare",6],["ORB-WALKER","default","epic",12]]},{"level":5,"cost":"5.35M","reqs":[["R4","gold","rare",8],["VECT-ARM","gold","rare",10],["NAV-EX","gold","rare",9]]},{"level":6,"cost":"9.85M","reqs":[["GUNRUNNER","default","epic",8],["2BB","diamond","rare",null],["BAL-CORE","diamond","rare",11]]},{"level":7,"cost":"14.5M","reqs":[["ROLL-R","diamond","rare",null],["BDX EXPLORER","diamond","rare",null],["R2","gold","epic",10]]},{"level":8,"cost":"36M","reqs":[["R4","diamond","rare",null],["B2 SUPER","gold","epic",10],["GUNRUNNER","gold","epic",32]]},{"level":9,"cost":"89M","reqs":[["NAV-EX","rainbow","rare",null],["STRIKE-ORB","gold","epic",11],["AMP WALKER","gold","epic",16]]},{"level":10,"cost":"220M","reqs":[["VECT-ARM","rainbow","rare",null],["R2","diamond","epic",12],["B2 SUPER","diamond","epic",13]]},{"level":11,"cost":"550M","reqs":[["BAL-CORE","rainbow","rare",null],["STRIKE-ORB","diamond","epic",15],["B2 HEAVY","diamond","epic",14]]},{"level":12,"cost":"1.36B","reqs":[["ORB-WALKER","rainbow","epic",null],["R2","rainbow","epic",33],["BB9","default","legendary",15]]},{"level":13,"cost":"3.4B","reqs":[["B2 SUPER","rainbow","epic",31],["MECHA-DROID","default","legendary",16],["PROTO-ROLLER","default","legendary",15]]},{"level":14,"cost":"8.45B","reqs":[["B2 HEAVY","rainbow","epic",null],["B2-RP","default","legendary",16],["R7","gold","legendary",17]]},{"level":15,"cost":"21B","reqs":[["STRIKE-ORB","rainbow","epic",22],["BB9","gold","legendary",18],["PROTO-ROLLER","gold","legendary",18]]},{"level":16,"cost":"52B","reqs":[["AMP WALKER","rainbow","epic",null],["MECHA-DROID","gold","legendary",19],["B2-RP","diamond","legendary",19]]},{"level":17,"cost":"130B","reqs":[["OPTI-POD","rainbow","legendary",null],["MONO-WLKR","gold","legendary",20],["R7","diamond","legendary",19]]},{"level":18,"cost":"325B","reqs":[["UTIL-TEC","rainbow","epic",null],["BB9","diamond","legendary",23],["PROTO-ROLLER","diamond","legendary",22]]},{"level":19,"cost":"810B","reqs":[["MECHA-DROID","diamond","legendary",28],["R7","rainbow","legendary",29],["B2-RP","rainbow","legendary",23]]},{"level":20,"cost":"2T","reqs":[["MONO-WLKR","rainbow","legendary",25],["OPTI-STRK","rainbow","legendary",24],["CYCLO-GRAV","rainbow","legendary",23]]},{"level":21,"cost":"3T","reqs":[["LO","beskar","epic",34],["R6","beskar","epic",34],["HAUL-R","beskar","epic",null]]},{"level":22,"cost":"4.5T","reqs":[["SEN-TRI","beskar","epic",null],["STRIKE-ORB","beskar","epic",null],["PROTO-ROLLER","beskar","legendary",null]]},{"level":23,"cost":"6T","reqs":[["BB9","beskar","legendary",null],["CYCLO-GRAV","beskar","legendary",29],["B2-RP","beskar","legendary",24]]},{"level":24,"cost":"9T","reqs":[["OPTI-STRK","beskar","legendary",30],["B2-RP","beskar","legendary",31],["SNOW MOUSE","default","mythic",28]]},{"level":25,"cost":"13.5T","reqs":[["MONO-WLKR","beskar","legendary",null],["TRI-TEK","gold","mythic",28],["RIC-1200","default","mythic",null]]},{"level":26,"cost":"21T","reqs":[["KX","gold","mythic",30],["DRFT-R","diamond","mythic",30],["IG","rainbow","mythic",null]]},{"level":27,"cost":"32T","reqs":[["LEP","diamond","mythic",32],["LOADLIFTER","rainbow","mythic",31],["MO-TRAK","beskar","mythic",null]]},{"level":28,"cost":"45T","reqs":[["MECHA-DROID","galactic","legendary",null],["SNOW MOUSE","rainbow","mythic",null],["TRI-TEK","beskar","mythic",null]]},{"level":29,"cost":"68T","reqs":[["CYCLO-GRAV","galactic","legendary",null],["R7","galactic","legendary",35],["RIC","beskar","mythic",34]]},{"level":30,"cost":"100T","reqs":[["OPTI-STRK","galactic","legendary",33],["KX","beskar","mythic",33],["DRFT-R","galactic","mythic",35]]},{"level":31,"cost":"150T","reqs":[["B2 SUPER","stellar","epic",null],["B2-RP","beskar","legendary",null],["LOADLIFTER","beskar","mythic",null]]},{"level":32,"cost":"230T","reqs":[["GUNRUNNER","galactic","epic",null],["B1 HEAVY","galactic","epic",null],["LEP","beskar","mythic",null]]},{"level":33,"cost":"345T","reqs":[["R2","stellar","epic",null],["OPTI-STRK","galactic","legendary",null],["KX","galactic","mythic",null]]},{"level":34,"cost":"520T","reqs":[["R6","stellar","epic",null],["LO","stellar","epic",null],["RIC","galactic","mythic",null]]},{"level":35,"cost":"778T","reqs":[["R7","stellar","legendary",null],["DRFT-R","stellar","mythic",null],["CYCLENS","stellar","mythic",null]]}]},"3":{"rebirths":[{"level":1,"cost":"10K","reqs":[["MOUSE","default","common",null],["PIT","default","common",null],["GONK","default","common",null]]},{"level":2,"cost":"150K","reqs":[["R3","default","common",5],["2BB","default","rare",5],["SENATE HOVERCAM","default","rare",5]]},{"level":3,"cost":"975K","reqs":[["R8","default","common",7],["R5","default","common",6],["R4","default","rare",6]]},{"level":4,"cost":"2.95M","reqs":[["B1 BATTLE","gold","common",7],["R9","gold","rare",7],["B1 SECURITY","gold","rare",8]]},{"level":5,"cost":"5.35M","reqs":[["R3","gold","common",8],["2BB","gold","rare",8],["SENATE HOVERCAM","gold","rare",10]]},{"level":6,"cost":"9.85M","reqs":[["R5","diamond","common",9],["R4","diamond","rare",9],["BDX EXPLORER","diamond","rare",9]]},{"level":7,"cost":"14.5M","reqs":[["R8","diamond","common",null],["B1 BATTLE","diamond","common",null],["R9","diamond","rare",null]]},{"level":8,"cost":"36M","reqs":[["R3","rainbow","common",null],["2BB","rainbow","rare",null],["B1 SECURITY","rainbow","rare",null]]},{"level":9,"cost":"89M","reqs":[["R5","rainbow","common",null],["R4","rainbow","rare",null],["BDX EXPLORER","rainbow","rare",null]]},{"level":10,"cost":"220M","reqs":[["SENATE HOVERCAM","rainbow","rare",null],["GROUNDMECH","default","epic",12],["TRAK-R","default","epic",12]]},{"level":11,"cost":"550M","reqs":[["B2 HEAVY","default","epic",14],["B2 SUPER","default","epic",13],["UTIL-TEC","default","epic",18]]},{"level":12,"cost":"1.36B","reqs":[["BAL-CORE","rainbow","rare",null],["GROUNDMECH","gold","epic",32],["TRAK-R","gold","epic",33]]},{"level":13,"cost":"3.4B","reqs":[["B2 SUPER","rainbow","epic",21],["MECHA-DROID","default","legendary",16],["PROTO-ROLLER","default","legendary",15]]},{"level":14,"cost":"8.45B","reqs":[["B2 HEAVY","rainbow","epic",31],["B2-RP","default","legendary",16],["R7","gold","legendary",17]]},{"level":15,"cost":"21B","reqs":[["STRIKE-ORB","rainbow","epic",null],["BB9","gold","legendary",18],["PROTO-ROLLER","gold","legendary",18]]},{"level":16,"cost":"52B","reqs":[["AMP WALKER","rainbow","epic",null],["MECHA-DROID","gold","legendary",19],["B2-RP","diamond","legendary",19]]},{"level":17,"cost":"130B","reqs":[["OPTI-POD","rainbow","legendary",21],["MONO-WLKR","diamond","legendary",20],["R7","diamond","legendary",19]]},{"level":18,"cost":"325B","reqs":[["UTIL-TEC","rainbow","epic",null],["BB9","diamond","legendary",24],["PROTO-ROLLER","diamond","legendary",25]]},{"level":19,"cost":"810B","reqs":[["MECHA-DROID","diamond","legendary",23],["R7","rainbow","legendary",30],["B2-RP","rainbow","legendary",22]]},{"level":20,"cost":"2T","reqs":[["MONO-WLKR","rainbow","legendary",23],["OPTI-STRK","rainbow","legendary",29],["CYCLO-GRAV","rainbow","legendary",23]]},{"level":21,"cost":"3T","reqs":[["B2 SUPER","beskar","epic",34],["OPTI-POD","beskar","legendary",null],["R2","beskar","epic",null]]},{"level":22,"cost":"4.5T","reqs":[["GUNRUNNER","beskar","epic",null],["LNG-SHOT","beskar","epic",null],["B2-RP","beskar","legendary",24]]},{"level":23,"cost":"6T","reqs":[["MONO-WLKR","beskar","legendary",33],["CYCLO-GRAV","beskar","legendary",null],["MECHA-DROID","beskar","legendary",29]]},{"level":24,"cost":"9T","reqs":[["BB9","beskar","legendary",28],["B2-RP","beskar","legendary",null],["RIC","default","mythic",28]]},{"level":25,"cost":"13.5T","reqs":[["PROTO-ROLLER","beskar","legendary",35],["LOADLIFTER","default","mythic",33],["MO-TRAK","gold","mythic",28]]},{"level":26,"cost":"21T","reqs":[["LEP","gold","mythic",30],["TRI-TEK","diamond","mythic",null],["SNOW MOUSE","rainbow","mythic",null]]},{"level":27,"cost":"32T","reqs":[["RIC-1200","diamond","mythic",31],["IG","rainbow","mythic",29],["DRFT-R","beskar","mythic",30]]},{"level":28,"cost":"45T","reqs":[["BB9","galactic","legendary",null],["RIC","rainbow","mythic",35],["MO-TRAK","beskar","mythic",32]]},{"level":29,"cost":"68T","reqs":[["MECHA-DROID","galactic","legendary",31],["OPTI-STRK","galactic","legendary",null],["IG","beskar","mythic",null]]},{"level":30,"cost":"100T","reqs":[["R7","galactic","legendary",null],["LEP","beskar","mythic",34],["DRFT-R","galactic","mythic",null]]},{"level":31,"cost":"150T","reqs":[["B2 HEAVY","stellar","epic",null],["MECHA-DROID","beskar","legendary",null],["RIC-1200","beskar","mythic",null]]},{"level":32,"cost":"230T","reqs":[["GROUNDMECH","galactic","epic",null],["BB","galactic","epic",null],["MO-TRAK","beskar","mythic",null]]},{"level":33,"cost":"345T","reqs":[["TRAK-R","stellar","epic",null],["MONO-WLKR","galactic","legendary",null],["LOADLIFTER","galactic","mythic",null]]},{"level":34,"cost":"520T","reqs":[["ORB-WALKER","stellar","epic",null],["B2 SUPER","stellar","epic",null],["LEP","galactic","mythic",null]]},{"level":35,"cost":"778T","reqs":[["PROTO-ROLLER","stellar","legendary",null],["KX","stellar","mythic",null],["RIC","stellar","mythic",null]]}]},"4":{"rebirths":[{"level":1,"cost":"10K","reqs":[["ID10","default","common",null],["PIT","default","common",null],["DRK-1 PROBE","default","common",null]]},{"level":2,"cost":"150K","reqs":[["R3","default","common",5],["2BB","default","rare",5],["SENATE HOVERCAM","default","rare",5]]},{"level":3,"cost":"975K","reqs":[["R5","gold","common",6],["R8","gold","common",7],["R4","default","rare",6]]},{"level":4,"cost":"2.95M","reqs":[["B1 BATTLE","gold","common",7],["R9","gold","rare",7],["B1 SECURITY","gold","rare",8]]},{"level":5,"cost":"5.35M","reqs":[["R3","gold","common",8],["2BB","gold","rare",8],["SENATE HOVERCAM","gold","rare",10]]},{"level":6,"cost":"9.85M","reqs":[["R5","diamond","common",9],["R4","diamond","rare",9],["BDX EXPLORER","diamond","rare",9]]},{"level":7,"cost":"14.5M","reqs":[["R8","diamond","common",null],["B1 BATTLE","diamond","common",null],["R9","diamond","rare",null]]},{"level":8,"cost":"36M","reqs":[["R3","rainbow","common",null],["B1 SECURITY","rainbow","rare",null],["2BB","rainbow","rare",null]]},{"level":9,"cost":"89M","reqs":[["R5","rainbow","common",null],["R4","rainbow","rare",null],["BDX EXPLORER","rainbow","rare",null]]},{"level":10,"cost":"220M","reqs":[["SENATE HOVERCAM","rainbow","rare",null],["GROUNDMECH","default","epic",12],["TRAK-R","default","epic",12]]},{"level":11,"cost":"550M","reqs":[["B2 HEAVY","default","epic",15],["B2 SUPER","default","epic",13],["UTIL-TEC","default","epic",16]]},{"level":12,"cost":"1.36B","reqs":[["BAL-CORE","rainbow","rare",14],["GROUNDMECH","gold","epic",14],["TRAK-R","gold","epic",14]]},{"level":13,"cost":"3.4B","reqs":[["B2 SUPER","rainbow","epic",15],["MECHA-DROID","default","legendary",17],["PROTO-ROLLER","default","legendary",24]]},{"level":14,"cost":"8.45B","reqs":[["BAL-CORE","diamond","rare",null],["GROUNDMECH","diamond","epic",21],["TRAK-R","rainbow","epic",31]]},{"level":15,"cost":"21B","reqs":[["B2 HEAVY","diamond","epic",33],["B2 SUPER","rainbow","epic",22],["B2-RP","default","legendary",18]]},{"level":16,"cost":"52B","reqs":[["UTIL-TEC","rainbow","epic",null],["BB9","default","legendary",18],["R7","gold","legendary",18]]},{"level":17,"cost":"130B","reqs":[["OPTI-STRK","default","legendary",20],["CYCLO-GRAV","gold","legendary",20],["MECHA-DROID","gold","legendary",19]]},{"level":18,"cost":"325B","reqs":[["B2-RP","gold","legendary",19],["BB9","gold","legendary",29],["R7","diamond","legendary",19]]},{"level":19,"cost":"810B","reqs":[["MECHA-DROID","diamond","legendary",24],["R7","rainbow","legendary",29],["B2-RP","rainbow","legendary",23]]},{"level":20,"cost":"2T","reqs":[["MONO-WLKR","rainbow","legendary",23],["OPTI-STRK","rainbow","legendary",25],["CYCLO-GRAV","rainbow","legendary",23]]},{"level":21,"cost":"3T","reqs":[["AMP WALKER","beskar","epic",34],["GROUNDMECH","beskar","epic",null],["HAUL-R","beskar","epic",null]]},{"level":22,"cost":"4.5T","reqs":[["GUNRUNNER","beskar","epic",null],["STRIKE-ORB","beskar","epic",34],["B2 SUPER","beskar","epic",null]]},{"level":23,"cost":"6T","reqs":[["MONO-WLKR","beskar","legendary",30],["CYCLO-GRAV","beskar","legendary",31],["B2-RP","beskar","legendary",35]]},{"level":24,"cost":"9T","reqs":[["MECHA-DROID","beskar","legendary",null],["PROTO-ROLLER","beskar","legendary",null],["MO-TRAK","default","mythic",26]]},{"level":25,"cost":"13.5T","reqs":[["OPTI-STRK","beskar","legendary",28],["TRI-TEK","default","mythic",29],["DRFT-R","gold","mythic",null]]},{"level":26,"cost":"21T","reqs":[["CYCLENS","gold","mythic",30],["LEP","diamond","mythic",35],["MO-TRAK","rainbow","mythic",34]]},{"level":27,"cost":"32T","reqs":[["RIC-1200","diamond","mythic",33],["SNOW MOUSE","rainbow","mythic",null],["LOADLIFTER","beskar","mythic",35]]},{"level":28,"cost":"45T","reqs":[["OPTI-STRK","galactic","legendary",null],["IG","rainbow","mythic",30],["KX","beskar","mythic",null]]},{"level":29,"cost":"68T","reqs":[["BB9","galactic","legendary",33],["R7","galactic","legendary",null],["TRI-TEK","beskar","mythic",31]]},{"level":30,"cost":"100T","reqs":[["MONO-WLKR","galactic","legendary",null],["CYCLENS","beskar","mythic",null],["IG","galactic","mythic",32]]},{"level":31,"cost":"150T","reqs":[["TRAK-R","stellar","epic",null],["CYCLO-GRAV","beskar","legendary",null],["TRI-TEK","beskar","mythic",null]]},{"level":32,"cost":"230T","reqs":[["R2","galactic","epic",null],["R6","galactic","epic",null],["IG","beskar","mythic",null]]},{"level":33,"cost":"345T","reqs":[["B2 HEAVY","stellar","epic",null],["BB9","galactic","legendary",null],["RIC-1200","galactic","mythic",null]]},{"level":34,"cost":"520T","reqs":[["STRIKE-ORB","stellar","epic",null],["AMP WALKER","stellar","epic",null],["MO-TRAK","galactic","mythic",null]]},{"level":35,"cost":"778T","reqs":[["B2-RP","stellar","legendary",null],["LOADLIFTER","stellar","mythic",null],["LEP","stellar","mythic",null]]}]},"5":{"rebirths":[{"level":1,"cost":"10K","reqs":[["ID10","default","common",null],["MOUSE","default","common",null],["GONK","default","common",null]]},{"level":2,"cost":"150K","reqs":[["IMPERIAL PROBE","gold","common",10],["2BB","default","rare",6],["ROLL-R","default","rare",7]]},{"level":3,"cost":"975K","reqs":[["R4","default","rare",5],["VECT-ARM","default","rare",null],["BDX EXPLORER","gold","rare",6]]},{"level":4,"cost":"2.95M","reqs":[["B1 BATTLE","gold","common",8],["R9","gold","rare",null],["B1 SECURITY","gold","rare",null]]},{"level":5,"cost":"5.35M","reqs":[["R3","gold","common",null],["BAL-CORE","gold","rare",12],["R4","gold","rare",null]]},{"level":6,"cost":"9.85M","reqs":[["2BB","diamond","rare",null],["BDX EXPLORER","diamond","rare",null],["GUNRUNNER","default","epic",22]]},{"level":7,"cost":"14.5M","reqs":[["R5","diamond","common",null],["ROLL-R","diamond","rare",null],["R2","gold","epic",13]]},{"level":8,"cost":"36M","reqs":[["R8","diamond","common",null],["B1 BATTLE","diamond","common",null],["B2 SUPER","gold","epic",11]]},{"level":9,"cost":"89M","reqs":[["NAV-EX","rainbow","rare",null],["STRIKE-ORB","gold","epic",21],["AMP WALKER","gold","epic",31]]},{"level":10,"cost":"220M","reqs":[["IMPERIAL PROBE","beskar","common",null],["GROUNDMECH","default","epic",12],["TRAK-R","default","epic",12]]},{"level":11,"cost":"550M","reqs":[["B2 HEAVY","default","epic",13],["B2 SUPER","default","epic",13],["UTIL-TEC","default","epic",14]]},{"level":12,"cost":"1.36B","reqs":[["BAL-CORE","rainbow","rare",null],["GROUNDMECH","gold","epic",14],["TRAK-R","gold","epic",14]]},{"level":13,"cost":"3.4B","reqs":[["B2 SUPER","gold","epic",15],["B2 HEAVY","gold","epic",15],["R2","diamond","epic",null]]},{"level":14,"cost":"8.45B","reqs":[["GROUNDMECH","diamond","epic",null],["TRAK-R","diamond","epic",32],["UTIL-TEC","rainbow","epic",33]]},{"level":15,"cost":"21B","reqs":[["B2 HEAVY","diamond","epic",null],["B2 SUPER","diamond","epic",null],["B2-RP","default","legendary",18]]},{"level":16,"cost":"52B","reqs":[["BB9","default","legendary",18],["R7","gold","legendary",18],["PROTO-ROLLER","gold","legendary",null]]},{"level":17,"cost":"130B","reqs":[["OPTI-STRK","default","legendary",19],["CYCLO-GRAV","gold","legendary",19],["MECHA-DROID","gold","legendary",19]]},{"level":18,"cost":"325B","reqs":[["BB9","gold","legendary",20],["B2-RP","gold","legendary",20],["R7","diamond","legendary",20]]},{"level":19,"cost":"810B","reqs":[["OPTI-STRK","diamond","legendary",24],["CYCLO-GRAV","diamond","legendary",23],["MECHA-DROID","rainbow","legendary",25]]},{"level":20,"cost":"2T","reqs":[["B2-RP","rainbow","legendary",23],["BB9","rainbow","legendary",23],["R7","rainbow","legendary",30]]},{"level":21,"cost":"3T","reqs":[["LO","beskar","epic",32],["STRIKE-ORB","beskar","epic",null],["HAUL-R","beskar","epic",34]]},{"level":22,"cost":"4.5T","reqs":[["SEN-TRI","beskar","epic",null],["R6","beskar","epic",null],["GUNRUNNER","beskar","epic",null]]},{"level":23,"cost":"6T","reqs":[["BB9","beskar","legendary",28],["CYCLO-GRAV","beskar","legendary",null],["B2-RP","beskar","legendary",null]]},{"level":24,"cost":"9T","reqs":[["MONO-WLKR","beskar","legendary",null],["OPTI-STRK","beskar","legendary",29],["MO-TRAK","default","mythic",28]]},{"level":25,"cost":"13.5T","reqs":[["MECHA-DROID","beskar","legendary",29],["RIC","default","mythic",28],["TRI-TEK","gold","mythic",33]]},{"level":26,"cost":"21T","reqs":[["CYCLENS","gold","mythic",30],["LEP","diamond","mythic",30],["SNOW MOUSE","rainbow","mythic",31]]},{"level":27,"cost":"32T","reqs":[["RIC-1200","diamond","mythic",35],["IG","rainbow","mythic",29],["LOADLIFTER","beskar","mythic",null]]},{"level":28,"cost":"45T","reqs":[["BB9","galactic","legendary",null],["RIC","rainbow","mythic",null],["MO-TRAK","beskar","mythic",35]]},{"level":29,"cost":"68T","reqs":[["MECHA-DROID","galactic","legendary",35],["OPTI-STRK","galactic","legendary",31],["IG","beskar","mythic",34]]},{"level":30,"cost":"100T","reqs":[["R7","galactic","legendary",33],["LEP","beskar","mythic",null],["CYCLENS","galactic","mythic",null]]},{"level":31,"cost":"150T","reqs":[["AMP WALKER","stellar","epic",null],["OPTI-STRK","beskar","legendary",null],["SNOW MOUSE","beskar","mythic",null]]},{"level":32,"cost":"230T","reqs":[["LO","galactic","epic",null],["TRAK-R","galactic","epic",null],["DRFT-R","beskar","mythic",null]]},{"level":33,"cost":"345T","reqs":[["UTIL-TEC","stellar","epic",null],["R7","galactic","legendary",null],["TRI-TEK","galactic","mythic",null]]},{"level":34,"cost":"520T","reqs":[["HAUL-R","stellar","epic",null],["LNG-SHOT","stellar","epic",null],["IG","galactic","mythic",null]]},{"level":35,"cost":"778T","reqs":[["MECHA-DROID","stellar","legendary",null],["RIC-1200","stellar","mythic",null],["MO-TRAK","stellar","mythic",null]]}]}};
@@ -626,43 +541,12 @@ const LIGHT={gold:1,diamond:1,rainbow:1,beskar:1,stellar:1};
    a cycle that never asks for more than diamond. The extra keys are harmless: every
    requirement lookup is still has(name,tier). */
 /* build screen tier chips: tapping the quality you already own clears it */
-function setHeld(name,tier){
-  setOwned(name, ownedTier(name)===tier ? null : tier);
-}
-
 function droidInfo(n){
   const L=ladder(n);
   return {n,L,rar:L[0].rar,
     held:L.filter(x=>has(n,x.t)).pop()||null,
     nextNeed:L.find(x=>!has(n,x.t))};
 }
-function buildRow(x,extra){
-  const status = !x.held
-    ? `<span class="bst none">DO NOT HAVE</span>`
-    : (x.nextNeed
-        ? `<span class="bst up">HAVE ${ABBR[x.held.t]} &middot; UPGRADE TO ${ABBR[x.nextNeed.t]}</span>`
-        : `<span class="bst done">FULLY UPGRADED</span>`);
-  const need = x.nextNeed
-    ? `<span class="bneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?'#14141c':'#fff'}">RB ${x.nextNeed.lvl}</span>`
-    : `<span class="bneed" style="background:#2a2a3a;color:var(--dim)">DONE</span>`;
-  return `<div class="brow ${x.held?'owned':''} ${extra||''}">
-    <div class="bhead">
-      <span class="gdot" style="background:${TC[(x.held||x.nextNeed||x.L[0]).t]}"></span>
-      <span class="bname">${x.n}</span>
-      <span class="brar" style="color:${RC[x.rar]}">${x.rar}</span>
-      <span class="bspace"></span>${need}
-    </div>
-    <div class="tstrip">${x.L.map(s=>{
-      const have=has(x.n,s.t);
-      const isNext=x.nextNeed&&x.nextNeed.t===s.t;
-      return `<button class="tchip ${have?'have':''} ${isNext?'next':''}"
-        data-d="${x.n}" data-t="${s.t}"
-        style="${have?`background:${TC[s.t]};color:${LIGHT[s.t]?'#14141c':'#fff'};border-color:transparent`:``}">
-        <i>${ABBR[s.t]}</i><u>RB${s.lvl}</u></button>`}).join("")}</div>
-    ${status}
-  </div>`;
-}
-
 function viewBuild(){
   const upto=Math.min(level+lookahead,35);
   const all=new Set(); rbs().forEach(rb=>rb.reqs.forEach(([n])=>all.add(n)));
@@ -834,7 +718,7 @@ function gameCard(rb,q){
           <span class="gmeta">
             <span class="gname">${n}</span>
             <span class="gtags"><b style="color:${TXT[t]}">${t}</b>
-              <b style="color:${RC[rar]}">${rar}</b></span>
+              <b class="grar">${rar}</b></span>
           </span>
           ${badge}
           <span class="gcheck">&#10003;</span>
@@ -1126,10 +1010,10 @@ function viewFuse(){
     f.ins.forEach(i=>counts[i]=(counts[i]||0)+1);
     const dupes=Object.keys(counts).filter(k=>counts[k]>1);
     const haveAll=f.ins.every(i=>ownedTier(i));
-    return `<div class="fcard ${haveAll?"ready":""}" style="--fr:${RC[f.rar]}">
+    return `<div class="fcard ${haveAll?"ready":""}">
       <div class="fhead">
         <span class="fname">${f.out}</span>
-        <span class="frar" style="color:${RC[f.rar]}">${f.rar}</span>
+        <span class="frar">${f.rar}</span>
         ${f.cls?`<span class="fcls">${CLS_LABEL[f.cls]}</span>`:``}
         <span class="bspace"></span>
         ${haveAll?`<span class="fready">HAVE THE PARTS</span>`:``}
@@ -1141,7 +1025,7 @@ function viewFuse(){
             <span class="fdot" style="background:${t?TC[t]:"#2a2a3a"}"></span>${i}
             ${t?`<b>${ABBR[t]}</b>`:``}</span>`}).join(`<span class="fplus">+</span>`)}
         <span class="farrow">&rarr;</span>
-        <span class="fout" style="background:${RC[f.rar]}">${f.out}</span>
+        <span class="fout">${f.out}</span>
       </div>
       ${dupes.length?`<div class="fnote">needs ${dupes.map(d=>counts[d]+"&times; "+d).join(", ")},
         and this tracker does not count copies</div>`:``}
@@ -1168,7 +1052,7 @@ function viewFuse(){
     </div>
 
     ${shown.length?groups.map(r=>`
-      <h2 style="color:${RC[r]}">${r} &middot; ${shown.filter(f=>f.rar===r).length}</h2>
+      <h2>${r} &middot; ${shown.filter(f=>f.rar===r).length}</h2>
       <div class="fgrid">${shown.filter(f=>f.rar===r).map(card).join("")}</div>`).join("")
       :`<div class="empty">No recipe matches &ldquo;${esc(fuseQ)}&rdquo;.</div>`}
 
@@ -1316,7 +1200,7 @@ function renderSettings(){
   const touched=[1,2,3,4,5].filter(c=>{const s=cycleStats(c);return s.made||s.level});
   el.innerHTML=`
     <div class="card" style="margin-top:14px">
-      <div style="font-weight:800;font-size:15px;margin-bottom:2px">Settings</div>
+      <div style="font-weight:700;font-size:var(--f4);margin-bottom:2px">Settings</div>
       <div class="sub" style="margin:6px 0 12px">Droids you own are shared across all five cycles,
         the way they are in the game. Only the rebirth number is per cycle. Everything is stored on
         this device only, nothing is sent anywhere. You own ${Object.keys(owned).length} droids.
@@ -1402,8 +1286,6 @@ document.body.addEventListener("click",e=>{
   if(bpb){ toggleAlert(bpb.dataset.bp); return }
   const qb=e.target.closest(".qbtn");
   if(qb){ e.stopPropagation(); openSheet(qb.dataset.q); return }
-  const tc=e.target.closest(".tchip");
-  if(tc){setHeld(tc.dataset.d,tc.dataset.t); render(); return}
   const req=e.target.closest(".req");
   if(req){
     const s=splitKey(req.dataset.k);

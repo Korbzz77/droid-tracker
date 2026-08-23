@@ -684,9 +684,10 @@ function viewBuild(){
 
   document.getElementById("v-build").innerHTML=`
     <h2>Build list</h2>
-    <div class="sub">One row per droid, split by class. Tap a droid's colour dot to set the
-      quality you own. You already own something of ${own} of the ${active.length} still open,
-      so do not rebuy those.</div>
+    <div class="sub">What cycle ${cycle} still needs, split by class. Tap a droid's
+      <b class="hi">colour dot</b> to set the quality you own.${own?` You already have
+      ${own===1?"one of these, so it only needs upgrading":`${own} of these, so they only need
+      upgrading`} rather than buying again.`:""}</div>
 
     <div class="btools">
       <div class="searchwrap">
@@ -702,8 +703,9 @@ function viewBuild(){
 
     ${shown.length
       ? `<div class="bcols">${["worker","astromech","battle"].map(column).join("")}</div>`
-      : `<div class="empty">No droid still open matches &ldquo;${searchQ.replace(/</g,"&lt;")}&rdquo;.<br>
-           It may already be maxed for this cycle.</div>`}
+      : `<div class="empty">Nothing cycle ${cycle} still needs matches
+           &ldquo;${searchQ.replace(/</g,"&lt;")}&rdquo;.<br>
+           You may already be done with it.</div>`}
 
     <button class="btn ghost" id="ownedBtn">
       ${showOwned?"Hide":"Show"} the ${q?maxed.length:maxedAll.length} nothing more is needed from</button>
@@ -767,16 +769,16 @@ function viewSell(){
 
   document.getElementById("v-sell").innerHTML=`
     <h2>Safe to sell &middot; ${sellable.length}</h2>
-    <div class="sub">Cycle ${cycle} does not ask for these again after rebirth ${level}.
-      Tap one to sell it and it stops counting as owned everywhere. If another cycle wants it
-      back later the row says so, but that is not a reason to hold it now.</div>
+    <div class="sub">Cycle ${cycle} is finished with these. Tap one to sell it, which clears it
+      everywhere. If another cycle wants it back later the row tells you, but you can always
+      buy it again.</div>
     ${sellable.length?`<div class="srows">${sellable.map(x=>row(x,"sellable","SELL","sell",
         "holding "+x.t+otherLabel(x.other))).join("")}</div>`
       :`<div class="empty">${emptyMsg}</div>`}
 
     <h2>Hold on to &middot; ${keep.length}</h2>
-    <div class="sub">Cycle ${cycle} still wants these. You can sell one anyway by tapping it,
-      and undo if that was a mistake.</div>
+    <div class="sub">Cycle ${cycle} still wants these. Tap one to sell it anyway, and undo if you
+      change your mind.</div>
     ${keep.length?`<div class="srows">${keep.map(x=>row(x,"","KEEP","keep",
         "holding "+x.t+" &rarr; "+needLabel(x.f))).join("")}</div>`
       :`<div class="empty">${ownCount===0
@@ -831,9 +833,9 @@ function viewAll(){
   const esc=s=>s.replace(/</g,"&lt;");
   document.getElementById("v-all").innerHTML=`
     <h2>Cycle ${cycle} roadmap</h2>
-    <div class="sub">Tap a droid to tick that one quality. Tap its
-      <b class="hi">colour dot</b> to set the quality you own, and everything at
-      or below it fills in across all five cycles.</div>
+    <div class="sub">Tap a droid's <b class="hi">colour dot</b> to set the quality you own.
+      Everything at or below it ticks itself, in all five cycles. Tapping the name instead
+      ticks just that one.</div>
     <div class="btools">
       <div class="searchwrap">
         <span class="si"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.1"/><path d="M12.4 12.4 16.8 16.8"/></svg></span>
@@ -1129,10 +1131,11 @@ function viewFuse(){
 
   document.getElementById("v-fuse").innerHTML=`
     <h2>Fusion recipes</h2>
-    <div class="sub">Three droids go into the Workshop's fusion machine. A known combination
-      makes a specific droid; anything else that qualifies gives a random one a rarity higher.
-      The result always comes out at the <b class="hi">lowest quality</b> of the
-      three you put in, so fusing a base into it wastes the good ones.</div>
+    <div class="sub">Three droids go into the Workshop's fusion machine. Match one of the
+      combinations below and you get that exact droid; anything else that qualifies gives you a
+      random droid one rarity up. Either way it comes out at the
+      <b class="hi">lowest quality</b> you put in, so never throw a base one in with two good
+      ones.</div>
 
     <div class="btools">
       <div class="searchwrap">

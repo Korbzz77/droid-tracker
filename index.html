@@ -395,6 +395,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .cst.none{color:var(--bad)}
 .cst.up{color:var(--warn);font-weight:600}
 .cst.done{color:var(--ok)}
+.cst.past{color:var(--dim2)}
 .cneed{flex:0 0 auto;font-size:var(--f0);font-weight:600;padding:4px 7px;border-radius:6px;
   white-space:nowrap}
 /* one stroke icon style, sized to the text it sits with */
@@ -597,14 +598,24 @@ const qdot=(n,t,cls)=>`<button class="qbtn" data-q="${n.replace(/"/g,"&quot;")}"
   aria-label="Set the quality you own of ${n.replace(/"/g,"&quot;")}"><span class="${cls||"dot"}"
   style="background:${TC[t]}"></span></button>`;
 
-/* every tier this droid is required at across the whole cycle, in level order */
+/* Every quality this droid is asked for in the cycle, keeping all the rebirths that ask,
+   not just the first. A quality wanted at rebirth 3 and again at 20 is still outstanding at
+   rebirth 10, and collapsing it to its earliest rebirth loses that. */
 function ladder(name){
-  const out=[];
-  rbs().forEach(rb=>rb.reqs.forEach(([n,t,rar])=>{ if(n===name) out.push({t,lvl:rb.level,rar}) }));
-  const seen=new Set();
-  return out.filter(x=>{const k=x.t; if(seen.has(k))return false; seen.add(k); return true})
-            .sort((a,b)=>TIERS.indexOf(a.t)-TIERS.indexOf(b.t));
+  const by={};
+  rbs().forEach(rb=>rb.reqs.forEach(([n,t,rar])=>{
+    if(n!==name) return;
+    (by[t]=by[t]||{t,rar,lvls:[]}).lvls.push(rb.level);
+  }));
+  return Object.values(by)
+    .map(x=>({...x,lvl:Math.min(...x.lvls)}))
+    .sort((a,b)=>TIERS.indexOf(a.t)-TIERS.indexOf(b.t));
 }
+/* the next rebirth above where you are that still asks for this quality, if any */
+const dueAbove=(entry,lv)=>{
+  const ahead=entry.lvls.filter(l=>l>lv);
+  return ahead.length?Math.min(...ahead):null;
+};
 const ABBR={default:"BASE",gold:"GOLD",diamond:"DIA",rainbow:"RBOW",beskar:"BESK",galactic:"GAL",stellar:"STEL"};
 const LIGHT={gold:1,diamond:1,rainbow:1,beskar:1,stellar:1};
 
@@ -620,9 +631,15 @@ const LIGHT={gold:1,diamond:1,rainbow:1,beskar:1,stellar:1};
 /* build screen tier chips: tapping the quality you already own clears it */
 function droidInfo(n){
   const L=ladder(n);
+  /* Only rebirths ahead of you count. Passing rebirth 34 means the droids rebirth 1 wanted
+     are history, whether or not you ever owned them, so they are not work any more.
+     nextNeed used to be the lowest quality you lacked anywhere in the cycle, which kept
+     showing RB 1 requirements to someone sitting on rebirth 34. */
+  const ahead=L.map(x=>({...x,lvl:dueAbove(x,level)}))
+               .filter(x=>x.lvl!==null);
   return {n,L,rar:L[0].rar,
     held:L.filter(x=>has(n,x.t)).pop()||null,
-    nextNeed:L.find(x=>!has(n,x.t))};
+    nextNeed:ahead.find(x=>!has(n,x.t))};
 }
 function viewBuild(){
   const upto=Math.min(level+lookahead,35);
@@ -641,9 +658,11 @@ function viewBuild(){
   /* One row per droid, two lines tall. Quality is set through the colour swatch, which opens
      the same picker as everywhere else, so the tall strip of tier chips is no longer needed. */
   const crow=(x,later)=>{
-    const st=!x.held ? `<span class="cst none">Do not have</span>`
-      : (x.nextNeed ? `<span class="cst up">Have ${ABBR[x.held.t]} &rarr; ${ABBR[x.nextNeed.t]}</span>`
-                    : `<span class="cst done">Fully upgraded</span>`);
+    const st = x.nextNeed
+      ? (x.held ? `<span class="cst up">Have ${ABBR[x.held.t]} &rarr; ${ABBR[x.nextNeed.t]}</span>`
+                : `<span class="cst none">Do not have</span>`)
+      : (x.held ? `<span class="cst done">Fully upgraded</span>`
+                : `<span class="cst past">Not needed again</span>`);
     const need=x.nextNeed
       ? `<span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">RB ${x.nextNeed.lvl}</span>`
       : `<span class="cneed done">DONE</span>`;
@@ -687,9 +706,9 @@ function viewBuild(){
            It may already be maxed for this cycle.</div>`}
 
     <button class="btn ghost" id="ownedBtn">
-      ${showOwned?"Hide":"Show"} droids already maxed for this cycle &middot; ${q?maxed.length:maxedAll.length}</button>
+      ${showOwned?"Hide":"Show"} the ${q?maxed.length:maxedAll.length} nothing more is needed from</button>
     ${showOwned?`
-      <h2>${maxed.length} maxed for cycle ${cycle}</h2>
+      <h2>${maxed.length} done for the rest of cycle ${cycle}</h2>
       <div class="bcols">${["worker","astromech","battle"].map(cls=>{
         const mine=maxed.filter(x=>DCLASS[x.n]===cls);
         return `<div><div class="bcolhead">${CLS_LABEL[cls]}<b>${mine.length}</b></div>

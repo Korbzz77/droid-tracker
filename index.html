@@ -69,12 +69,6 @@ h2{font-size:var(--f1);letter-spacing:1.4px;text-transform:uppercase;color:var(-
 /* hero: the one place that gets to be loud */
 .hero{position:relative;overflow:hidden;background:#1a1622;border-color:#3a3a4a;
   box-shadow:var(--sh3)}
-@supports(background:color-mix(in srgb,red,blue)){
-  .hero{background:linear-gradient(158deg,color-mix(in srgb,var(--accent) 22%,var(--card)),var(--card) 55%);
-    border-color:color-mix(in srgb,var(--accent) 30%,var(--line2));
-    box-shadow:var(--sh3),0 0 40px -12px color-mix(in srgb,var(--accent) 45%,transparent)}
-@media(min-width:900px){
-  .ncols{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
 .dot{width:13px;height:13px;border-radius:50%;display:inline-block;vertical-align:-2px;margin-right:8px;
   box-shadow:0 0 0 1.5px #0006 inset}
 .btn{background:var(--accent);color:var(--onAccent);border:0;border-radius:var(--r2);
@@ -146,39 +140,57 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
    Two columns only: .wrap caps content at 980px, so a third column would not add space,
    it would just narrow each card until the tier strip wrapped onto a second line.
    At two columns a card is ~472px and the widest strip in any cycle is five chips. */
-.blist{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:9px}
-@media(min-width:760px){.blist{grid-template-columns:1fr 1fr}}
 .bspace{flex:1}
+
+/* ---- in-game style rebirth chart ----
+   This screen is a chart, not a reading column, so it breaks out of the 980px measure the
+   rest of the app uses. Centring a wider child in a narrower parent means a negative margin
+   of (parent - child) / 2. That width is what buys the third and fourth column without
+   squeezing the droid names, which was the real reason it dropped to two. */
+.gwrap{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:700px){.gwrap{grid-template-columns:1fr 1fr}}
+@media(min-width:1040px){
+  .gwrap{grid-template-columns:repeat(3,minmax(0,1fr));
+    width:min(94vw,1560px);margin-left:calc((100% - min(94vw,1560px))/2)}
+}
+@media(min-width:1660px){.gwrap{grid-template-columns:repeat(4,minmax(0,1fr))}}
 /* min-width:0 or the grid tracks refuse to shrink below the rows' min-content width,
    which pushes the whole grid wider than its container */
-/* Thirty-five saturated fills was a wall of colour, and it forced dark-on-light rows in an
-   otherwise dark-on-dark app. Only the rebirth you are actually on gets the full accent. */
-.gcard{background:var(--card);border-radius:var(--r4);padding:10px;display:flex;gap:10px;
-  align-items:stretch;position:relative;box-shadow:var(--sh1);transition:box-shadow .2s;
+/* Deliberately the loudest screen in the app: it mirrors the in-game rebirth chart, where a
+   saturated card carrying dark rows is the whole visual idea. */
+.gcard{background:var(--accent);border-radius:var(--r4);padding:10px;display:flex;gap:10px;
+  align-items:stretch;position:relative;box-shadow:var(--sh2);transition:box-shadow .2s;
   min-width:0}
-.gcard.done{background:var(--bg2);box-shadow:none;opacity:.72}
-.gcard.next{background:var(--accent);box-shadow:0 0 34px -8px var(--accent),var(--sh2)}
-.gcard.next .gcost{color:var(--onAccent)}
-.gcard.next .gnum{background:rgba(0,0,0,.28);color:#fff}
-.gcard.next .gmade{background:rgba(0,0,0,.22);color:rgba(0,0,0,.66)}
-.gleft{flex:0 0 64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
-.gnum{background:var(--bg);border-radius:14px;width:64px;height:64px;display:grid;place-items:center;
-  font-size:28px;font-weight:800;color:var(--txt);letter-spacing:-1px;
+@supports(background:color-mix(in srgb,red,blue)){
+  .gcard{background:linear-gradient(158deg,color-mix(in srgb,var(--accent) 86%,#fff),
+    var(--accent) 62%)}
+}
+.gcard.done{background:linear-gradient(158deg,#313143,#252533)}
+.gcard.done .gcost{color:#bcbcca}
+.gcard.done .gnum{color:#d6d6e0}
+.gcard.done .gmade{background:rgba(0,0,0,.3);color:rgba(255,255,255,.62)}
+.gcard.next{box-shadow:0 0 0 3px rgba(255,255,255,.3),0 0 32px -4px var(--accent),var(--sh3)}
+.gleft{flex:0 0 62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.gnum{background:#0b0b12;border-radius:15px;width:62px;height:62px;display:grid;place-items:center;
+  font-size:27px;font-weight:800;color:#fff;letter-spacing:-1px;
   font-variant-numeric:tabular-nums}
-.gcost{font-size:var(--f0);font-weight:600;color:var(--dim);letter-spacing:.3px;
-  font-variant-numeric:tabular-nums}
+.gcost{font-size:var(--f0);font-weight:700;color:#fff;letter-spacing:.3px;
+  font-variant-numeric:tabular-nums;text-shadow:0 1px 2px rgba(0,0,0,.35)}
 .grows{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
-.grow{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:12px;
+.grow{display:flex;align-items:center;gap:8px;background:#0b0b12;border-radius:12px;
   padding:8px;cursor:pointer;border:1.5px solid transparent;min-width:0;
   transition:background .15s,border-color .15s,transform .1s}
-.grow.have{border-color:rgba(53,208,127,.5);background:var(--bg2)}
+.grow.have{border-color:var(--ok);background:#0c1c15}
 .grow.qmatch{box-shadow:0 0 0 2px var(--accent),0 0 14px -4px var(--accent)}
 .grow:active{transform:scale(.98);background:#1b1b27}
 .gdot{width:15px;height:15px;flex:0 0 15px;border-radius:50%;box-shadow:0 0 0 1.5px #0006 inset}
+/* the chart rows are the tightest place in the app, so the swatch keeps its 44px height but
+   gives back horizontal room; SENATE HOVERCAM is the name that decides this */
+.gcard .qbtn{min-width:32px;margin:-8px 0 -8px -5px}
+.gcard .gname{font-size:13.5px}
 .gmeta{flex:1;min-width:0;display:block}
 .gname{display:block;font-size:var(--f3);font-weight:700;letter-spacing:.2px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
 .gtags{display:block;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
   margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gtags b{margin-right:6px;font-weight:600}
@@ -186,13 +198,13 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 .gb{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;border-radius:9px;
   padding:5px 9px;font-size:var(--f1);font-weight:600;letter-spacing:.2px}
 .gbi{font-style:normal;font-size:var(--f0);opacity:.85}
-.gsell{background:transparent;color:var(--dim2);border:1px solid var(--line2);font-size:var(--f0)}
+.gsell{background:#0b0b12;color:#fff;border:1.5px solid #33334a;font-size:var(--f0)}
 .gcheck{flex:0 0 auto;color:var(--ok);font-weight:900;font-size:14px;width:0;overflow:hidden;
   transition:width .16s}
 .grow.have .gcheck{width:15px}
-.gmade{font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.5px;
-  background:var(--bg2);border-radius:7px;padding:3px 8px;font-variant-numeric:tabular-nums}
-.gmade.ok{background:rgba(53,208,127,.14);color:var(--ok)}
+.gmade{font-size:10px;font-weight:700;color:rgba(0,0,0,.72);letter-spacing:.5px;
+  background:rgba(0,0,0,.2);border-radius:7px;padding:3px 8px;font-variant-numeric:tabular-nums}
+.gmade.ok{background:#0b3a24;color:#5cf0a8}
 .gear{font-size:17px;line-height:1;padding:9px 11px;cursor:pointer;background-image:none}
 .srow{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line2)}
 .sname{font-weight:600;font-size:var(--f3);margin-bottom:4px}
@@ -1306,8 +1318,6 @@ document.body.addEventListener("click",e=>{
     const warn=f.length ? ` Cycle ${cycle} wants it again at rebirth ${f[0].lvl}.` : "";
     toast(`${n} sold.${warn}`,"Undo",()=>{ setOwned(n,prev); render() });
     return}
-  const head=e.target.closest(".rbhead");
-  if(head){head.parentElement.classList.toggle("open"); return}
 });
 
 document.getElementById("sheetBg").onclick=closeSheet;

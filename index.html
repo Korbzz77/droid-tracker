@@ -370,14 +370,21 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
   border:1px solid transparent;border-radius:var(--r1);padding:8px 9px;margin-top:7px;
   min-width:0;box-shadow:var(--sh1)}
 .crow.later{background:var(--bg2);opacity:.62}
-.crow.owned{border-color:#3a4a5e}
+/* Owning a droid and needing to upgrade it is a completely different job from not having
+   one at all, so the row carries a stripe and a lit dot, not just a differently coloured
+   word. The dot used to show the next needed tier even when you owned nothing, which made
+   an empty row look identical to a filled one. */
+.crow.owned{background:rgba(255,204,51,.07);box-shadow:inset 3px 0 0 var(--warn),var(--sh1)}
+.crow.done{box-shadow:inset 3px 0 0 rgba(53,208,127,.45),var(--sh1)}
+.crow:not(.owned):not(.done) .gdot{opacity:.26}
+.crow.owned .cname{color:var(--txt)}
 .cmeta{flex:1;min-width:0}
 .cname{display:block;font-weight:600;font-size:var(--f2);letter-spacing:.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cst{display:block;font-size:var(--f0);font-weight:500;letter-spacing:.3px;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cst.none{color:var(--bad)}
-.cst.up{color:var(--warn)}
+.cst.up{color:var(--warn);font-weight:600}
 .cst.done{color:var(--ok)}
 .cneed{flex:0 0 auto;font-size:var(--f0);font-weight:600;padding:4px 7px;border-radius:6px;
   white-space:nowrap}
@@ -607,7 +614,7 @@ function viewBuild(){
     const need=x.nextNeed
       ? `<span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">RB ${x.nextNeed.lvl}</span>`
       : `<span class="cneed" style="background:#2a2a3a;color:var(--dim)">DONE</span>`;
-    return `<div class="crow ${x.held?"owned":""} ${later?"later":""}">
+    return `<div class="crow ${x.held?(x.nextNeed?"owned":"done"):""} ${later?"later":""}">
       ${qdot(x.n,(x.held||x.nextNeed||x.L[0]).t,"gdot")}
       <span class="cmeta"><span class="cname">${x.n}</span>${st}</span>${need}</div>`;
   };

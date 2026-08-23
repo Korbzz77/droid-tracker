@@ -372,9 +372,9 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .crow.later{background:var(--bg2);opacity:.62}
 .crow.owned{border-color:#3a4a5e}
 .cmeta{flex:1;min-width:0}
-.cname{font-weight:600;font-size:var(--f2);letter-spacing:.2px;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis}
-.cst{font-size:var(--f0);font-weight:500;letter-spacing:.3px;margin-top:2px;
+.cname{display:block;font-weight:600;font-size:var(--f2);letter-spacing:.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cst{display:block;font-size:var(--f0);font-weight:500;letter-spacing:.3px;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cst.none{color:var(--bad)}
 .cst.up{color:var(--warn)}
@@ -618,7 +618,7 @@ function viewBuild(){
     return `<div>
       <div class="bcolhead">${CLS_LABEL[cls]}<b>${mine.length}</b></div>
       ${due.map(x=>crow(x)).join("")||`<div class="mini" style="padding:10px 2px">Nothing due.</div>`}
-      ${later.length?`<div class="mini" style="padding:12px 2px 2px">Later in cycle ${cycle} &middot; ${later.length}</div>
+      ${later.length?`<div class="mini" style="padding:12px 2px 2px">${later.length} needed later in cycle ${cycle}</div>
         ${later.map(x=>crow(x,true)).join("")}`:""}
     </div>`;
   };
@@ -649,7 +649,7 @@ function viewBuild(){
     <button class="btn ghost" id="ownedBtn">
       ${showOwned?"Hide":"Show"} droids already maxed for this cycle &middot; ${q?maxed.length:maxedAll.length}</button>
     ${showOwned?`
-      <h2>Maxed for cycle ${cycle} &middot; ${maxed.length}</h2>
+      <h2>${maxed.length} maxed for cycle ${cycle}</h2>
       <div class="bcols">${["worker","astromech","battle"].map(cls=>{
         const mine=maxed.filter(x=>DCLASS[x.n]===cls);
         return `<div><div class="bcolhead">${CLS_LABEL[cls]}<b>${mine.length}</b></div>

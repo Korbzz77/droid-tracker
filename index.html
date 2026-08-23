@@ -105,6 +105,13 @@ h2{font-size:var(--f1);letter-spacing:1.4px;text-transform:uppercase;color:var(-
 .row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--r2);
   background:var(--card);border:1px solid transparent;margin-bottom:8px}
 .row.sellable{border-color:rgba(255,84,112,.4);background:rgba(255,84,112,.06)}
+/* the sell lists are scan-and-tap, so they get columns like the build list rather than
+   one 980px row per droid with the content sitting in the left third */
+.srows{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:8px}
+@media(min-width:720px){.srows{grid-template-columns:1fr 1fr}}
+@media(min-width:1120px){.srows{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.srows .row{margin-bottom:0;min-width:0;align-items:flex-start}
+.srows .row .mini{white-space:normal;line-height:1.45}
 .row.tap{cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
 .row.tap:active{transform:scale(.99);background:var(--card3)}
 @media(hover:hover){.row.tap:hover{border-color:var(--dim2)}}
@@ -290,48 +297,60 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 .bpalert .bclose{margin-left:auto;font-weight:600;font-size:var(--f2);opacity:.7;
   border:1.5px solid #0d0d1447;border-radius:99px;padding:7px 13px;white-space:nowrap}
 
-/* blueprint countdowns */
-.bps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
-.bp{background:var(--card);border:0;border-left:3px solid var(--bp);
-  border-radius:var(--r2);padding:10px 11px;min-width:0;box-shadow:var(--sh1);
-  transition:border-color .2s,background .2s,transform .1s;
-  font-family:inherit;text-align:left;color:var(--txt);cursor:pointer;display:block;width:100%}
-.bp:active{transform:scale(.97)}
-.bp.armed{border-color:var(--bp);box-shadow:var(--sh1),0 0 0 1px var(--bp),0 0 16px -6px var(--bp)}
-.bp.armed .bpat{color:var(--bp);font-weight:600}
-.bp.soon{background:color-mix(in srgb,var(--bp) 13%,var(--card));
-  border-color:color-mix(in srgb,var(--bp) 45%,var(--line))}
-@supports not (background:color-mix(in srgb,red,blue)){.bp.soon{background:var(--card2)}}
-.bpname{font-size:var(--f0);font-weight:600;letter-spacing:.9px;text-transform:uppercase;
-  color:var(--bp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bptime{font-size:var(--f6);font-weight:800;letter-spacing:-.5px;margin-top:3px;
-  font-variant-numeric:tabular-nums}
-.bpat{font-size:var(--f0);color:var(--dim);font-weight:600;margin-top:1px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* blueprint countdowns, in the header */
+.hbps{display:flex;gap:6px;align-items:center}
+.hbp{display:inline-flex;align-items:center;gap:6px;background:var(--card2);
+  border:1px solid transparent;border-radius:99px;padding:0 11px;min-height:38px;
+  cursor:pointer;font-family:inherit;font-size:var(--f1);font-weight:600;color:var(--dim);
+  transition:background .18s,border-color .18s,color .18s,transform .1s}
+.hbp:active{transform:scale(.96)}
+.hbp i{font-style:normal;font-weight:800;font-size:var(--f2);color:var(--bp);letter-spacing:.5px}
+.hbp span{font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.hbp.armed{border-color:var(--bp);color:var(--txt)}
+.hbp.soon{background:var(--bp);color:#14141c;border-color:var(--bp)}
+.hbp.soon i{color:#14141c}
+@media(hover:hover){.hbp:hover{color:var(--txt)}}
+/* on a phone the header cannot hold the logo, three timers and the pickers on one line,
+   so the timers take a row of their own underneath */
+@media(max-width:759px){
+  .hrow{flex-wrap:wrap}
+  .hbps{order:5;flex-basis:100%;margin-top:9px;gap:7px}
+  .hbp{flex:1;justify-content:center}
+  .spacer{order:1}
+}
 
 /* fusion */
 .fgrid{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:6px}
 @media(min-width:760px){.fgrid{grid-template-columns:1fr 1fr}}
-.fcard{background:var(--card);border:0;
-  border-radius:var(--r2);padding:11px 12px;min-width:0;box-shadow:var(--sh1)}
-.fcard.ready{border-color:rgba(53,208,127,.45);background:rgba(53,208,127,.05)}
+@media(min-width:1220px){.fgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.fcard{background:var(--card);border:0;border-radius:var(--r2);padding:11px 12px;
+  min-width:0;box-shadow:var(--sh1)}
+.fcard.ready{background:rgba(53,208,127,.07);box-shadow:inset 3px 0 0 var(--ok),var(--sh1)}
 .fhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
 .fname{font-weight:700;font-size:var(--f4);letter-spacing:.2px}
 .frar{font-size:var(--f0);font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--dim2)}
 .fcls{font-size:var(--f0);font-weight:500;color:var(--dim2);letter-spacing:.5px;text-transform:uppercase}
 .fready{font-size:var(--f0);font-weight:600;letter-spacing:.5px;color:var(--ok)}
+.fhave{font-size:var(--f0);font-weight:600;letter-spacing:.4px;color:var(--dim2);
+  font-variant-numeric:tabular-nums}
 .fins{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.fin{display:inline-flex;align-items:center;gap:6px;background:var(--card2);
-  border:0;border-radius:8px;padding:6px 10px;
-  font-size:var(--f1);font-weight:500;color:var(--dim);white-space:nowrap}
-.fin.got{color:var(--txt);font-weight:600;background:var(--card3)}
+/* An ingredient you have and one you do not should differ in shape, not just shade: a
+   missing one is an empty dashed outline with a faded dot, one you own is filled and
+   ticked. Two greys a few steps apart was not readable at a glance. */
+.fin{display:inline-flex;align-items:center;gap:6px;background:transparent;
+  border:1px dashed var(--line2);border-radius:8px;padding:5px 9px;
+  font-size:var(--f1);font-weight:500;color:var(--dim2);white-space:nowrap}
+.fin .fdot{opacity:.3}
+.fin.got{background:var(--card3);border:1px solid transparent;color:var(--txt);font-weight:600}
+.fin.got .fdot{opacity:1}
+.fin.got::after{content:"✓";color:var(--ok);font-weight:700;font-size:11px;margin-left:2px}
 .fin b{font-size:var(--f0);font-weight:600;opacity:.6;letter-spacing:.4px}
 .fdot{width:11px;height:11px;border-radius:50%;flex:0 0 11px;box-shadow:0 0 0 1.5px #0006 inset}
 .fplus,.farrow{color:var(--dim2);font-weight:500;font-size:var(--f1)}
 .fout{display:inline-flex;align-items:center;border-radius:8px;padding:6px 11px;
   font-size:var(--f1);font-weight:700;color:var(--onAccent);background:var(--accent);
   white-space:nowrap}
-.fnote{font-size:var(--f0);color:var(--dim2);font-weight:600;margin-top:8px;line-height:1.5}
+.fnote{font-size:var(--f0);color:var(--dim2);font-weight:500;margin-top:8px;line-height:1.5}
 
 /* compact build rows, grouped into a column per droid class */
 .bcols{display:grid;grid-template-columns:1fr;gap:0 16px;align-items:start}
@@ -384,6 +403,7 @@ nav button:hover{color:var(--txt)}
   <div class="hrow">
     <div class="logo">DROID<span>TYCOON</span></div>
     <div class="spacer"></div>
+    <div class="hbps" id="hbps"></div>
     <select class="sel" id="cycleSel"></select>
     <select class="sel" id="lvlSel" title="Rebirth you are on"></select>
     <button class="sel gear" id="gearBtn" title="Settings" aria-label="Settings">&#9881;</button>
@@ -686,15 +706,15 @@ function viewSell(){
     <div class="sub">Cycle ${cycle} does not ask for these again after rebirth ${level}.
       Tap one to sell it and it stops counting as owned everywhere. If another cycle wants it
       back later the row says so, but that is not a reason to hold it now.</div>
-    ${sellable.length?sellable.map(x=>row(x,"sellable","SELL","var(--bad)",
-        "rgba(255,84,112,.15)","holding "+x.t+otherLabel(x.other))).join("")
+    ${sellable.length?`<div class="srows">${sellable.map(x=>row(x,"sellable","SELL","var(--bad)",
+        "rgba(255,84,112,.15)","holding "+x.t+otherLabel(x.other))).join("")}</div>`
       :`<div class="empty">${emptyMsg}</div>`}
 
     <h2>Hold on to &middot; ${keep.length}</h2>
     <div class="sub">Cycle ${cycle} still wants these. You can sell one anyway by tapping it,
       and undo if that was a mistake.</div>
-    ${keep.length?keep.map(x=>row(x,"","KEEP","var(--warn)",
-        "rgba(255,204,51,.15)","holding "+x.t+" &rarr; "+needLabel(x.f))).join("")
+    ${keep.length?`<div class="srows">${keep.map(x=>row(x,"","KEEP","var(--warn)",
+        "rgba(255,204,51,.15)","holding "+x.t+" &rarr; "+needLabel(x.f))).join("")}</div>`
       :`<div class="empty">${ownCount===0
           ? "Nothing owned yet."
           : `Cycle ${cycle} is done with every droid you own. All ${ownCount} are safe to sell.`}</div>`}`;
@@ -746,7 +766,6 @@ function viewAll(){
   const shown=q?all.filter(rb=>rb.reqs.some(r=>r[0].indexOf(q)>-1)):all;
   const esc=s=>s.replace(/</g,"&lt;");
   document.getElementById("v-all").innerHTML=`
-    ${blueprintHTML()}
     <h2>Cycle ${cycle} roadmap</h2>
     <div class="sub">Same layout as the in-game rebirth chart. Tap a droid to tick just that
       one quality. Tap its <b style="color:var(--txt)">colour dot</b> to say what quality you
@@ -865,8 +884,7 @@ function toggleAlert(id){
   else { bpAlerts[id]=true; unlockAudio(); }
   store.set("dt_bp_alerts",bpAlerts);
   const b=BLUEPRINTS.find(x=>x.id===id);
-  const card=document.getElementById("bpc-"+id);
-  if(card) card.classList.toggle("armed",!!bpAlerts[id]);
+  paintBlueprintChips();
   tickBlueprints();
   toast(bpAlerts[id]
     ? `${b.label} alert on. You will get a warning ${BP_LEAD/1000} seconds before every spawn.`
@@ -885,18 +903,18 @@ function showBpAlert(b){
   el.classList.add("on");
   beep(2);
 }
-function blueprintHTML(){
-  return `<h2>Blueprint spawns</h2>
-    <div class="sub" style="margin-top:-2px">Tap one to be warned ${BP_LEAD/1000} seconds
-      before it spawns, on whichever screen you are on.</div>
-    <div class="bps">${BLUEPRINTS.map(b=>`
-      <button class="bp ${bpAlerts[b.id]?"armed":""}" id="bpc-${b.id}" data-bp="${b.id}"
-        style="--bp:${b.col}">
-        <div class="bpname">${b.label}</div>
-        <div class="bptime" id="bp-${b.id}">--:--</div>
-        <div class="bpat" id="bpat-${b.id}">--</div>
-      </button>`).join("")}</div>`;
+/* Rendered once into the header instead of into a view, so the countdowns are on screen
+   whatever page you are on and never get torn down by a re-render. */
+function paintBlueprintChips(){
+  const el=document.getElementById("hbps");
+  if(!el) return;
+  el.innerHTML=BLUEPRINTS.map(b=>`
+    <button class="hbp ${bpAlerts[b.id]?"armed":""}" id="bpc-${b.id}" data-bp="${b.id}"
+      style="--bp:${b.col}" title="${b.label} blueprint">
+      <i>${b.label[0]}</i><span id="bp-${b.id}">--:--</span>
+    </button>`).join("");
 }
+
 /* only the numbers are rewritten each second, never the view, so nothing else loses focus */
 function tickBlueprints(){
   const now=new Date();
@@ -1028,7 +1046,8 @@ function viewFuse(){
         <span class="frar">${f.rar}</span>
         ${f.cls?`<span class="fcls">${CLS_LABEL[f.cls]}</span>`:``}
         <span class="bspace"></span>
-        ${haveAll?`<span class="fready">HAVE THE PARTS</span>`:``}
+        ${haveAll?`<span class="fready">HAVE ALL 3</span>`
+                 :`<span class="fhave">${f.ins.filter(i=>ownedTier(i)).length} of 3</span>`}
       </div>
       <div class="fins">
         ${f.ins.map(i=>{
@@ -1282,6 +1301,10 @@ function renderSettings(){
 }
 
 function render(){
+  /* Measured here as well as from the observer: the sticky filter bar reads --hh, and a
+     wrong value parks it away from the header edge. render() runs on every view and state
+     change, and the cost is one offsetHeight read. */
+  syncHeaderH();
   ["all","build","sell","fuse"].forEach(v=>document.getElementById("v-"+v).classList.toggle("hide",v!==view));
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===view));
   if(view==="all")viewAll(); if(view==="build")viewBuild();
@@ -1352,10 +1375,17 @@ function syncHeaderH(){
   const h=document.querySelector("header");
   if(h) document.documentElement.style.setProperty("--hh",h.offsetHeight+"px");
 }
+/* Watch the element rather than the window. The header grows a second row when the
+   blueprint chips wrap on a narrow screen, and it can also change after fonts load, neither
+   of which fires a resize. A stale --hh pins the sticky filter bar at the wrong offset. */
+if(window.ResizeObserver){
+  const hEl=document.querySelector("header");
+  if(hEl) new ResizeObserver(syncHeaderH).observe(hEl);
+}
 addEventListener("resize",syncHeaderH);
 addEventListener("orientationchange",()=>setTimeout(syncHeaderH,250));
 
-applyTheme(); buildLvlSel(); render(); syncHeaderH();
+applyTheme(); buildLvlSel(); paintBlueprintChips(); render(); tickBlueprints(); syncHeaderH();
 
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   /* Registering alone was not enough: a home screen app that iOS keeps suspended can go on

@@ -240,6 +240,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
   border-radius:var(--r1);padding:10px 14px;font-weight:600;font-size:var(--f2);cursor:pointer;
   font-family:inherit;transition:background .15s,transform .1s}
 .sbtn:active{transform:scale(.96);background:var(--card3)}
+a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 
 /* non-blocking confirmation, sits above the nav and gets out of the way on its own */
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);z-index:40;
@@ -1364,6 +1365,12 @@ function renderSettings(){
             cycle back to rebirth 0. This cannot be undone.</div></div>
         <button class="rbtn ${pending==="all"?"armed":""}" data-reset="all">
           ${pending==="all"?"Tap again to confirm":"Start over"}</button>
+      </div>
+
+      <div class="srow">
+        <div><div class="sname">How to use this</div>
+          <div class="mini">A short guide you can send to anyone. Opens in this app.</div></div>
+        <a class="sbtn" href="guide.html">Open</a>
       </div>
 
       <button class="btn ghost" id="closeSet">Close</button>

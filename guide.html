@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111119">
+<meta name="description" content="How to install and use the Droid Tycoon rebirth tracker: setup, the colour dot, the four screens, blueprint alerts and backups.">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>How to use the Droid Tycoon rebirth tracker</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  /* Light is the base set; dark redefines the same tokens twice so the un-stamped
+     system state and an explicit toggle both resolve correctly. */
+  :root{
+    --ground:#f5f5f8;
+    --surface:#ffffff;
+    --surface-2:#eeeef3;
+    --line:#dedee6;
+    --ink:#16161e;
+    --ink-2:#54546a;
+    --ink-3:#7c7c92;
+    --accent:#e2620a;
+    --accent-ink:#ffffff;
+    --ok:#1d8a55;
+    --ok-bg:#e4f5ec;
+    --warn:#8a6300;
+    --warn-bg:#fbf1d8;
+    --shadow:0 1px 2px rgba(20,20,35,.06), 0 8px 24px -14px rgba(20,20,35,.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#111119;
+      --surface:#1b1b25;
+      --surface-2:#22222e;
+      --line:#2e2e3c;
+      --ink:#e8e8ef;
+      --ink-2:#a3a3b4;
+      --ink-3:#7c7c8e;
+      --accent:#ff8a33;
+      --accent-ink:#1a0d02;
+      --ok:#4fd894;
+      --ok-bg:rgba(53,208,127,.12);
+      --warn:#ffcc4d;
+      --warn-bg:rgba(255,204,51,.12);
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#111119;
+    --surface:#1b1b25;
+    --surface-2:#22222e;
+    --line:#2e2e3c;
+    --ink:#e8e8ef;
+    --ink-2:#a3a3b4;
+    --ink-3:#7c7c8e;
+    --accent:#ff8a33;
+    --accent-ink:#1a0d02;
+    --ok:#4fd894;
+    --ok-bg:rgba(53,208,127,.12);
+    --warn:#ffcc4d;
+    --warn-bg:rgba(255,204,51,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    margin:0;
+    padding:0 20px 72px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+
+  h1,h2,h3{font-family:"Chakra Petch","IBM Plex Sans",sans-serif;text-wrap:balance;margin:0}
+  h1{font-size:clamp(30px,6vw,44px);font-weight:700;line-height:1.08;letter-spacing:-.01em}
+  h2{font-size:22px;font-weight:700;letter-spacing:.01em}
+  h3{font-size:16px;font-weight:600}
+  p{margin:0}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  }
+
+  /* masthead */
+  .top{padding-top:56px;display:flex;flex-direction:column;gap:18px}
+  .lede{font-size:18px;color:var(--ink-2);max-width:56ch}
+  .cta{
+    display:flex;flex-wrap:wrap;align-items:center;gap:14px;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;box-shadow:var(--shadow);
+  }
+  .cta .url{
+    font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600;
+    color:var(--accent);word-break:break-all;text-decoration:none;
+  }
+  .cta .note{font-size:14px;color:var(--ink-3);margin-left:auto}
+
+  section{display:flex;flex-direction:column;gap:18px}
+  .section-head{display:flex;flex-direction:column;gap:6px}
+  .section-head p{color:var(--ink-2);max-width:60ch}
+
+  /* install: a genuine ordered sequence, so it gets numbers */
+  ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+  ol.steps li{
+    counter-increment:s;position:relative;padding:14px 16px 14px 56px;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  }
+  ol.steps li::before{
+    content:counter(s);position:absolute;left:16px;top:13px;
+    width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    background:var(--accent);color:var(--accent-ink);
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;
+  }
+  ol.steps strong{font-weight:600}
+  ol.steps .sub{display:block;color:var(--ink-2);font-size:14.5px;margin-top:3px}
+
+  /* the four screens are parallel, not sequential, so they are labelled not numbered */
+  .screens{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:620px){.screens{grid-template-columns:1fr 1fr}}
+  .screen{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;display:flex;flex-direction:column;gap:7px;
+  }
+  .screen .tab{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+    letter-spacing:.14em;color:var(--accent);
+  }
+  .screen p{font-size:14.5px;color:var(--ink-2)}
+
+  .callout{
+    background:var(--surface);border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:12px;
+    padding:18px 20px;display:flex;flex-direction:column;gap:9px;
+  }
+  .callout.good{border-left-color:var(--ok);background:var(--ok-bg)}
+  .callout.warn{border-left-color:var(--warn);background:var(--warn-bg)}
+  .callout p{color:var(--ink-2);font-size:15px}
+  .callout h3{color:var(--ink)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+  .chip{
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;
+    background:var(--surface-2);color:var(--ink-2);
+    border-radius:999px;padding:6px 12px;font-variant-numeric:tabular-nums;
+  }
+  .chip b{color:var(--ink);font-weight:600}
+
+  .ladder{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:4px}
+  .ladder span{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+    padding:5px 10px;border-radius:7px;background:var(--surface-2);color:var(--ink-2);
+  }
+  .ladder i{color:var(--ink-3);font-style:normal;font-size:12px}
+
+  dl.faq{margin:0;display:flex;flex-direction:column;gap:14px}
+  dl.faq dt{font-weight:600;margin-bottom:3px}
+  dl.faq dd{margin:0;color:var(--ink-2);font-size:15px}
+
+  footer{
+    border-top:1px solid var(--line);padding-top:20px;
+    color:var(--ink-3);font-size:14px;display:flex;flex-direction:column;gap:6px;
+  }
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+  .back{
+    display:inline-block;margin:24px 0 -18px;font-size:14px;font-weight:500;
+    color:var(--ink-3);text-decoration:none;
+  }
+  .back:hover{color:var(--accent)}
+</style>
+
+<div class="page">
+
+  <a class="back" href="./">&larr; Back to the tracker</a>
+
+  <header class="top">
+    <span class="eyebrow">Fortnite · Droid Tycoon</span>
+    <h1>Rebirth tracker</h1>
+    <p class="lede">Every requirement for all five rebirth cycles, what to build next,
+      what's safe to sell, and the fusion recipes. Free, no signup, works offline.</p>
+    <div class="cta">
+      <a class="url" href="https://korbzz77.github.io/droid-tracker/">korbzz77.github.io/droid-tracker</a>
+      <span class="note">Open it in a browser first</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Put it on your home screen</span>
+      <h2>Install</h2>
+      <p>It's a web app, so there's no App Store or Play Store step. Adding it to your home
+        screen gives it an icon, drops the browser bars, and lets it work with no signal.</p>
+    </div>
+    <ol class="steps">
+      <li><strong>Open the link above.</strong>
+        <span class="sub">On iPhone or iPad this has to be <strong>Safari</strong> — Chrome on iOS can't install it.
+          On Android use Chrome.</span></li>
+      <li><strong>Tap the Share button</strong>, or the ⋮ menu on Android.
+        <span class="sub">Share is the square with an arrow coming out of the top.</span></li>
+      <li><strong>Choose "Add to Home Screen", then Add.</strong>
+        <span class="sub">Done. Open it from the icon from now on.</span></li>
+    </ol>
+    <p style="color:var(--ink-3);font-size:14.5px">You can skip all of that and just use it in
+      the browser — everything works, you only lose the offline part.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Do this once</span>
+      <h2>First run</h2>
+    </div>
+    <div class="callout good">
+      <h3>Tell it where you are, and it fills itself in</h3>
+      <p>Top right, set your <strong>Cycle</strong>, then set your <strong>RB</strong> number.
+        On a fresh app that ticks off every droid the game asked for on the way there — usually
+        20 or 30 of them — so you're not entering your whole collection by hand.</p>
+      <p>Then fix the exceptions: anything you sold, and anything you're further ahead on than
+        the requirements demanded.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">The one thing that isn't obvious</span>
+      <h2>The colour dot</h2>
+      <p>Every droid has a small coloured dot next to its name. That dot is a button.</p>
+    </div>
+    <div class="callout">
+      <h3>Tap it to say what quality you own</h3>
+      <p>Pick a quality and every requirement at or below it fills in automatically — across
+        all five cycles, because in the game you own one droid at one quality and it counts
+        everywhere.</p>
+      <div class="ladder">
+        <span>BASE</span><i>→</i><span>GOLD</span><i>→</i><span>DIA</span><i>→</i>
+        <span>RBOW</span><i>→</i><span>BESK</span><i>→</i><span>GAL</span><i>→</i><span>STEL</span>
+      </div>
+      <p style="margin-top:4px">So if you own a galactic A-LT, tapping the dot and choosing
+        <strong>GAL</strong> satisfies the base one at rebirth 3 and the diamond one at rebirth 6
+        in a single tap.</p>
+    </div>
+    <p style="color:var(--ink-2);font-size:15px">Tapping the droid's <em>name</em> instead just
+      ticks that one quality, which is handy for a quick correction.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Four tabs in the header</span>
+      <h2>The screens</h2>
+    </div>
+    <div class="screens">
+      <div class="screen">
+        <span class="tab">ROADMAP</span>
+        <h3>The whole cycle</h3>
+        <p>The same chart as in game, all 35 rebirths. Search it to find which rebirths want a
+          particular droid.</p>
+      </div>
+      <div class="screen">
+        <span class="tab">BUILD</span>
+        <h3>What to make next</h3>
+        <p>Split into Worker, Astromech and Battle columns, and only ever lists rebirths still
+          ahead of you — so it gets shorter as you go. Each row says whether it's a fresh buy or
+          an upgrade, and the ones you part-own carry an amber stripe.</p>
+      </div>
+      <div class="screen">
+        <span class="tab">SELL</span>
+        <h3>What you can let go</h3>
+        <p>Splits what you own into safe to sell and hold on to, based on the cycle you're
+          playing. Tap a droid to sell it; there's an undo if you misfire.</p>
+      </div>
+      <div class="screen">
+        <span class="tab">FUSION</span>
+        <h3>All 17 recipes</h3>
+        <p>Colour-coded by rarity. Ingredients you own are filled and ticked, missing ones are
+          outlined, and anything you can make right now gets a green <em>Ready</em> flag and
+          jumps to the top of its group.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Top of every screen</span>
+      <h2>Blueprint timers</h2>
+      <p>Three countdowns live in the header, so they're visible wherever you are in the app.</p>
+    </div>
+    <div class="chips">
+      <span class="chip"><b>S</b> Stellar · on the hour</span>
+      <span class="chip"><b>M</b> Mythic · at :55</span>
+      <span class="chip"><b>G</b> Galactic · at :15 and :45</span>
+    </div>
+    <p style="color:var(--ink-2);font-size:15px"><strong>Tap one to get a warning 20 seconds
+      before it spawns</strong> — a banner drops in and it beeps, whatever screen you're on.
+      Tap it again to turn it off. Worth arming Galactic if you're grinding.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Read this bit</span>
+      <h2>Before you rely on it</h2>
+    </div>
+    <div class="callout warn">
+      <h3>Your progress lives on that one device</h3>
+      <p>There's no account and nothing is uploaded. That means it won't sync between your phone
+        and your tablet, and deleting the home screen app takes your progress with it.</p>
+      <p>The settings button at the top right has <strong>Back up progress</strong> — it saves a
+        file you keep. Worth doing after a big session.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Quick answers</span>
+      <h2>Odds and ends</h2>
+    </div>
+    <dl class="faq">
+      <dt>It's showing an old version</dt>
+      <dd>Close it fully — swipe it out of the app switcher — and open it again while online.
+        It checks for updates on launch.</dd>
+
+      <dt>Nothing appears on the SELL screen</dt>
+      <dd>That's normal early in a cycle: the game still wants everything you own. The screen
+        tells you which rebirth the first one frees up at.</dd>
+
+      <dt>Does it cost anything?</dt>
+      <dd>No. No ads, no signup, no permissions.</dd>
+
+      <dt>Something's wrong in the data</dt>
+      <dd>Tell Mark — the requirements were transcribed from the in-game chart and cross-checked,
+        but the game does get updated.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    <p>Droid Tycoon rebirth tracker · not affiliated with Epic Games or Lucasfilm</p>
+    <p>korbzz77.github.io/droid-tracker</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

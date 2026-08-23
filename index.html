@@ -382,6 +382,54 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 .bpat{font-size:var(--f0);color:var(--dim);font-weight:600;margin-top:1px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* fusion */
+.fgrid{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:6px}
+@media(min-width:760px){.fgrid{grid-template-columns:1fr 1fr}}
+.fcard{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--fr,var(--line2));
+  border-radius:var(--r2);padding:11px 12px;min-width:0;box-shadow:var(--sh1)}
+.fcard.ready{border-color:rgba(53,208,127,.45);background:rgba(53,208,127,.05)}
+.fhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.fname{font-weight:800;font-size:var(--f4);font-style:italic;letter-spacing:.3px}
+.frar{font-size:var(--f0);font-weight:800;letter-spacing:.7px;text-transform:uppercase}
+.fcls{font-size:var(--f0);font-weight:700;color:var(--dim);letter-spacing:.5px;text-transform:uppercase}
+.fready{font-size:var(--f0);font-weight:800;letter-spacing:.5px;color:var(--ok)}
+.fins{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fin{display:inline-flex;align-items:center;gap:6px;background:var(--card2);
+  border:1px solid var(--line);border-radius:9px;padding:5px 9px;
+  font-size:var(--f1);font-weight:700;color:var(--dim);white-space:nowrap}
+.fin.got{color:var(--txt);border-color:rgba(53,208,127,.4)}
+.fin b{font-size:9.5px;font-weight:800;opacity:.7;letter-spacing:.4px}
+.fdot{width:11px;height:11px;border-radius:50%;flex:0 0 11px;box-shadow:0 0 0 1.5px #0006 inset}
+.fplus,.farrow{color:var(--dim2);font-weight:800;font-size:var(--f1)}
+.fout{display:inline-flex;align-items:center;border-radius:9px;padding:5px 10px;
+  font-size:var(--f1);font-weight:800;font-style:italic;color:#14141c;white-space:nowrap}
+.fnote{font-size:var(--f0);color:var(--dim2);font-weight:600;margin-top:8px;line-height:1.5}
+
+/* compact build rows, grouped into a column per droid class */
+.bcols{display:grid;grid-template-columns:1fr;gap:0 16px;align-items:start}
+@media(min-width:820px){.bcols{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.bcolhead{position:sticky;top:calc(var(--hh,64px) + 1px);z-index:14;
+  background:rgba(8,8,14,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  font-size:var(--f0);letter-spacing:1.4px;text-transform:uppercase;font-weight:800;
+  color:var(--dim);padding:9px 0 8px;margin-top:6px;
+  border-bottom:1px solid var(--line)}
+.bcolhead b{color:var(--txt);margin-left:6px}
+.crow{display:flex;align-items:center;gap:9px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--r1);padding:7px 9px;margin-top:7px;
+  min-width:0;box-shadow:var(--sh1)}
+.crow.later{background:var(--bg2);opacity:.62}
+.crow.owned{border-color:#3a4a5e}
+.cmeta{flex:1;min-width:0}
+.cname{font-weight:800;font-size:var(--f2);letter-spacing:.2px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.cst{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cst.none{color:var(--bad)}
+.cst.up{color:var(--warn)}
+.cst.done{color:var(--ok)}
+.cneed{flex:0 0 auto;font-size:9.5px;font-weight:800;padding:4px 7px;border-radius:6px;
+  white-space:nowrap}
+
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
   background:var(--card);border:1px dashed var(--line2);border-radius:var(--r3)}
@@ -391,7 +439,7 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 
 /* view enters with a small settle so switching tabs feels intentional */
 @keyframes vin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-#v-next,#v-build,#v-sell,#v-all{animation:vin .22s cubic-bezier(.2,.7,.3,1)}
+#v-all,#v-build,#v-sell,#v-fuse{animation:vin .22s cubic-bezier(.2,.7,.3,1)}
 
 /* pointer devices (Magic Keyboard / trackpad) get hover affordances */
 @media(hover:hover){
@@ -416,10 +464,10 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 
 <div class="wrap">
   <div id="settings" class="hide"></div>
-  <div id="v-next"></div>
+  <div id="v-all"></div>
   <div id="v-build" class="hide"></div>
   <div id="v-sell" class="hide"></div>
-  <div id="v-all" class="hide"></div>
+  <div id="v-fuse" class="hide"></div>
 </div>
 
 <div class="bpalert" id="bpAlert"></div>
@@ -428,10 +476,10 @@ nav button.on::before{content:"";position:absolute;top:0;left:50%;transform:tran
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Droid quality"></div>
 
 <nav>
-  <button class="on" data-v="next"><i>&#9678;</i>NEXT</button>
+  <button class="on" data-v="all"><i>&#9776;</i>ROADMAP</button>
   <button data-v="build"><i>&#9874;</i>BUILD</button>
   <button data-v="sell"><i>&#36;</i>SELL</button>
-  <button data-v="all"><i>&#9776;</i>ROADMAP</button>
+  <button data-v="fuse"><i>&#10042;</i>FUSION</button>
 </nav>
 
 <script>
@@ -488,8 +536,8 @@ let level=store.get("dt_level_"+cycle,0);
    satisfies every requirement at or below it in every cycle. Rebirth level stays per
    cycle, because that genuinely is per cycle. */
 let owned=loadOwnership();
-let view="next", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
-let searchQ="", clsFilter="all", showLater=false, roadQ="";
+let view="all", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
+let searchQ="", roadQ="", fuseQ="";
 
 const key=(n,t)=>n+"|"+t;
 /* declared, not assigned to a const, because loadOwnership() runs before this line */
@@ -556,79 +604,6 @@ const dot=t=>`<span class="dot" style="background:${TC[t]}"></span>`;
 const qdot=(n,t,cls)=>`<button class="qbtn" data-q="${n.replace(/"/g,"&quot;")}"
   aria-label="Set the quality you own of ${n.replace(/"/g,"&quot;")}"><span class="${cls||"dot"}"
   style="background:${TC[t]}"></span></button>`;
-function reqRow(r,rbLevel){
-  const [n,t,rar,nx]=r, have=has(n,t);
-  const badge = nx ? `<span class="badge b-keep">KEEP &rarr; ${nx}</span>`
-                   : `<span class="badge b-sell">SELL</span>`;
-  /* Whether this is something to buy or something you already own a lower quality of
-     changes the job completely. BUILD tracked that; this screen used to check only the
-     exact tier, so a droid you were one upgrade away from looked like one you had never
-     touched. Tiers can be ticked individually on the roadmap, so a higher-than-required
-     holding is possible too, and is reported as-is rather than called an upgrade. */
-  let status="";
-  if(!have){
-    const ot=ownedTier(n);
-    status = ot
-      ? `<span class="rst up">Have ${ABBR[ot]} &middot; upgrade to ${ABBR[t]}</span>`
-      : `<span class="rst none">Do not have</span>`;
-  }
-  return `<div class="req ${have?'have':''}" data-k="${key(n,t)}">
-    <div class="tick">&#10003;</div>
-    <div class="rmeta">
-      <div class="rname">${qdot(n,t)}${n}</div>
-      <div class="rtags"><span style="color:${TXT[t]}">${t}</span>
-        <span style="color:${RC[rar]}"> &nbsp;${rar}</span></div>
-      ${status}
-    </div>${badge}</div>`;
-}
-
-function viewNext(){
-  const rb=rbs().find(r=>r.level===level+1);
-  const el=document.getElementById("v-next");
-  if(!rb){el.innerHTML=`<div class="empty">Cycle ${cycle} complete.<br>All 35 rebirths done.</div>`;return}
-  const done=rb.reqs.filter(r=>has(r[0],r[1])).length;
-  /* count only what this cycle actually asks for, not everything you own */
-  const reqKeys=new Set(rbs().flatMap(r=>r.reqs.map(x=>key(x[0],x[1]))));
-  let totalMade=0;
-  reqKeys.forEach(k=>{const s=splitKey(k); if(s&&has(s[0],s[1])) totalMade++});
-  const totalReq=reqKeys.size;
-  el.innerHTML=`
-  <div class="ncols">
-    <div>
-      <h2>Next rebirth</h2>
-      <div class="card hero">
-        <div class="flexline">
-          <div><div class="lvl">${rb.level}</div><div class="cost">${rb.cost}</div></div>
-          <div style="flex:1">
-            <div style="font-weight:700;font-size:15px">${done} of 3 droids ready</div>
-            <div class="mini" style="margin-top:4px">Cycle ${cycle} &middot; ${totalMade}/${totalReq} droids made overall</div>
-            <div class="bar"><i style="width:${Math.round(done/3*100)}%"></i></div>
-          </div>
-        </div>
-        ${rb.reqs.map(r=>reqRow(r,rb.level)).join("")}
-        <button class="btn" id="doneBtn" ${done<3?"disabled":""}>
-          ${done<3?`Need ${3-done} more`:`Rebirth to ${rb.level+1} &rarr;`}</button>
-      </div>
-    </div>
-    <div>
-      ${blueprintHTML()}
-      <h2>Coming up</h2>
-      ${rbs().filter(r=>r.level>level+1&&r.level<=level+8).map(r=>{
-        const m=r.reqs.filter(x=>has(x[0],x[1])).length;
-        return `<div class="row"><div class="rbnum">${r.level}</div>
-          <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">${r.reqs.map(x=>x[0]).join(" &middot; ")}</div>
-          <div class="mini">${r.cost}</div></div>
-          <span class="pill" style="background:${m===3?'rgba(53,208,127,.15)':'#2a2a3a'};color:${m===3?'var(--ok)':'var(--dim)'}">${m}/3</span></div>`
-      }).join("")||`<div class="empty">Nothing further in this cycle.</div>`}
-      <div class="note">All five cycles are loaded, 525 requirements, each cross-checked against
-        the in-game chart. On a cycle you have not started, picking your rebirth level fills in
-        everything up to that point and you correct the exceptions. Progress is saved per cycle.</div>
-    </div>
-  </div>`;
-  tickBlueprints();
-  const b=document.getElementById("doneBtn");
-  if(b&&done===3) b.onclick=()=>{level=rb.level;save();buildLvlSel();render()};
-}
 
 /* every tier this droid is required at across the whole cycle, in level order */
 function ladder(name){
@@ -692,34 +667,46 @@ function viewBuild(){
   const upto=Math.min(level+lookahead,35);
   const all=new Set(); rbs().forEach(rb=>rb.reqs.forEach(([n])=>all.add(n)));
   const infos=[...all].map(droidInfo);
-
-  /* a droid stays on the build list until it is maxed for this cycle */
   const active=infos.filter(x=>x.nextNeed)
     .sort((a,b)=>a.nextNeed.lvl-b.nextNeed.lvl||a.n.localeCompare(b.n));
-  const maxedAll = infos.filter(x=>!x.nextNeed).sort((a,b)=>a.n.localeCompare(b.n));
+  const maxedAll=infos.filter(x=>!x.nextNeed).sort((a,b)=>a.n.localeCompare(b.n));
 
-  /* search and class narrow every list below; counts on the chips reflect the search
-     but not the class choice, so you can see what switching class would give you */
   const q=searchQ.trim().toUpperCase();
-  const hitsQ  = x=>!q||x.n.indexOf(q)>-1;
-  const hitsAll= x=>hitsQ(x)&&(clsFilter==="all"||DCLASS[x.n]===clsFilter);
-  const clsCount=c=>active.filter(x=>hitsQ(x)&&(c==="all"||DCLASS[x.n]===c)).length;
-  const filtering = q || clsFilter!=="all";
-
-  const shown = active.filter(hitsAll);
-  const due   = shown.filter(x=>x.nextNeed.lvl<=upto);
-  const later = shown.filter(x=>x.nextNeed.lvl> upto);
-  const maxed = maxedAll.filter(hitsAll);
-  /* the later list is collapsed by default to keep the page short, but a search has to be
-     able to reach into it, otherwise searching for a droid you need at RB 20 finds nothing */
-  const laterOpen = showLater || !!q;
-
+  const hit=x=>!q||x.n.indexOf(q)>-1;
+  const shown=active.filter(hit);
+  const maxed=maxedAll.filter(hit);
   const own=active.filter(x=>x.held).length;
+
+  /* One row per droid, two lines tall. Quality is set through the colour swatch, which opens
+     the same picker as everywhere else, so the tall strip of tier chips is no longer needed. */
+  const crow=(x,later)=>{
+    const st=!x.held ? `<span class="cst none">Do not have</span>`
+      : (x.nextNeed ? `<span class="cst up">Have ${ABBR[x.held.t]} &rarr; ${ABBR[x.nextNeed.t]}</span>`
+                    : `<span class="cst done">Fully upgraded</span>`);
+    const need=x.nextNeed
+      ? `<span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">RB ${x.nextNeed.lvl}</span>`
+      : `<span class="cneed" style="background:#2a2a3a;color:var(--dim)">DONE</span>`;
+    return `<div class="crow ${x.held?"owned":""} ${later?"later":""}">
+      ${qdot(x.n,(x.held||x.nextNeed||x.L[0]).t,"gdot")}
+      <span class="cmeta"><span class="cname">${x.n}</span>${st}</span>${need}</div>`;
+  };
+  const column=(cls)=>{
+    const mine=shown.filter(x=>DCLASS[x.n]===cls);
+    const due=mine.filter(x=>x.nextNeed.lvl<=upto);
+    const later=mine.filter(x=>x.nextNeed.lvl>upto);
+    return `<div>
+      <div class="bcolhead">${CLS_LABEL[cls]}<b>${mine.length}</b></div>
+      ${due.map(x=>crow(x)).join("")||`<div class="mini" style="padding:10px 2px">Nothing due.</div>`}
+      ${later.length?`<div class="mini" style="padding:12px 2px 2px">Later in cycle ${cycle} &middot; ${later.length}</div>
+        ${later.map(x=>crow(x,true)).join("")}`:""}
+    </div>`;
+  };
+
   document.getElementById("v-build").innerHTML=`
     <h2>Build list</h2>
-    <div class="sub">One row per droid. Tap the quality you already have, tap it again if you sell it.
-      A droid stays here until it is maxed to the highest quality cycle ${cycle} asks for.
-      You already own something of ${own} of the ${active.length} still open, so do not rebuy those.</div>
+    <div class="sub">One row per droid, split by class. Tap a droid's colour dot to set the
+      quality you own. You already own something of ${own} of the ${active.length} still open,
+      so do not rebuy those.</div>
 
     <div class="btools">
       <div class="searchwrap">
@@ -727,52 +714,33 @@ function viewBuild(){
         <input class="search" id="dsearch" type="search" inputmode="search"
           placeholder="Search droids, e.g. R7 or WLKR" value="${searchQ.replace(/"/g,"&quot;")}"
           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
-        <button class="searchclr ${searchQ?'on':''}" id="dclear" aria-label="Clear search">&times;</button>
+        <button class="searchclr ${searchQ?"on":""}" id="dclear" aria-label="Clear search">&times;</button>
       </div>
-
-      <div class="chips">${["all","worker","astromech","battle"]
-        .map(c=>`<div class="chip ${clsFilter===c?'on':''}" data-cls="${c}">${CLS_LABEL[c]}<b>${clsCount(c)}</b></div>`).join("")}</div>
-
-      <div class="chips">${[1,3,5,10].map(n=>`<div class="chip ${lookahead===n?'on':''}" data-la="${n}">Next ${n}</div>`).join("")}
-        <div class="chip ${lookahead===35?'on':''}" data-la="35">Rest of cycle</div></div>
+      <div class="chips">${[1,3,5,10].map(n=>`<div class="chip ${lookahead===n?"on":""}" data-la="${n}">Next ${n}</div>`).join("")}
+        <div class="chip ${lookahead===35?"on":""}" data-la="35">Rest of cycle</div></div>
     </div>
 
-    ${filtering&&!shown.length&&!maxed.length
-      ? `<div class="empty">No droid still open matches${q?` &ldquo;${searchQ.replace(/</g,"&lt;")}&rdquo;`:""}${clsFilter!=="all"?` in ${CLS_LABEL[clsFilter].toLowerCase()}`:""}.<br>
-           It may already be maxed for this cycle.</div>`
-      : `
-    <h2 style="margin-top:4px">Needed by rebirth ${upto} &middot; ${due.length}</h2>
-    ${due.length?`<div class="blist">${due.map(x=>buildRow(x)).join("")}</div>`
-      :`<div class="empty">${filtering?"Nothing matching is due yet.":`Nothing due. You are ready for the next ${lookahead} rebirth${lookahead>1?'s':''}.`}</div>`}
-
-    ${later.length?`
-      ${q?"":`<button class="btn ghost" id="laterBtn">
-        ${laterOpen?"Hide":"Show"} ${later.length} needed later in cycle ${cycle}</button>`}
-      ${laterOpen?`<h2>Later in cycle ${cycle} &middot; ${later.length}</h2>
-        <div class="sub">Still on your list, just not needed before rebirth ${upto}.</div>
-        <div class="blist">${later.map(x=>buildRow(x,"later")).join("")}</div>`:""}`:""}`}
+    ${shown.length
+      ? `<div class="bcols">${["worker","astromech","battle"].map(column).join("")}</div>`
+      : `<div class="empty">No droid still open matches &ldquo;${searchQ.replace(/</g,"&lt;")}&rdquo;.<br>
+           It may already be maxed for this cycle.</div>`}
 
     <button class="btn ghost" id="ownedBtn">
-      ${showOwned?"Hide":"Show"} droids already maxed for this cycle &middot; ${filtering?maxed.length:maxedAll.length}</button>
+      ${showOwned?"Hide":"Show"} droids already maxed for this cycle &middot; ${q?maxed.length:maxedAll.length}</button>
     ${showOwned?`
       <h2>Maxed for cycle ${cycle} &middot; ${maxed.length}</h2>
-      <div class="sub">Nothing left in this cycle asks anything more of these, which is why they are off the
-        list above. If you sold one by mistake, tap a lower chip to set what you actually hold,
-        or tap the highlighted chip to clear it entirely.</div>
-      ${maxed.length?`<div class="blist">${maxed.map(x=>buildRow(x)).join("")}</div>`:`<div class="empty">Nothing maxed matches.</div>`}`:""}`;
+      <div class="bcols">${["worker","astromech","battle"].map(cls=>{
+        const mine=maxed.filter(x=>DCLASS[x.n]===cls);
+        return `<div><div class="bcolhead">${CLS_LABEL[cls]}<b>${mine.length}</b></div>
+          ${mine.map(x=>crow(x)).join("")||`<div class="mini" style="padding:10px 2px">None.</div>`}</div>`;
+      }).join("")}</div>`:""}`;
 
   const ob=document.getElementById("ownedBtn");
   if(ob) ob.onclick=()=>{showOwned=!showOwned; render()};
-  const lb=document.getElementById("laterBtn");
-  if(lb) lb.onclick=()=>{showLater=!showLater; render()};
-
-  /* re-render only this view while typing, then put the caret back where it was,
-     so the keyboard stays up and each letter narrows the list underneath */
   const si=document.getElementById("dsearch");
   if(si) si.oninput=e=>{
     const pos=e.target.selectionStart;
-    searchQ=e.target.value;
-    viewBuild();
+    searchQ=e.target.value; viewBuild();
     const n=document.getElementById("dsearch");
     if(n){ n.focus(); try{ n.setSelectionRange(pos,pos) }catch(err){} }
   };
@@ -882,6 +850,7 @@ function viewAll(){
   const shown=q?all.filter(rb=>rb.reqs.some(r=>r[0].indexOf(q)>-1)):all;
   const esc=s=>s.replace(/</g,"&lt;");
   document.getElementById("v-all").innerHTML=`
+    ${blueprintHTML()}
     <h2>Cycle ${cycle} roadmap</h2>
     <div class="sub">Same layout as the in-game rebirth chart. Tap a droid to tick just that
       one quality. Tap its <b style="color:var(--txt)">colour dot</b> to say what quality you
@@ -912,8 +881,35 @@ function viewAll(){
   const cb=document.getElementById("rclear");
   if(cb) cb.onclick=()=>{ roadQ=""; viewAll();
     const n=document.getElementById("rsearch"); if(n) n.focus(); };
+  tickBlueprints();
 }
 
+
+/* ---- fusion ----
+   Recipes and rules read from droid-tycoon.pages.dev's own fusion table, which is the only
+   complete source I could find; the public guides describe the mechanic but list no recipes.
+   Their chart spells B-U4D as BU-4D, renamed here to match ours.
+   Class and rarity come from Mark's spreadsheet; three of them are still unfilled there. */
+const FUSIONS=[
+  {out:"ZRO-TEC", cls:"astromech", rar:"rare",      ins:["ID10","ID10","2BB"]},
+  {out:"WHL-EX",  cls:"worker",    rar:"rare",      ins:["ARG","MOUSE","MOUSE"]},
+  {out:"BTL-R",   cls:"battle",    rar:"rare",      ins:["BDX EXPLORER","B1 BATTLE","R9"]},
+  {out:"N-UL",    cls:"worker",    rar:"epic",      ins:["B1 HEAVY","GUNRUNNER","BB"]},
+  {out:"OPT-AR",  cls:"battle",    rar:"epic",      ins:["R2","R2","B2 SUPER"]},
+  {out:"ARM-CORE",cls:null,        rar:"epic",      ins:["ARG","ARG","B2 HEAVY"]},
+  {out:"SCRP-R",  cls:"astromech", rar:"epic",      ins:["GONK","R6","GROUNDMECH"]},
+  {out:"RO-TOR",  cls:"worker",    rar:"legendary", ins:["BB9","PIT","B1 BATTLE"]},
+  {out:"ORB-XL",  cls:"battle",    rar:"legendary", ins:["CB","GUNRUNNER","B2-RP"]},
+  {out:"FUS-3",   cls:"worker",    rar:"legendary", ins:["R7","B-U4D","B-U4D"]},
+  {out:"QIK-BIT", cls:"astromech", rar:"legendary", ins:["GROUNDMECH","GROUNDMECH","BB9"]},
+  {out:"RIV-3T",  cls:"worker",    rar:"mythic",    ins:["KX","IG","RIC"]},
+  {out:"X-ONK",   cls:"battle",    rar:"mythic",    ins:["KX","KX","GONK"]},
+  {out:"LUG-G",   cls:"worker",    rar:"mythic",    ins:["LOADLIFTER","ID10","R5"]},
+  {out:"AXI-POD", cls:"astromech", rar:"mythic",    ins:["R7","BDX EXPLORER","RIC"]},
+  {out:"SRV-O",   cls:null,        rar:"mythic",    ins:["RIC-1200","B1 HEAVY","B1 HEAVY"]},
+  {out:"LOW-MO",  cls:null,        rar:"mythic",    ins:["A-LT","A-LT","LOADLIFTER"]}
+];
+const RARORDER=["common","rare","epic","legendary","mythic"];
 
 /* ---- blueprint countdowns ----
    Spawn times come from droid-tycoon.pages.dev, which defines them as minutes past the
@@ -1115,6 +1111,96 @@ function toast(msg,actLabel,actFn){
   toastT=setTimeout(hideToast, actLabel?8000:3500);
 }
 
+function viewFuse(){
+  const q=fuseQ.trim().toUpperCase();
+  const esc=s=>s.replace(/</g,"&lt;");
+  const hit=f=>!q||f.out.indexOf(q)>-1||f.ins.some(i=>i.indexOf(q)>-1);
+  const shown=FUSIONS.filter(hit);
+  const groups=RARORDER.filter(r=>shown.some(f=>f.rar===r));
+
+  /* Ownership is one droid at one quality, with no count, so a recipe wanting two of
+     something cannot be confirmed from what we track. Say which parts you have and leave
+     the duplicate call to you. */
+  const card=f=>{
+    const counts={};
+    f.ins.forEach(i=>counts[i]=(counts[i]||0)+1);
+    const dupes=Object.keys(counts).filter(k=>counts[k]>1);
+    const haveAll=f.ins.every(i=>ownedTier(i));
+    return `<div class="fcard ${haveAll?"ready":""}" style="--fr:${RC[f.rar]}">
+      <div class="fhead">
+        <span class="fname">${f.out}</span>
+        <span class="frar" style="color:${RC[f.rar]}">${f.rar}</span>
+        ${f.cls?`<span class="fcls">${CLS_LABEL[f.cls]}</span>`:``}
+        <span class="bspace"></span>
+        ${haveAll?`<span class="fready">HAVE THE PARTS</span>`:``}
+      </div>
+      <div class="fins">
+        ${f.ins.map(i=>{
+          const t=ownedTier(i);
+          return `<span class="fin ${t?"got":""}">
+            <span class="fdot" style="background:${t?TC[t]:"#2a2a3a"}"></span>${i}
+            ${t?`<b>${ABBR[t]}</b>`:``}</span>`}).join(`<span class="fplus">+</span>`)}
+        <span class="farrow">&rarr;</span>
+        <span class="fout" style="background:${RC[f.rar]}">${f.out}</span>
+      </div>
+      ${dupes.length?`<div class="fnote">needs ${dupes.map(d=>counts[d]+"&times; "+d).join(", ")},
+        and this tracker does not count copies</div>`:``}
+    </div>`;
+  };
+
+  document.getElementById("v-fuse").innerHTML=`
+    <h2>Fusion recipes</h2>
+    <div class="sub">Three droids go into the Workshop's fusion machine. A known combination
+      makes a specific droid; anything else that qualifies gives a random one a rarity higher.
+      The result always comes out at the <b style="color:var(--txt)">lowest quality</b> of the
+      three you put in, so fusing a base into it wastes the good ones.</div>
+
+    <div class="btools">
+      <div class="searchwrap">
+        <span class="si">&#9906;</span>
+        <input class="search" id="fsearch" type="search" inputmode="search"
+          placeholder="Find a recipe or an ingredient" value="${fuseQ.replace(/"/g,"&quot;")}"
+          autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+        <button class="searchclr ${fuseQ?"on":""}" id="fclear" aria-label="Clear search">&times;</button>
+      </div>
+      ${q?`<div class="mini" style="padding-bottom:9px">${shown.length} of ${FUSIONS.length}
+        recipes match &ldquo;${esc(fuseQ)}&rdquo;</div>`:``}
+    </div>
+
+    ${shown.length?groups.map(r=>`
+      <h2 style="color:${RC[r]}">${r} &middot; ${shown.filter(f=>f.rar===r).length}</h2>
+      <div class="fgrid">${shown.filter(f=>f.rar===r).map(card).join("")}</div>`).join("")
+      :`<div class="empty">No recipe matches &ldquo;${esc(fuseQ)}&rdquo;.</div>`}
+
+    <h2>Without a recipe</h2>
+    <div class="fcard">
+      <div class="fins" style="flex-wrap:wrap">
+        <span class="fin">3 of the same droid, same quality</span>
+        <span class="fplus">or</span>
+        <span class="fin">3 of the same rarity</span>
+        <span class="farrow">&rarr;</span>
+        <span class="fout" style="background:var(--accent);color:var(--onAccent)">RANDOM, ONE RARITY UP</span>
+      </div>
+      <div class="fnote">common &rarr; rare &rarr; epic &rarr; legendary &rarr; mythic &rarr; iconic.
+        Mixed rarities that are not all the same droid will not fuse at all.</div>
+    </div>
+
+    <div class="note">Recipes cross-checked against droid-tycoon.pages.dev. KO-MAX is not a real
+      fusion, matching the note on your sheet. Class is still unknown for ARM-CORE, SRV-O and
+      LOW-MO.</div>`;
+
+  const si=document.getElementById("fsearch");
+  if(si) si.oninput=e=>{
+    const pos=e.target.selectionStart;
+    fuseQ=e.target.value; viewFuse();
+    const n=document.getElementById("fsearch");
+    if(n){ n.focus(); try{ n.setSelectionRange(pos,pos) }catch(err){} }
+  };
+  const cb=document.getElementById("fclear");
+  if(cb) cb.onclick=()=>{ fuseQ=""; viewFuse();
+    const n=document.getElementById("fsearch"); if(n) n.focus(); };
+}
+
 /* ---- settings and reset ---- */
 function cycleStats(c){
   const rbs=DATA[c].rebirths;
@@ -1300,10 +1386,10 @@ function renderSettings(){
 }
 
 function render(){
-  ["next","build","sell","all"].forEach(v=>document.getElementById("v-"+v).classList.toggle("hide",v!==view));
+  ["all","build","sell","fuse"].forEach(v=>document.getElementById("v-"+v).classList.toggle("hide",v!==view));
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===view));
-  if(view==="next")viewNext(); if(view==="build")viewBuild();
-  if(view==="sell")viewSell(); if(view==="all")viewAll();
+  if(view==="all")viewAll(); if(view==="build")viewBuild();
+  if(view==="sell")viewSell(); if(view==="fuse")viewFuse();
   renderSettings();
 }
 
@@ -1338,8 +1424,6 @@ document.body.addEventListener("click",e=>{
     const warn=f.length ? ` Cycle ${cycle} wants it again at rebirth ${f[0].lvl}.` : "";
     toast(`${n} sold.${warn}`,"Undo",()=>{ setOwned(n,prev); render() });
     return}
-  const cf=e.target.closest("[data-cls]");
-  if(cf){clsFilter=cf.dataset.cls; viewBuild(); return}
   const head=e.target.closest(".rbhead");
   if(head){head.parentElement.classList.toggle("open"); return}
 });

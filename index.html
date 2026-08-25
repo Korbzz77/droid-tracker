@@ -470,6 +470,16 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
   font-weight:600;color:var(--dim2);font-variant-numeric:tabular-nums}
 .xr.whole .xn{color:var(--ok)}
 .xr.whole .xf{color:var(--ok)}
+/* Fusion tints a card by its rarity whether or not you own the ingredients, so colour is
+   structure there rather than a reward. The chart does the same down its quality columns:
+   a faint wash and a tinted empty outline, so gold reads as gold before it is ticked. The
+   wash is deliberately weak, because seven of them run the height of the page. */
+@supports(background:color-mix(in srgb,red,blue)){
+  .xc{background:color-mix(in srgb,var(--tqf,var(--dim2)) 7%,transparent)}
+  .xc::before{border-color:color-mix(in srgb,var(--tqf,var(--dim2)) 40%,var(--line2))}
+  .xc.none{background:none}
+}
+.xgroup{box-shadow:inset 3px 0 0 var(--fr)}
 /* roomier ticks where there is room for them, tighter name column where there is not */
 @media(min-width:720px){
   .xc::before{width:18px;height:18px}
@@ -493,6 +503,11 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .xgroup b{color:var(--txt);font-weight:700}
 .xgroup span{margin-left:auto;color:var(--dim2);font-weight:500;letter-spacing:.3px;
   text-transform:none;font-variant-numeric:tabular-nums}
+@supports(background:color-mix(in srgb,red,blue)){
+  .xhdr .xc{background:color-mix(in srgb,var(--tqf,var(--dim2)) 16%,var(--card2))}
+  .xgroup{background:color-mix(in srgb,var(--fr) 13%,var(--card));
+    border-bottom-color:color-mix(in srgb,var(--fr) 30%,transparent)}
+}
 
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
@@ -1331,6 +1346,8 @@ function viewFuse(){
 const QUAL_LABEL={all:"All",default:"Base",gold:"Gold",diamond:"Diamond",rainbow:"Rainbow",
   beskar:"Beskar",galactic:"Galactic",stellar:"Stellar"};
 const RAR_ORDER=["common","rare","epic","legendary","mythic","iconic"];
+/* the fusion rarity colours, plus the one rarity fusion never has to name */
+const RARC=Object.assign({iconic:"#3ad6c0"},FRC);
 
 /* A droid at seven qualities is a matrix, so lay it out as one: a row per droid, a column
    per quality. A wrapping grid split a droid's set across two rows and gave no way to scan a
@@ -1372,10 +1389,11 @@ function viewIndex(){
   const row=d=>`<div class="xr ${complete(d)?"whole":""}">
       <div class="xn"><span class="xcls xcls-${d.cls}">${CLS_MARK[d.cls]||"?"}</span>${d.n}</div>
       ${cols.map(qq=>{
-        if(d.qs.indexOf(qq)<0) return `<div class="xc none">&middot;</div>`;
+        const st=`--tq:${TC[qq]};--tqf:${TXT[qq]}`;
+        if(d.qs.indexOf(qq)<0) return `<div class="xc none" style="${st}">&middot;</div>`;
         const got=craftedHas(d.n,qq);
         return `<button class="xc ${got?"got":""}" data-x="${d.n.replace(/"/g,"&quot;")}|${qq}"
-          style="--tq:${TC[qq]}" aria-label="${d.n} ${ABBR[qq]}"></button>`;
+          style="${st}" aria-label="${d.n} ${ABBR[qq]}"></button>`;
       }).join("")}
       <div class="xf">${rowDone(d)}/${d.qs.length}</div>
     </div>`;
@@ -1385,7 +1403,7 @@ function viewIndex(){
     const inRar=visible.filter(d=>d.rar===r);
     if(!inRar.length) return;
     const cd=inRar.reduce((a,d)=>a+rowDone(d),0), ct=inRar.reduce((a,d)=>a+d.qs.length,0);
-    body+=`<div class="xgroup" style="--fr:${FRC[r]}">${r}
+    body+=`<div class="xgroup" style="--fr:${RARC[r]}">${r}
       <b>${inRar.length}</b><span>${cd} of ${ct}</span></div>`;
     body+=inRar.map(row).join("");
   });
@@ -1426,7 +1444,7 @@ function viewIndex(){
       <div class="xtable" style="--cols:${cols.length}">
         <div class="xr xhdr">
           <div class="xn">Droid</div>
-          ${cols.map(qq=>`<div class="xc lbl" style="color:${TXT[qq]}">${ABBR[qq]}</div>`).join("")}
+          ${cols.map(qq=>`<div class="xc lbl" style="--tqf:${TXT[qq]};color:${TXT[qq]}">${ABBR[qq]}</div>`).join("")}
           <div class="xf lbl">Set</div>
         </div>
         ${body}

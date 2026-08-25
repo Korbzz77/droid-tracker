@@ -1126,13 +1126,16 @@ const BLUEPRINTS=[
   /* The shop's limited deal rolls over on the hour, which is the same instant as the stellar
      blueprint, so the two chips will always read the same time. It is kept separate because
      it is a different thing to react to and you may want warning about one and not the other. */
-  {id:"deal",    label:"Deal",     mins:[0],     col:"#2fd4c6", lead:15000}
+  {id:"deal",    label:"Deal",     mins:[0],     col:"#2fd4c6", secs:5}
 ];
-function nextSpawn(mins,now){
+/* secs is for a spawn that does not land on the minute. The deal resets five seconds past
+   the hour, so counting to the hour itself ran the timer out while the old deal was still
+   up. */
+function nextSpawn(mins,now,secs){
   let best=null;
   mins.forEach(m=>{
     const d=new Date(now.getTime());
-    d.setUTCSeconds(0,0); d.setUTCMinutes(m);
+    d.setUTCSeconds(secs||0,0); d.setUTCMinutes(m);
     if(d.getTime()<=now.getTime()) d.setUTCHours(d.getUTCHours()+1);
     if(!best||d.getTime()<best.getTime()) best=d;
   });
@@ -1143,8 +1146,7 @@ const fmtGap=ms=>{
   return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
 };
 const fmtAt=d=>d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
-const BP_LEAD=20000;                       /* how far ahead to warn, unless a spawn says otherwise */
-const bpLead=b=>b.lead||BP_LEAD;
+const BP_LEAD=20000;                       /* how far ahead to warn */
 let bpAlerts=store.get("dt_bp_alerts",{}); /* which spawns you want warning about */
 let bpFired={};                            /* spawn instants already announced */
 let bpShown=null;                          /* blueprint currently on the banner */
@@ -1181,7 +1183,7 @@ function toggleAlert(id){
   paintBlueprintChips();
   tickBlueprints();
   toast(bpAlerts[id]
-    ? `${b.label} alert on. You will get a warning ${bpLead(b)/1000} seconds before every spawn.`
+    ? `${b.label} alert on. You will get a warning ${BP_LEAD/1000} seconds before every spawn.`
     : `${b.label} alert off.`);
 }
 function hideBpAlert(){
@@ -1213,11 +1215,11 @@ function paintBlueprintChips(){
 function tickBlueprints(){
   const now=new Date();
   BLUEPRINTS.forEach(b=>{
-    const at=nextSpawn(b.mins,now), left=at.getTime()-now.getTime();
+    const at=nextSpawn(b.mins,now,b.secs), left=at.getTime()-now.getTime();
 
     /* Alerts are checked before any DOM lookup, so they still fire while you are on BUILD,
        SELL or ROADMAP, where the tiles do not exist. */
-    if(bpAlerts[b.id] && left<=bpLead(b) && bpFired[b.id]!==at.getTime()){
+    if(bpAlerts[b.id] && left<=BP_LEAD && bpFired[b.id]!==at.getTime()){
       bpFired[b.id]=at.getTime();
       showBpAlert(b);
     }
@@ -1236,7 +1238,7 @@ function tickBlueprints(){
   /* keep the banner counting down, then let it sit briefly on the spawn before clearing */
   if(bpShown){
     const b=BLUEPRINTS.find(x=>x.id===bpShown);
-    const at=nextSpawn(b.mins,now), left=at.getTime()-now.getTime();
+    const at=nextSpawn(b.mins,now,b.secs), left=at.getTime()-now.getTime();
     const el=document.getElementById("bpAlert");
     const secs=Math.max(0,Math.round(left/1000));
     const justGone=left>BP_LEAD;   /* the spawn passed and the clock rolled to the next one */

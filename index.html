@@ -496,10 +496,14 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .xhdr .xn,.xhdr .xc,.xhdr .xf{background:var(--card2);min-height:32px;
   font-size:var(--f0);letter-spacing:.6px;font-weight:600;color:var(--dim);cursor:default}
 .xhdr .xc::before{display:none}
-.xgroup{grid-column:1/-1;display:flex;align-items:center;gap:9px;
-  padding:9px 10px 8px;background:var(--bg2);border-bottom:1px solid var(--line);
-  font-size:var(--f0);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
-  color:var(--fr)}
+.xgroup{grid-column:1/-1;display:flex;align-items:center;gap:9px;width:100%;
+  padding:9px 10px 8px;background:var(--bg2);border:0;border-bottom:1px solid var(--line);
+  font-family:inherit;font-size:var(--f0);font-weight:600;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--fr);text-align:left;cursor:pointer;
+  -webkit-appearance:none;appearance:none}
+.xchev{color:var(--dim2);transition:transform .18s cubic-bezier(.4,0,.2,1)}
+.xgroup.shut .xchev{transform:rotate(-90deg)}
+@media(hover:hover){.xgroup:hover .xchev{color:var(--txt)}}
 .xgroup b{color:var(--txt);font-weight:700}
 .xgroup span{margin-left:auto;color:var(--dim2);font-weight:500;letter-spacing:.3px;
   text-transform:none;font-variant-numeric:tabular-nums}
@@ -1007,6 +1011,13 @@ function loadCrafted(){
   return seed;
 }
 const craftedHas=(n,q)=>crafted.has(n+"|"+q);
+/* which rarity bands are rolled up. Worth keeping across sessions: once you have finished
+   the commons you want them out of the way for good, not just until the next reload. */
+let idxClosed=new Set(store.get("dt_idxclosed",[])||[]);
+function toggleGroup(r){
+  if(idxClosed.has(r)) idxClosed.delete(r); else idxClosed.add(r);
+  store.set("dt_idxclosed",[...idxClosed]);
+}
 function markCrafted(n,q,on){
   const k=n+"|"+q;
   if(on===false) crafted.delete(k); else crafted.add(k);
@@ -1403,9 +1414,13 @@ function viewIndex(){
     const inRar=visible.filter(d=>d.rar===r);
     if(!inRar.length) return;
     const cd=inRar.reduce((a,d)=>a+rowDone(d),0), ct=inRar.reduce((a,d)=>a+d.qs.length,0);
-    body+=`<div class="xgroup" style="--fr:${RARC[r]}">${r}
-      <b>${inRar.length}</b><span>${cd} of ${ct}</span></div>`;
-    body+=inRar.map(row).join("");
+    /* a search that matched inside a rolled up band would otherwise show a heading with
+       nothing under it, so searching opens everything for as long as the query lasts */
+    const shut=!q && idxClosed.has(r);
+    body+=`<button class="xgroup ${shut?"shut":""}" data-xg="${r}" style="--fr:${RARC[r]}"
+      aria-expanded="${!shut}"><svg class="ic xchev" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8 10 12 14 8"/></svg>${r}
+      <b>${inRar.length}</b><span>${cd} of ${ct}</span></button>`;
+    if(!shut) body+=inRar.map(row).join("");
   });
 
   document.getElementById("v-index").innerHTML=`
@@ -1697,6 +1712,8 @@ document.body.addEventListener("click",e=>{
     const n=xc.dataset.x.slice(0,i), qq=xc.dataset.x.slice(i+1);
     markCrafted(n,qq,!craftedHas(n,qq));
     viewIndex(); return}
+  const xg=e.target.closest("[data-xg]");
+  if(xg){ toggleGroup(xg.dataset.xg); viewIndex(); return}
   const xq=e.target.closest("[data-xq]");
   if(xq){ idxQual=xq.dataset.xq; viewIndex(); return}
   const xcl=e.target.closest("[data-xc]");

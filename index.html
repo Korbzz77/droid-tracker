@@ -432,38 +432,67 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .frule{flex-wrap:wrap}
 .mt14{margin-top:14px}
 
-/* droidex */
+/* droidex: a matrix, laid out as one grid so every column lines up across rarity groups */
 .xhead{background:var(--card);border-radius:var(--r3);padding:15px 16px;margin-bottom:14px;
   box-shadow:var(--sh2)}
-.xbig{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-1px;
+.xstats{display:flex;gap:26px;flex-wrap:wrap}
+.xbig{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-1px;
   line-height:1;font-variant-numeric:tabular-nums}
-.xbig span{font-size:var(--f4);font-weight:600;color:var(--dim);letter-spacing:0}
-.xbar{height:8px;background:rgba(0,0,0,.4);border-radius:99px;overflow:hidden;margin:11px 0 8px;
+.xbig span{font-size:var(--f3);font-weight:600;color:var(--dim);letter-spacing:0}
+.xbar{height:8px;background:rgba(0,0,0,.4);border-radius:99px;overflow:hidden;margin-top:12px;
   box-shadow:0 1px 2px #0006 inset}
 .xbar i{display:block;height:100%;border-radius:99px;
   background:linear-gradient(90deg,var(--accent),#ffb347);
   transition:width .35s cubic-bezier(.4,0,.2,1)}
-.xgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-@media(min-width:600px){.xgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(min-width:900px){.xgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-/* the same language as the fusion ingredients: missing is an empty dashed outline,
-   crafted is filled and ticked, so the two screens read the same way */
-.xcell{display:flex;align-items:center;gap:9px;min-width:0;width:100%;text-align:left;
-  background:transparent;border:1px dashed var(--line2);border-radius:var(--r1);
-  padding:8px 10px;cursor:pointer;font-family:inherit;color:var(--dim2);
-  transition:background .15s,border-color .15s,color .15s,transform .1s}
-.xcell:active{transform:scale(.97)}
-.xcell .xdot{opacity:.28}
-.xcell.got{background:var(--card);border:1px solid transparent;color:var(--txt)}
-.xcell.got .xdot{opacity:1}
-.xcell.got::after{content:"¹3";margin-left:auto;color:var(--ok);font-weight:700;font-size:12px}
-.xdot{width:13px;height:13px;flex:0 0 13px;border-radius:50%;box-shadow:0 0 0 1.5px #0006 inset}
-.xmeta{min-width:0;display:block}
-.xname{display:block;font-family:var(--display);font-weight:600;font-size:var(--f2);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.xq{display:block;font-size:var(--f0);font-weight:500;color:var(--dim2);letter-spacing:.4px}
-.xcell.got .xq{color:var(--dim)}
-@media(hover:hover){.xcell:not(.got):hover{border-color:var(--dim2);color:var(--dim)}}
+
+.xtable{display:grid;
+  grid-template-columns:minmax(150px,260px) repeat(var(--cols),minmax(22px,64px)) minmax(30px,56px);
+  width:max-content;max-width:100%;
+  align-items:stretch;background:var(--card);border-radius:var(--r2);overflow:hidden;
+  box-shadow:var(--sh1)}
+.xr{display:contents}
+.xn,.xc,.xf{border-bottom:1px solid var(--line);display:flex;align-items:center;min-height:36px}
+.xn{gap:7px;padding:0 8px 0 10px;font-family:var(--display);font-weight:600;font-size:var(--f2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.xcls{flex:0 0 auto;width:16px;height:16px;border-radius:5px;display:grid;place-items:center;
+  font-family:inherit;font-size:9px;font-weight:700;color:#14141c}
+.xcls-worker{background:#7fd16a}.xcls-astromech{background:#6fb7f5}.xcls-battle{background:#f5748c}
+.xc{justify-content:center;padding:0;background:none;border-left:1px solid var(--line);
+  cursor:pointer;font-family:inherit;position:relative;transition:background .14s}
+.xc::before{content:"";width:15px;height:15px;border-radius:5px;
+  border:1.5px dashed var(--line2);transition:background .14s,border-color .14s}
+.xc.got::before{background:var(--tq);border:1.5px solid transparent}
+.xc.none{cursor:default;color:var(--dim2);font-size:var(--f0)}
+.xc.none::before{display:none}
+.xc:active:not(.none){background:var(--card3)}
+@media(hover:hover){.xc:hover:not(.none):not(.lbl){background:var(--card2)}}
+.xf{justify-content:center;border-left:1px solid var(--line);font-size:var(--f0);
+  font-weight:600;color:var(--dim2);font-variant-numeric:tabular-nums}
+.xr.whole .xn{color:var(--ok)}
+.xr.whole .xf{color:var(--ok)}
+/* roomier ticks where there is room for them, tighter name column where there is not */
+@media(min-width:720px){
+  .xc::before{width:18px;height:18px}
+  .xn,.xc,.xf{min-height:40px}
+}
+@media(max-width:560px){
+  .xtable{width:auto;
+    grid-template-columns:minmax(0,1fr) repeat(var(--cols),minmax(22px,30px)) 30px}
+  .xn{padding:0 4px 0 8px;gap:5px;font-size:var(--f1)}
+  .xcls{width:14px;height:14px;border-radius:4px;font-size:8px}
+  .xc::before{width:13px;height:13px}
+}
+
+.xhdr .xn,.xhdr .xc,.xhdr .xf{background:var(--card2);min-height:32px;
+  font-size:var(--f0);letter-spacing:.6px;font-weight:600;color:var(--dim);cursor:default}
+.xhdr .xc::before{display:none}
+.xgroup{grid-column:1/-1;display:flex;align-items:center;gap:9px;
+  padding:9px 10px 8px;background:var(--bg2);border-bottom:1px solid var(--line);
+  font-size:var(--f0);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--fr)}
+.xgroup b{color:var(--txt);font-weight:700}
+.xgroup span{margin-left:auto;color:var(--dim2);font-weight:500;letter-spacing:.3px;
+  text-transform:none;font-variant-numeric:tabular-nums}
 
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
@@ -576,7 +605,7 @@ let level=store.get("dt_level_"+cycle,0);
 let owned=loadOwnership();
 let view="all", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
 let searchQ="", roadQ="", fuseQ="";
-let idxQ="", idxQual="all", idxCls="all", idxRar="all";
+let idxQ="", idxQual="all", idxCls="all", idxRar="all", idxHideDone=false;
 
 const key=(n,t)=>n+"|"+t;
 /* declared, not assigned to a const, because loadOwnership() runs before this line */
@@ -1303,43 +1332,77 @@ const QUAL_LABEL={all:"All",default:"Base",gold:"Gold",diamond:"Diamond",rainbow
   beskar:"Beskar",galactic:"Galactic",stellar:"Stellar"};
 const RAR_ORDER=["common","rare","epic","legendary","mythic","iconic"];
 
+/* A droid at seven qualities is a matrix, so lay it out as one: a row per droid, a column
+   per quality. A wrapping grid split a droid's set across two rows and gave no way to scan a
+   single quality down the page.
+
+   Note this does not track Flawless. Flawless is a random roll on any craft rather than
+   something earned by completing a set, so it cannot be derived from what is ticked here. */
+function idxDroids(){
+  const by={};
+  indexEntries().forEach(e=>{
+    (by[e.n]=by[e.n]||{n:e.n,cls:e.cls,rar:e.rar,qs:[]}).qs.push(e.q);
+  });
+  return Object.values(by);
+}
+
 function viewIndex(){
   const all=indexEntries();
+  const droids=idxDroids();
   const q=idxQ.trim().toUpperCase();
-  const pass=(e,skip)=>
-    (skip==="qual"||idxQual==="all"||e.q===idxQual) &&
-    (skip==="cls" ||idxCls ==="all"||e.cls===idxCls) &&
-    (skip==="rar" ||idxRar ==="all"||e.rar===idxRar) &&
-    (!q||e.n.indexOf(q)>-1);
-  const shown=all.filter(e=>pass(e));
-  const total=all.length, done=all.filter(e=>craftedHas(e.n,e.q)).length;
-  const shownDone=shown.filter(e=>craftedHas(e.n,e.q)).length;
-  const pct=Math.round(done/total*100);
-  /* counts ignore their own filter, so you can see what switching would give you */
-  const nQual=v=>all.filter(e=>(v==="all"||e.q===v)&&pass(e,"qual")).length;
-  const nCls =v=>all.filter(e=>(v==="all"||e.cls===v)&&pass(e,"cls")).length;
-  const nRar =v=>all.filter(e=>(v==="all"||e.rar===v)&&pass(e,"rar")).length;
+  const cols=idxQual==="all"?TIERS:[idxQual];
 
-  const cell=e=>{
-    const got=craftedHas(e.n,e.q);
-    return `<button class="xcell ${got?"got":""}" data-x="${e.n.replace(/"/g,"&quot;")}|${e.q}">
-      <span class="xdot" style="background:${TC[e.q]}"></span>
-      <span class="xmeta"><span class="xname">${e.n}</span>
-        <span class="xq">${e.rar==="iconic"?"iconic":ABBR[e.q]}</span></span>
-    </button>`;
-  };
+  const rowDone=d=>d.qs.filter(x=>craftedHas(d.n,x)).length;
+  const complete=d=>rowDone(d)===d.qs.length;
+  const visible=droids.filter(d=>
+    (idxCls==="all"||d.cls===idxCls) &&
+    (idxRar==="all"||d.rar===idxRar) &&
+    (!q||d.n.indexOf(q)>-1) &&
+    (!idxHideDone||!complete(d)));
+
+  const total=all.length, done=all.filter(e=>craftedHas(e.n,e.q)).length;
+  const pct=Math.round(done/total*100);
+  const sets=droids.filter(complete).length;
+
+  const nCls=v=>droids.filter(d=>(v==="all"||d.cls===v)&&(idxRar==="all"||d.rar===idxRar)&&(!q||d.n.indexOf(q)>-1)).length;
+  const nRar=v=>droids.filter(d=>(v==="all"||d.rar===v)&&(idxCls==="all"||d.cls===idxCls)&&(!q||d.n.indexOf(q)>-1)).length;
+  const nQual=v=>v==="all"?all.length:all.filter(e=>e.q===v).length;
+
+  const CLS_MARK={worker:"W",astromech:"A",battle:"B"};
+  const row=d=>`<div class="xr ${complete(d)?"whole":""}">
+      <div class="xn"><span class="xcls xcls-${d.cls}">${CLS_MARK[d.cls]||"?"}</span>${d.n}</div>
+      ${cols.map(qq=>{
+        if(d.qs.indexOf(qq)<0) return `<div class="xc none">&middot;</div>`;
+        const got=craftedHas(d.n,qq);
+        return `<button class="xc ${got?"got":""}" data-x="${d.n.replace(/"/g,"&quot;")}|${qq}"
+          style="--tq:${TC[qq]}" aria-label="${d.n} ${ABBR[qq]}"></button>`;
+      }).join("")}
+      <div class="xf">${rowDone(d)}/${d.qs.length}</div>
+    </div>`;
+
+  let body="";
+  RAR_ORDER.forEach(r=>{
+    const inRar=visible.filter(d=>d.rar===r);
+    if(!inRar.length) return;
+    const cd=inRar.reduce((a,d)=>a+rowDone(d),0), ct=inRar.reduce((a,d)=>a+d.qs.length,0);
+    body+=`<div class="xgroup" style="--fr:${FRC[r]}">${r}
+      <b>${inRar.length}</b><span>${cd} of ${ct}</span></div>`;
+    body+=inRar.map(row).join("");
+  });
 
   document.getElementById("v-index").innerHTML=`
     <h2>Droidex</h2>
-    <div class="sub">Every droid at every quality, and whether you have ever crafted it. Unlike
-      the rest of the app a diamond does not count as a gold, and selling never removes anything
-      from here.</div>
+    <div class="sub">Every droid at every quality, and whether you have ever crafted it. A
+      diamond does not count as a gold here, and selling never removes anything.</div>
 
     <div class="xhead">
-      <div class="xbig">${done}<span>/${total}</span></div>
+      <div class="xstats">
+        <div><div class="xbig">${done}<span>/${total}</span></div>
+          <div class="mini">crafted &middot; ${pct}%</div></div>
+        <div><div class="xbig">${sets}<span>/${droids.length}</span></div>
+          <div class="mini">droids finished at every quality</div></div>
+      </div>
       <div class="xbar"><i style="width:${pct}%"></i></div>
-      <div class="mini">${pct}% of the droidex crafted${q||idxQual!=="all"||idxCls!=="all"||idxRar!=="all"
-        ?` &middot; ${shownDone} of ${shown.length} shown`:""}</div>
     </div>
 
     <div class="btools">
@@ -1355,11 +1418,20 @@ function viewIndex(){
       <div class="chips">${["all","worker","astromech","battle"].map(v=>
         `<div class="chip ${idxCls===v?"on":""}" data-xc="${v}">${CLS_LABEL[v]}<b>${nCls(v)}</b></div>`).join("")}
         ${["all"].concat(RAR_ORDER).map(v=>
-        `<div class="chip ${idxRar===v?"on":""}" data-xr="${v}">${v==="all"?"Any rarity":v}<b>${nRar(v)}</b></div>`).join("")}</div>
+        `<div class="chip ${idxRar===v?"on":""}" data-xr="${v}">${v==="all"?"Any rarity":v}<b>${nRar(v)}</b></div>`).join("")}
+        <div class="chip ${idxHideDone?"on":""}" id="xhide">Hide finished</div></div>
     </div>
 
-    ${shown.length?`<div class="xgrid">${shown.map(cell).join("")}</div>`
-      :`<div class="empty">Nothing matches those filters.</div>`}`;
+    ${visible.length?`
+      <div class="xtable" style="--cols:${cols.length}">
+        <div class="xr xhdr">
+          <div class="xn">Droid</div>
+          ${cols.map(qq=>`<div class="xc lbl" style="color:${TXT[qq]}">${ABBR[qq]}</div>`).join("")}
+          <div class="xf lbl">Set</div>
+        </div>
+        ${body}
+      </div>`
+      :`<div class="empty">No droid matches those filters.</div>`}`;
 
   const si=document.getElementById("xsearch");
   if(si) si.oninput=e=>{
@@ -1371,6 +1443,8 @@ function viewIndex(){
   const cb=document.getElementById("xclear");
   if(cb) cb.onclick=()=>{ idxQ=""; viewIndex();
     const n=document.getElementById("xsearch"); if(n) n.focus(); };
+  const hb=document.getElementById("xhide");
+  if(hb) hb.onclick=()=>{ idxHideDone=!idxHideDone; viewIndex(); };
 }
 
 /* ---- settings and reset ---- */

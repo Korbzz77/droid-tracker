@@ -475,19 +475,25 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .xw{justify-content:center;border-left:1px solid var(--line);background:none;padding:0;
   font-family:inherit;font-size:13px;line-height:1;color:var(--line2);cursor:pointer;
   transition:color .14s,text-shadow .14s}
-.xw.got{color:#fff;text-shadow:0 0 7px rgba(255,255,255,.55);
-  animation:twinkle 3.6s ease-in-out infinite}
-@keyframes twinkle{0%,100%{opacity:.8;transform:scale(1)}50%{opacity:1;transform:scale(1.16)}}
+.xw.got{color:#fff;text-shadow:0 0 7px rgba(255,255,255,.55)}
+.xws{display:inline-block;line-height:1}
+.xw.got .xws{animation:twinkle 3.6s ease-in-out infinite;animation-delay:var(--sd,0s)}
+@keyframes twinkle{0%,100%{opacity:.72;transform:scale(1)}50%{opacity:1;transform:scale(1.22)}}
 /* Flawless is the rare one, so it gets to look it: the droid's name takes a pale gold sheen
    and the sparkle breathes. Only those two things, because the row already carries a rarity
    band behind it and a quality colour in every box. */
 .xnm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @supports((-webkit-background-clip:text) or (background-clip:text)){
   .xr.flaw .xnm,.xbig.flaw{
-    background:linear-gradient(96deg,#fff,#ffe9a8 28%,#fff 46%,#cfe6ff 68%,#fff);
-    -webkit-background-clip:text;background-clip:text;color:transparent}
+    background:linear-gradient(100deg,#ffdf9a 0 36%,#fff 46%,#fffbe9 52%,#ffdf9a 62% 100%);
+    background-size:300% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:sheen 5.5s linear infinite;animation-delay:var(--sd,0s)}
 }
-@media(prefers-reduced-motion:reduce){.xw.got{animation:none}}
+@keyframes sheen{0%{background-position:190% 0}100%{background-position:-90% 0}}
+@media(prefers-reduced-motion:reduce){
+  .xw.got .xws,.xr.flaw .xnm,.xbig.flaw{animation:none}
+}
 .xw.none{cursor:default;color:var(--dim2);opacity:.35}
 .xw.lbl{cursor:default;color:var(--dim)}
 .xw:active:not(.none):not(.lbl){background:var(--card3)}
@@ -1442,7 +1448,8 @@ function viewIndex(){
   const nCls=v=>left(e=>v==="all"||e.cls===v);
 
   const CLS_MARK={worker:"W",astromech:"A",battle:"B"};
-  const row=d=>`<div class="xr ${complete(d)?"whole":""} ${isFlaw(d.n)?"flaw":""}">
+  const row=d=>`<div class="xr ${complete(d)?"whole":""} ${isFlaw(d.n)?"flaw":""}"
+      style="--sd:-${([...d.n].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7)%53)/10}s">
       <div class="xn"><span class="xcls xcls-${d.cls}">${CLS_MARK[d.cls]||"?"}</span><span class="xnm">${d.n}</span></div>
       ${TIERS.map(qq=>{
         const st=`--tq:${TC[qq]};--tqf:${TXT[qq]}`;
@@ -1455,7 +1462,7 @@ function viewIndex(){
       ${d.qs.length<TIERS.length
         ? `<div class="xw none">&middot;</div>`
         : `<button class="xw ${isFlaw(d.n)?"got":""}" data-xw="${d.n.replace(/"/g,"&quot;")}"
-            aria-pressed="${isFlaw(d.n)}" aria-label="${d.n} flawless">&#10038;</button>`}
+            aria-pressed="${isFlaw(d.n)}" aria-label="${d.n} flawless"><span class="xws">&#10038;</span></button>`}
     </div>`;
 
   let body="";

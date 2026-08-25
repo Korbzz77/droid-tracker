@@ -980,7 +980,7 @@ const FUSIONS=[
   {out:"BTL-R",   cls:"battle",    rar:"rare",      ins:["BDX EXPLORER","B1 BATTLE","R9"]},
   {out:"N-UL",    cls:"worker",    rar:"epic",      ins:["B1 HEAVY","GUNRUNNER","BB"]},
   {out:"OPT-AR",  cls:"battle",    rar:"epic",      ins:["R2","R2","B2 SUPER"]},
-  {out:"ARM-CORE",cls:null,        rar:"epic",      ins:["ARG","ARG","B2 HEAVY"]},
+  {out:"ARM-CORE",cls:"battle",    rar:"epic",      ins:["ARG","ARG","B2 HEAVY"]},
   {out:"SCRP-R",  cls:"astromech", rar:"epic",      ins:["GONK","R6","GROUNDMECH"]},
   {out:"RO-TOR",  cls:"worker",    rar:"legendary", ins:["BB9","PIT","B1 BATTLE"]},
   {out:"ORB-XL",  cls:"battle",    rar:"legendary", ins:["CB","GUNRUNNER","B2-RP"]},
@@ -990,8 +990,8 @@ const FUSIONS=[
   {out:"X-ONK",   cls:"battle",    rar:"mythic",    ins:["KX","KX","GONK"]},
   {out:"LUG-G",   cls:"worker",    rar:"mythic",    ins:["LOADLIFTER","ID10","R5"]},
   {out:"AXI-POD", cls:"astromech", rar:"mythic",    ins:["R7","BDX EXPLORER","RIC"]},
-  {out:"SRV-O",   cls:null,        rar:"mythic",    ins:["RIC-1200","B1 HEAVY","B1 HEAVY"]},
-  {out:"LOW-MO",  cls:null,        rar:"mythic",    ins:["A-LT","A-LT","LOADLIFTER"]}
+  {out:"SRV-O",   cls:"battle",    rar:"mythic",    ins:["RIC-1200","B1 HEAVY","B1 HEAVY"]},
+  {out:"LOW-MO",  cls:"worker",    rar:"mythic",    ins:["A-LT","A-LT","LOADLIFTER"]}
 ];
 const RARORDER=["common","rare","epic","legendary","mythic"];
 /* Rarity gets its colour back on this screen only. The values are shifted off the quality
@@ -1007,7 +1007,11 @@ const canMake=f=>f.ins.every(i=>ownedTier(i));
 const BLUEPRINTS=[
   {id:"stellar", label:"Stellar",  mins:[0],     col:"#ffd23f"},
   {id:"mythic",  label:"Mythic",   mins:[55],    col:"#ff5470"},
-  {id:"galactic",label:"Galactic", mins:[15,45], col:"#b975f9"}
+  {id:"galactic",label:"Galactic", mins:[15,45], col:"#b975f9"},
+  /* The shop's limited deal rolls over on the hour, which is the same instant as the stellar
+     blueprint, so the two chips will always read the same time. It is kept separate because
+     it is a different thing to react to and you may want warning about one and not the other. */
+  {id:"deal",    label:"Deal",     mins:[0],     col:"#2fd4c6"}
 ];
 function nextSpawn(mins,now){
   let best=null;

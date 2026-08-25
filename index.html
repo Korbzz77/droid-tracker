@@ -475,7 +475,19 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .xw{justify-content:center;border-left:1px solid var(--line);background:none;padding:0;
   font-family:inherit;font-size:13px;line-height:1;color:var(--line2);cursor:pointer;
   transition:color .14s,text-shadow .14s}
-.xw.got{color:#fff;text-shadow:0 0 7px rgba(255,255,255,.55)}
+.xw.got{color:#fff;text-shadow:0 0 7px rgba(255,255,255,.55);
+  animation:twinkle 3.6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.8;transform:scale(1)}50%{opacity:1;transform:scale(1.16)}}
+/* Flawless is the rare one, so it gets to look it: the droid's name takes a pale gold sheen
+   and the sparkle breathes. Only those two things, because the row already carries a rarity
+   band behind it and a quality colour in every box. */
+.xnm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@supports((-webkit-background-clip:text) or (background-clip:text)){
+  .xr.flaw .xnm,.xbig.flaw{
+    background:linear-gradient(96deg,#fff,#ffe9a8 28%,#fff 46%,#cfe6ff 68%,#fff);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+}
+@media(prefers-reduced-motion:reduce){.xw.got{animation:none}}
 .xw.none{cursor:default;color:var(--dim2);opacity:.35}
 .xw.lbl{cursor:default;color:var(--dim)}
 .xw:active:not(.none):not(.lbl){background:var(--card3)}
@@ -1430,8 +1442,8 @@ function viewIndex(){
   const nCls=v=>left(e=>v==="all"||e.cls===v);
 
   const CLS_MARK={worker:"W",astromech:"A",battle:"B"};
-  const row=d=>`<div class="xr ${complete(d)?"whole":""}">
-      <div class="xn"><span class="xcls xcls-${d.cls}">${CLS_MARK[d.cls]||"?"}</span>${d.n}</div>
+  const row=d=>`<div class="xr ${complete(d)?"whole":""} ${isFlaw(d.n)?"flaw":""}">
+      <div class="xn"><span class="xcls xcls-${d.cls}">${CLS_MARK[d.cls]||"?"}</span><span class="xnm">${d.n}</span></div>
       ${TIERS.map(qq=>{
         const st=`--tq:${TC[qq]};--tqf:${TXT[qq]}`;
         if(d.qs.indexOf(qq)<0) return `<div class="xc none" style="${st}">&middot;</div>`;
@@ -1473,7 +1485,7 @@ function viewIndex(){
           <div class="mini">crafted &middot; ${pct}%</div></div>
         <div><div class="xbig">${sets}<span>/${droids.length}</span></div>
           <div class="mini">droids finished at every quality</div></div>
-        <div><div class="xbig">${flawDone}<span>/${flawTotal}</span></div>
+        <div><div class="xbig ${flawDone?"flaw":""}">${flawDone}<span>/${flawTotal}</span></div>
           <div class="mini">flawless</div></div>
       </div>
       <div class="xbar"><i style="width:${pct}%"></i></div>

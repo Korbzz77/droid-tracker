@@ -636,7 +636,7 @@ let level=store.get("dt_level_"+cycle,0);
 let owned=loadOwnership();
 let view="all", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
 let searchQ="", roadQ="", fuseQ="";
-let idxQ="", idxQual="all", idxCls="all", idxRar="all", idxHideDone=false, idxGaps=false;
+let idxQ="", idxQual="all", idxCls="all", idxHideDone=false, idxGaps=false;
 
 const key=(n,t)=>n+"|"+t;
 /* declared, not assigned to a const, because loadOwnership() runs before this line */
@@ -1396,7 +1396,6 @@ function viewIndex(){
   const complete=d=>rowDone(d)===d.qs.length;
   const visible=droids.filter(d=>
     (idxCls==="all"||d.cls===idxCls) &&
-    (idxRar==="all"||d.rar===idxRar) &&
     (!q||d.n.indexOf(q)>-1) &&
     (!idxHideDone||!complete(d)));
 
@@ -1405,9 +1404,8 @@ function viewIndex(){
   const sets=droids.filter(complete).length;
 
   const left=f=>all.filter(e=>!craftedHas(e.n,e.q)&&(!q||e.n.indexOf(q)>-1)&&f(e)).length;
-  const nQual=v=>left(e=>(v==="all"||e.q===v)&&(idxCls==="all"||e.cls===idxCls)&&(idxRar==="all"||e.rar===idxRar));
-  const nCls =v=>left(e=>(v==="all"||e.cls===v)&&(idxQual==="all"||e.q===idxQual)&&(idxRar==="all"||e.rar===idxRar));
-  const nRar =v=>left(e=>(v==="all"||e.rar===v)&&(idxQual==="all"||e.q===idxQual)&&(idxCls==="all"||e.cls===idxCls));
+  const nQual=v=>left(e=>(v==="all"||e.q===v)&&(idxCls==="all"||e.cls===idxCls));
+  const nCls =v=>left(e=>(v==="all"||e.cls===v)&&(idxQual==="all"||e.q===idxQual));
 
   const CLS_MARK={worker:"W",astromech:"A",battle:"B"};
   const row=d=>`<div class="xr ${complete(d)?"whole":""}">
@@ -1464,8 +1462,6 @@ function viewIndex(){
         `<div class="chip ${idxQual===v?"on":""} ${nQual(v)?"":"done"}" data-xq="${v}">${QUAL_LABEL[v]}<b>${nQual(v)}</b></div>`).join("")}</div>
       <div class="chips">${["all","worker","astromech","battle"].map(v=>
         `<div class="chip ${idxCls===v?"on":""} ${nCls(v)?"":"done"}" data-xc="${v}">${CLS_LABEL[v]}<b>${nCls(v)}</b></div>`).join("")}
-        ${["all"].concat(RAR_ORDER).map(v=>
-        `<div class="chip ${idxRar===v?"on":""} ${nRar(v)?"":"done"}" data-xr="${v}">${v==="all"?"Any rarity":v}<b>${nRar(v)}</b></div>`).join("")}
         <div class="chip ${idxHideDone?"on":""}" id="xhide">Hide finished</div>
         <div class="chip ${idxGaps?"on":""}" id="xgap">Show gaps</div></div>
     </div>
@@ -1735,8 +1731,6 @@ document.body.addEventListener("click",e=>{
   if(xq){ idxQual=xq.dataset.xq; viewIndex(); return}
   const xcl=e.target.closest("[data-xc]");
   if(xcl){ idxCls=xcl.dataset.xc; viewIndex(); return}
-  const xr=e.target.closest("[data-xr]");
-  if(xr){ idxRar=xr.dataset.xr; viewIndex(); return}
   const la=e.target.closest("[data-la]");
   if(la){lookahead=+la.dataset.la; render(); return}
   const sell=e.target.closest("[data-sell]");

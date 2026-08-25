@@ -636,7 +636,7 @@ let level=store.get("dt_level_"+cycle,0);
 let owned=loadOwnership();
 let view="all", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
 let searchQ="", roadQ="", fuseQ="";
-let idxQ="", idxQual="all", idxCls="all", idxHideDone=false, idxGaps=false;
+let idxQ="", idxCls="all", idxHideDone=false, idxGaps=false;
 
 const key=(n,t)=>n+"|"+t;
 /* declared, not assigned to a const, because loadOwnership() runs before this line */
@@ -1366,8 +1366,6 @@ function viewFuse(){
     const n=document.getElementById("fsearch"); if(n) n.focus(); };
 }
 
-const QUAL_LABEL={all:"All",default:"Base",gold:"Gold",diamond:"Diamond",rainbow:"Rainbow",
-  beskar:"Beskar",galactic:"Galactic",stellar:"Stellar"};
 const RAR_ORDER=["common","rare","epic","legendary","mythic","iconic"];
 /* the fusion rarity colours, plus the one rarity fusion never has to name */
 const RARC=Object.assign({iconic:"#3ad6c0"},FRC);
@@ -1390,7 +1388,6 @@ function viewIndex(){
   const all=indexEntries();
   const droids=idxDroids();
   const q=idxQ.trim().toUpperCase();
-  const cols=idxQual==="all"?TIERS:[idxQual];
 
   const rowDone=d=>d.qs.filter(x=>craftedHas(d.n,x)).length;
   const complete=d=>rowDone(d)===d.qs.length;
@@ -1404,13 +1401,12 @@ function viewIndex(){
   const sets=droids.filter(complete).length;
 
   const left=f=>all.filter(e=>!craftedHas(e.n,e.q)&&(!q||e.n.indexOf(q)>-1)&&f(e)).length;
-  const nQual=v=>left(e=>(v==="all"||e.q===v)&&(idxCls==="all"||e.cls===idxCls));
-  const nCls =v=>left(e=>(v==="all"||e.cls===v)&&(idxQual==="all"||e.q===idxQual));
+  const nCls=v=>left(e=>v==="all"||e.cls===v);
 
   const CLS_MARK={worker:"W",astromech:"A",battle:"B"};
   const row=d=>`<div class="xr ${complete(d)?"whole":""}">
       <div class="xn"><span class="xcls xcls-${d.cls}">${CLS_MARK[d.cls]||"?"}</span>${d.n}</div>
-      ${cols.map(qq=>{
+      ${TIERS.map(qq=>{
         const st=`--tq:${TC[qq]};--tqf:${TXT[qq]}`;
         if(d.qs.indexOf(qq)<0) return `<div class="xc none" style="${st}">&middot;</div>`;
         const got=craftedHas(d.n,qq);
@@ -1458,8 +1454,6 @@ function viewIndex(){
           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
         <button class="searchclr ${idxQ?"on":""}" id="xclear" aria-label="Clear search">&times;</button>
       </div>
-      <div class="chips">${["all"].concat(TIERS).map(v=>
-        `<div class="chip ${idxQual===v?"on":""} ${nQual(v)?"":"done"}" data-xq="${v}">${QUAL_LABEL[v]}<b>${nQual(v)}</b></div>`).join("")}</div>
       <div class="chips">${["all","worker","astromech","battle"].map(v=>
         `<div class="chip ${idxCls===v?"on":""} ${nCls(v)?"":"done"}" data-xc="${v}">${CLS_LABEL[v]}<b>${nCls(v)}</b></div>`).join("")}
         <div class="chip ${idxHideDone?"on":""}" id="xhide">Hide finished</div>
@@ -1467,10 +1461,10 @@ function viewIndex(){
     </div>
 
     ${visible.length?`
-      <div class="xtable ${idxGaps?"gaps":""}" style="--cols:${cols.length}">
+      <div class="xtable ${idxGaps?"gaps":""}" style="--cols:${TIERS.length}">
         <div class="xr xhdr">
           <div class="xn">Droid</div>
-          ${cols.map(qq=>`<div class="xc lbl" style="--tqf:${TXT[qq]};color:${TXT[qq]}">${ABBR[qq]}</div>`).join("")}
+          ${TIERS.map(qq=>`<div class="xc lbl" style="--tqf:${TXT[qq]};color:${TXT[qq]}">${ABBR[qq]}</div>`).join("")}
           <div class="xf lbl">Set</div>
         </div>
         ${body}
@@ -1727,8 +1721,6 @@ document.body.addEventListener("click",e=>{
     viewIndex(); return}
   const xg=e.target.closest("[data-xg]");
   if(xg){ toggleGroup(xg.dataset.xg); viewIndex(); return}
-  const xq=e.target.closest("[data-xq]");
-  if(xq){ idxQual=xq.dataset.xq; viewIndex(); return}
   const xcl=e.target.closest("[data-xc]");
   if(xcl){ idxCls=xcl.dataset.xc; viewIndex(); return}
   const la=e.target.closest("[data-la]");

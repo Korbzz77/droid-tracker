@@ -432,6 +432,39 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .frule{flex-wrap:wrap}
 .mt14{margin-top:14px}
 
+/* droidex */
+.xhead{background:var(--card);border-radius:var(--r3);padding:15px 16px;margin-bottom:14px;
+  box-shadow:var(--sh2)}
+.xbig{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-1px;
+  line-height:1;font-variant-numeric:tabular-nums}
+.xbig span{font-size:var(--f4);font-weight:600;color:var(--dim);letter-spacing:0}
+.xbar{height:8px;background:rgba(0,0,0,.4);border-radius:99px;overflow:hidden;margin:11px 0 8px;
+  box-shadow:0 1px 2px #0006 inset}
+.xbar i{display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),#ffb347);
+  transition:width .35s cubic-bezier(.4,0,.2,1)}
+.xgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+@media(min-width:600px){.xgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:900px){.xgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* the same language as the fusion ingredients: missing is an empty dashed outline,
+   crafted is filled and ticked, so the two screens read the same way */
+.xcell{display:flex;align-items:center;gap:9px;min-width:0;width:100%;text-align:left;
+  background:transparent;border:1px dashed var(--line2);border-radius:var(--r1);
+  padding:8px 10px;cursor:pointer;font-family:inherit;color:var(--dim2);
+  transition:background .15s,border-color .15s,color .15s,transform .1s}
+.xcell:active{transform:scale(.97)}
+.xcell .xdot{opacity:.28}
+.xcell.got{background:var(--card);border:1px solid transparent;color:var(--txt)}
+.xcell.got .xdot{opacity:1}
+.xcell.got::after{content:"¹3";margin-left:auto;color:var(--ok);font-weight:700;font-size:12px}
+.xdot{width:13px;height:13px;flex:0 0 13px;border-radius:50%;box-shadow:0 0 0 1.5px #0006 inset}
+.xmeta{min-width:0;display:block}
+.xname{display:block;font-family:var(--display);font-weight:600;font-size:var(--f2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xq{display:block;font-size:var(--f0);font-weight:500;color:var(--dim2);letter-spacing:.4px}
+.xcell.got .xq{color:var(--dim)}
+@media(hover:hover){.xcell:not(.got):hover{border-color:var(--dim2);color:var(--dim)}}
+
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
   background:var(--card);border:1px dashed var(--line2);border-radius:var(--r3)}
@@ -442,7 +475,7 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 /* view enters with a small settle so switching tabs feels intentional */
 @keyframes vin{from{opacity:0;transform:translateY(6px)}
 to{opacity:1;transform:none}}
-#v-all,#v-build,#v-sell,#v-fuse{animation:vin .22s cubic-bezier(.2,.7,.3,1)}
+#v-all,#v-build,#v-sell,#v-fuse,#v-index{animation:vin .22s cubic-bezier(.2,.7,.3,1)}
 
 /* pointer devices (Magic Keyboard / trackpad) get hover affordances */
 @media(hover:hover){
@@ -469,6 +502,7 @@ nav button:hover{color:var(--txt)}
   <button data-v="build"><i><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M12.2 3.6 16.4 7.8 14.3 9.9 10.1 5.7z"/><path d="M10.1 5.7 3.6 12.2v4.2h4.2l6.5-6.5"/></svg></i>BUILD</button>
   <button data-v="sell"><i><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M10.2 2.8H17v6.8l-7.4 7.4a1.4 1.4 0 0 1-2 0l-4.8-4.8a1.4 1.4 0 0 1 0-2z"/><circle cx="13.6" cy="6.4" r="1.15"/></svg></i>SELL</button>
   <button data-v="fuse"><i><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 4.5h2.2c1.5 0 2.9.8 3.7 2.1l1.2 2c.8 1.3 2.2 2.1 3.7 2.1h2.2"/><path d="M3.5 15.5h2.2c1.5 0 2.9-.8 3.7-2.1l.5-.9"/><path d="M14.2 8.1 16.5 10.7 14.2 13.3"/></svg></i>FUSION</button>
+  <button data-v="index"><i><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1.4"/><rect x="11" y="3" width="6" height="6" rx="1.4"/><rect x="3" y="11" width="6" height="6" rx="1.4"/><rect x="11" y="11" width="6" height="6" rx="1.4"/></svg></i>INDEX</button>
 </nav>
 </header>
 
@@ -478,6 +512,7 @@ nav button:hover{color:var(--txt)}
   <div id="v-build" class="hide"></div>
   <div id="v-sell" class="hide"></div>
   <div id="v-fuse" class="hide"></div>
+  <div id="v-index" class="hide"></div>
 </div>
 
 <div class="bpalert" id="bpAlert"></div>
@@ -541,6 +576,7 @@ let level=store.get("dt_level_"+cycle,0);
 let owned=loadOwnership();
 let view="all", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
 let searchQ="", roadQ="", fuseQ="";
+let idxQ="", idxQual="all", idxCls="all", idxRar="all";
 
 const key=(n,t)=>n+"|"+t;
 /* declared, not assigned to a const, because loadOwnership() runs before this line */
@@ -598,6 +634,8 @@ const ownedTier=n=>owned[n]||null;
 const has=(n,t)=>oIdx(n)>=TIERS.indexOf(t);
 function setOwned(name,tier){
   if(tier==null) delete owned[name]; else owned[name]=tier;
+  /* owning a quality proves you crafted that exact one, and only that one */
+  if(tier!=null) markCrafted(name,tier);
   save();
 }
 
@@ -879,6 +917,57 @@ function viewAll(){
   tickBlueprints();
 }
 
+
+/* ---- the droidex ----
+   The in-game index counts 561: 79 regular droids at all seven qualities (553) plus 8 iconic
+   droids that exist at default only. The 79 is exactly the 62 the rebirth chart asks for plus
+   the 17 fusion droids, which is how the numbers were confirmed.
+
+   This is a different idea of ownership from the rest of the app. Elsewhere a higher quality
+   satisfies everything below it, because that is what a rebirth requirement cares about. Here
+   each droid-and-quality is its own entry: crafting a diamond R7 says nothing about whether
+   you ever crafted a gold one. So this is a set of exact pairs, and selling never removes
+   from it, because the question is what you have ever made. */
+const ICONICS=[
+  {n:"BB-8",         cls:"astromech"},
+  {n:"CB-23",        cls:"astromech"},
+  {n:"C-3PO",        cls:"astromech"},
+  {n:"R2-D2",        cls:"astromech"},
+  {n:"CHOPPER",      cls:"astromech"},
+  {n:"DJ R-3X",      cls:"worker"},
+  {n:"MISTER BONES", cls:"battle"},
+  {n:"IG-11 MARSHAL",cls:"battle"}
+];
+let idxCache=null;
+function indexEntries(){
+  if(idxCache) return idxCache;
+  const rar={};
+  [1,2,3,4,5].forEach(c=>DATA[c].rebirths.forEach(rb=>rb.reqs.forEach(r=>{rar[r[0]]=r[2]})));
+  const regular=Object.keys(rar).sort().map(n=>({n,cls:DCLASS[n]||null,rar:rar[n]}))
+    .concat(FUSIONS.map(f=>({n:f.out,cls:f.cls,rar:f.rar})));
+  const out=[];
+  regular.forEach(d=>TIERS.forEach(q=>out.push({n:d.n,q,cls:d.cls,rar:d.rar})));
+  ICONICS.forEach(d=>out.push({n:d.n,q:"default",cls:d.cls,rar:"iconic"}));
+  idxCache=out;
+  return out;
+}
+let crafted=loadCrafted();
+function loadCrafted(){
+  const saved=store.get("dt_crafted",null);
+  if(Array.isArray(saved)) return new Set(saved);
+  /* first run: you demonstrably crafted whatever quality you currently hold, but nothing can
+     be inferred about the ones below it, so only the exact pair is seeded */
+  const seed=new Set();
+  Object.keys(owned).forEach(n=>seed.add(n+"|"+owned[n]));
+  store.set("dt_crafted",[...seed]);
+  return seed;
+}
+const craftedHas=(n,q)=>crafted.has(n+"|"+q);
+function markCrafted(n,q,on){
+  const k=n+"|"+q;
+  if(on===false) crafted.delete(k); else crafted.add(k);
+  store.set("dt_crafted",[...crafted]);
+}
 
 /* ---- fusion ----
    Recipes and rules read from droid-tycoon.pages.dev's own fusion table, which is the only
@@ -1206,6 +1295,80 @@ function viewFuse(){
     const n=document.getElementById("fsearch"); if(n) n.focus(); };
 }
 
+const QUAL_LABEL={all:"All",default:"Base",gold:"Gold",diamond:"Diamond",rainbow:"Rainbow",
+  beskar:"Beskar",galactic:"Galactic",stellar:"Stellar"};
+const RAR_ORDER=["common","rare","epic","legendary","mythic","iconic"];
+
+function viewIndex(){
+  const all=indexEntries();
+  const q=idxQ.trim().toUpperCase();
+  const pass=(e,skip)=>
+    (skip==="qual"||idxQual==="all"||e.q===idxQual) &&
+    (skip==="cls" ||idxCls ==="all"||e.cls===idxCls) &&
+    (skip==="rar" ||idxRar ==="all"||e.rar===idxRar) &&
+    (!q||e.n.indexOf(q)>-1);
+  const shown=all.filter(e=>pass(e));
+  const total=all.length, done=all.filter(e=>craftedHas(e.n,e.q)).length;
+  const shownDone=shown.filter(e=>craftedHas(e.n,e.q)).length;
+  const pct=Math.round(done/total*100);
+  /* counts ignore their own filter, so you can see what switching would give you */
+  const nQual=v=>all.filter(e=>(v==="all"||e.q===v)&&pass(e,"qual")).length;
+  const nCls =v=>all.filter(e=>(v==="all"||e.cls===v)&&pass(e,"cls")).length;
+  const nRar =v=>all.filter(e=>(v==="all"||e.rar===v)&&pass(e,"rar")).length;
+
+  const cell=e=>{
+    const got=craftedHas(e.n,e.q);
+    return `<button class="xcell ${got?"got":""}" data-x="${e.n.replace(/"/g,"&quot;")}|${e.q}">
+      <span class="xdot" style="background:${TC[e.q]}"></span>
+      <span class="xmeta"><span class="xname">${e.n}</span>
+        <span class="xq">${e.rar==="iconic"?"iconic":ABBR[e.q]}</span></span>
+    </button>`;
+  };
+
+  document.getElementById("v-index").innerHTML=`
+    <h2>Droidex</h2>
+    <div class="sub">Every droid at every quality, and whether you have ever crafted it. Unlike
+      the rest of the app a diamond does not count as a gold, and selling never removes anything
+      from here.</div>
+
+    <div class="xhead">
+      <div class="xbig">${done}<span>/${total}</span></div>
+      <div class="xbar"><i style="width:${pct}%"></i></div>
+      <div class="mini">${pct}% of the droidex crafted${q||idxQual!=="all"||idxCls!=="all"||idxRar!=="all"
+        ?` &middot; ${shownDone} of ${shown.length} shown`:""}</div>
+    </div>
+
+    <div class="btools">
+      <div class="searchwrap">
+        <span class="si"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.1"/><path d="M12.4 12.4 16.8 16.8"/></svg></span>
+        <input class="search" id="xsearch" type="search" inputmode="search"
+          placeholder="Find a droid" value="${idxQ.replace(/"/g,"&quot;")}"
+          autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+        <button class="searchclr ${idxQ?"on":""}" id="xclear" aria-label="Clear search">&times;</button>
+      </div>
+      <div class="chips">${["all"].concat(TIERS).map(v=>
+        `<div class="chip ${idxQual===v?"on":""}" data-xq="${v}">${QUAL_LABEL[v]}<b>${nQual(v)}</b></div>`).join("")}</div>
+      <div class="chips">${["all","worker","astromech","battle"].map(v=>
+        `<div class="chip ${idxCls===v?"on":""}" data-xc="${v}">${CLS_LABEL[v]}<b>${nCls(v)}</b></div>`).join("")}
+        ${["all"].concat(RAR_ORDER).map(v=>
+        `<div class="chip ${idxRar===v?"on":""}" data-xr="${v}">${v==="all"?"Any rarity":v}<b>${nRar(v)}</b></div>`).join("")}</div>
+    </div>
+
+    ${shown.length?`<div class="xgrid">${shown.map(cell).join("")}</div>`
+      :`<div class="empty">Nothing matches those filters.</div>`}`;
+
+  const si=document.getElementById("xsearch");
+  if(si) si.oninput=e=>{
+    const pos=e.target.selectionStart;
+    idxQ=e.target.value; viewIndex();
+    const n=document.getElementById("xsearch");
+    if(n){ n.focus(); try{ n.setSelectionRange(pos,pos) }catch(err){} }
+  };
+  const cb=document.getElementById("xclear");
+  if(cb) cb.onclick=()=>{ idxQ=""; viewIndex();
+    const n=document.getElementById("xsearch"); if(n) n.focus(); };
+}
+
 /* ---- settings and reset ---- */
 function cycleStats(c){
   const rbs=DATA[c].rebirths;
@@ -1222,6 +1385,7 @@ function resetCycleLevel(c){
 }
 function resetEverything(){
   owned={}; level=0;
+  crafted=new Set(); store.set("dt_crafted",[]);
   [1,2,3,4,5].forEach(c=>store.set("dt_level_"+c,0));
   save();
 }
@@ -1232,8 +1396,8 @@ function resetEverything(){
 function exportData(){
   const levels={};
   [1,2,3,4,5].forEach(c=>levels[c]=store.get("dt_level_"+c,0));
-  return JSON.stringify({app:"droid-tycoon-tracker",v:2,
-    exported:new Date().toISOString(),cycle,owned,levels});
+  return JSON.stringify({app:"droid-tycoon-tracker",v:3,
+    exported:new Date().toISOString(),cycle,owned,levels,crafted:[...crafted]});
 }
 function backupName(){
   const d=new Date(), p=n=>String(n).padStart(2,"0");
@@ -1289,6 +1453,7 @@ function applyBackup(text){
   const when=(d.exported||"").slice(0,10);
   if(!confirm(`Restore ${n} droids${when?" from "+when:""}?\n\nThis replaces everything currently saved on this device.`)) return false;
   owned=newOwned;
+  if(Array.isArray(d.crafted)){ crafted=new Set(d.crafted); store.set("dt_crafted",d.crafted); }
   [1,2,3,4,5].forEach(c=>store.set("dt_level_"+c,newLevels[c]||0));
   cycle=Number(d.cycle)||1;
   level=newLevels[cycle]||0;
@@ -1361,8 +1526,9 @@ function renderSettings(){
 
       <div class="srow">
         <div><div class="sname">Start over completely</div>
-          <div class="mini">Forgets all ${Object.keys(owned).length} droids you own and sets every
-            cycle back to rebirth 0. This cannot be undone.</div></div>
+          <div class="mini">Forgets all ${Object.keys(owned).length} droids you own, every
+            cycle's rebirth number, and your droidex record of ${crafted.size} crafted. This
+            cannot be undone, so back up first.</div></div>
         <button class="rbtn ${pending==="all"?"armed":""}" data-reset="all">
           ${pending==="all"?"Tap again to confirm":"Start over"}</button>
       </div>
@@ -1401,10 +1567,11 @@ function render(){
      wrong value parks it away from the header edge. render() runs on every view and state
      change, and the cost is one offsetHeight read. */
   syncHeaderH();
-  ["all","build","sell","fuse"].forEach(v=>document.getElementById("v-"+v).classList.toggle("hide",v!==view));
+  ["all","build","sell","fuse","index"].forEach(v=>document.getElementById("v-"+v).classList.toggle("hide",v!==view));
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===view));
   if(view==="all")viewAll(); if(view==="build")viewBuild();
   if(view==="sell")viewSell(); if(view==="fuse")viewFuse();
+  if(view==="index")viewIndex();
   renderSettings();
 }
 
@@ -1428,6 +1595,18 @@ document.body.addEventListener("click",e=>{
       render();
     }
     return}
+  const xc=e.target.closest("[data-x]");
+  if(xc){
+    const i=xc.dataset.x.lastIndexOf("|");
+    const n=xc.dataset.x.slice(0,i), qq=xc.dataset.x.slice(i+1);
+    markCrafted(n,qq,!craftedHas(n,qq));
+    viewIndex(); return}
+  const xq=e.target.closest("[data-xq]");
+  if(xq){ idxQual=xq.dataset.xq; viewIndex(); return}
+  const xcl=e.target.closest("[data-xc]");
+  if(xcl){ idxCls=xcl.dataset.xc; viewIndex(); return}
+  const xr=e.target.closest("[data-xr]");
+  if(xr){ idxRar=xr.dataset.xr; viewIndex(); return}
   const la=e.target.closest("[data-la]");
   if(la){lookahead=+la.dataset.la; render(); return}
   const sell=e.target.closest("[data-sell]");

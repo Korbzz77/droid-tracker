@@ -447,12 +447,12 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
   transition:width .35s cubic-bezier(.4,0,.2,1)}
 
 .xtable{display:grid;
-  grid-template-columns:minmax(150px,260px) repeat(var(--cols),minmax(22px,64px)) minmax(30px,56px);
+  grid-template-columns:minmax(150px,260px) repeat(var(--cols),minmax(22px,64px)) minmax(30px,56px) minmax(28px,48px);
   width:max-content;max-width:100%;
   align-items:stretch;background:var(--card);border-radius:var(--r2);overflow:hidden;
   box-shadow:var(--sh1)}
 .xr{display:contents}
-.xn,.xc,.xf{border-bottom:1px solid var(--line);display:flex;align-items:center;min-height:36px}
+.xn,.xc,.xf,.xw{border-bottom:1px solid var(--line);display:flex;align-items:center;min-height:36px}
 .xn{gap:7px;padding:0 8px 0 10px;font-family:var(--display);font-weight:600;font-size:var(--f2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .xcls{flex:0 0 auto;width:16px;height:16px;border-radius:5px;display:grid;place-items:center;
@@ -470,6 +470,18 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .xf{justify-content:center;border-left:1px solid var(--line);font-size:var(--f0);
   font-weight:600;color:var(--dim2);font-variant-numeric:tabular-nums}
 .xf.close{color:var(--accent)}
+/* Flawless is not an eighth quality, so it reads as a sparkle rather than another tick box
+   and sits outside the seven columns of the matrix. */
+.xw{justify-content:center;border-left:1px solid var(--line);background:none;padding:0;
+  font-family:inherit;font-size:13px;line-height:1;color:var(--line2);cursor:pointer;
+  transition:color .14s,text-shadow .14s}
+.xw.got{color:#fff;text-shadow:0 0 7px rgba(255,255,255,.55)}
+.xw.none{cursor:default;color:var(--dim2);opacity:.35}
+.xw.lbl{cursor:default;color:var(--dim)}
+.xw:active:not(.none):not(.lbl){background:var(--card3)}
+@media(hover:hover){.xw:not(.none):not(.lbl):not(.got):hover{color:var(--dim)}}
+.xtable.gaps .xw.got{opacity:.16}
+.xtable.gaps .xw:not(.got):not(.none):not(.lbl){color:#fff;text-shadow:0 0 6px rgba(255,255,255,.3)}
 /* "Show gaps" answers what the screen is really for. It dims what you own rather than
    hiding it, so a row keeps its shape, and lights the empty boxes in their own quality
    colour. Filled still means owned either way, so the meaning never inverts: the only
@@ -494,17 +506,18 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 /* roomier ticks where there is room for them, tighter name column where there is not */
 @media(min-width:720px){
   .xc::before{width:18px;height:18px}
-  .xn,.xc,.xf{min-height:40px}
+  .xn,.xc,.xf,.xw{min-height:40px}
 }
 @media(max-width:560px){
   .xtable{width:auto;
-    grid-template-columns:minmax(0,1fr) repeat(var(--cols),minmax(22px,30px)) 30px}
+    grid-template-columns:minmax(0,1fr) repeat(var(--cols),minmax(22px,30px)) 28px}
+  .xf{display:none}
   .xn{padding:0 4px 0 8px;gap:5px;font-size:var(--f1)}
   .xcls{width:14px;height:14px;border-radius:4px;font-size:8px}
   .xc::before{width:13px;height:13px}
 }
 
-.xhdr .xn,.xhdr .xc,.xhdr .xf{background:var(--card2);min-height:32px;
+.xhdr .xn,.xhdr .xc,.xhdr .xf,.xhdr .xw{background:var(--card2);min-height:32px;
   font-size:var(--f0);letter-spacing:.6px;font-weight:600;color:var(--dim);cursor:default}
 .xhdr .xc::before{display:none}
 .xgroup{grid-column:1/-1;display:flex;align-items:center;gap:9px;width:100%;
@@ -1026,6 +1039,17 @@ const craftedHas=(n,q)=>crafted.has(n+"|"+q);
 /* which rarity bands are rolled up. Worth keeping across sessions: once you have finished
    the commons you want them out of the way for good, not just until the next reload. */
 let idxClosed=new Set(store.get("dt_idxclosed",[])||[]);
+/* Flawless is a random roll on any craft, not a reward for finishing a set, so it cannot be
+   worked out from what is ticked above. The game counts it 34/79 rather than out of 561, so
+   it is one flag per droid rather than one per droid and quality, and the eight iconics are
+   outside it. That is why it gets a single cell at the end of a row instead of a box in
+   every column. */
+let flawless=new Set(store.get("dt_flawless",[])||[]);
+const isFlaw=n=>flawless.has(n);
+function toggleFlaw(n){
+  if(flawless.has(n)) flawless.delete(n); else flawless.add(n);
+  store.set("dt_flawless",[...flawless]);
+}
 function toggleGroup(r){
   if(idxClosed.has(r)) idxClosed.delete(r); else idxClosed.add(r);
   store.set("dt_idxclosed",[...idxClosed]);
@@ -1399,6 +1423,8 @@ function viewIndex(){
   const total=all.length, done=all.filter(e=>craftedHas(e.n,e.q)).length;
   const pct=Math.round(done/total*100);
   const sets=droids.filter(complete).length;
+  const flawAble=droids.filter(d=>d.qs.length===TIERS.length);
+  const flawTotal=flawAble.length, flawDone=flawAble.filter(d=>isFlaw(d.n)).length;
 
   const left=f=>all.filter(e=>!craftedHas(e.n,e.q)&&(!q||e.n.indexOf(q)>-1)&&f(e)).length;
   const nCls=v=>left(e=>v==="all"||e.cls===v);
@@ -1414,6 +1440,10 @@ function viewIndex(){
           style="${st}" aria-label="${d.n} ${ABBR[qq]}"></button>`;
       }).join("")}
       <div class="xf ${d.qs.length-rowDone(d)===1?"close":""}">${rowDone(d)}/${d.qs.length}</div>
+      ${d.qs.length<TIERS.length
+        ? `<div class="xw none">&middot;</div>`
+        : `<button class="xw ${isFlaw(d.n)?"got":""}" data-xw="${d.n.replace(/"/g,"&quot;")}"
+            aria-pressed="${isFlaw(d.n)}" aria-label="${d.n} flawless">&#10038;</button>`}
     </div>`;
 
   let body="";
@@ -1434,7 +1464,8 @@ function viewIndex(){
     <h2>Droidex</h2>
     <div class="sub">Every droid at every quality, and whether you have ever crafted it. A
       diamond does not count as a gold here, and selling never removes anything. Every number
-      on a filter is how many you still need.</div>
+      on a filter is how many you still need. The sparkle at the end of a row is flawless,
+      which the game counts once per droid rather than once per quality.</div>
 
     <div class="xhead">
       <div class="xstats">
@@ -1442,6 +1473,8 @@ function viewIndex(){
           <div class="mini">crafted &middot; ${pct}%</div></div>
         <div><div class="xbig">${sets}<span>/${droids.length}</span></div>
           <div class="mini">droids finished at every quality</div></div>
+        <div><div class="xbig">${flawDone}<span>/${flawTotal}</span></div>
+          <div class="mini">flawless</div></div>
       </div>
       <div class="xbar"><i style="width:${pct}%"></i></div>
     </div>
@@ -1466,6 +1499,7 @@ function viewIndex(){
           <div class="xn">Droid</div>
           ${TIERS.map(qq=>`<div class="xc lbl" style="--tqf:${TXT[qq]};color:${TXT[qq]}">${ABBR[qq]}</div>`).join("")}
           <div class="xf lbl">Set</div>
+          <div class="xw lbl">&#10038;</div>
         </div>
         ${body}
       </div>`
@@ -1514,8 +1548,9 @@ function resetEverything(){
 function exportData(){
   const levels={};
   [1,2,3,4,5].forEach(c=>levels[c]=store.get("dt_level_"+c,0));
-  return JSON.stringify({app:"droid-tycoon-tracker",v:3,
-    exported:new Date().toISOString(),cycle,owned,levels,crafted:[...crafted]});
+  return JSON.stringify({app:"droid-tycoon-tracker",v:4,
+    exported:new Date().toISOString(),cycle,owned,levels,
+    crafted:[...crafted],flawless:[...flawless]});
 }
 function backupName(){
   const d=new Date(), p=n=>String(n).padStart(2,"0");
@@ -1572,6 +1607,8 @@ function applyBackup(text){
   if(!confirm(`Restore ${n} droids${when?" from "+when:""}?\n\nThis replaces everything currently saved on this device.`)) return false;
   owned=newOwned;
   if(Array.isArray(d.crafted)){ crafted=new Set(d.crafted); store.set("dt_crafted",d.crafted); }
+  /* a v3 backup predates flawless, so leave what is on the device rather than wiping it */
+  if(Array.isArray(d.flawless)){ flawless=new Set(d.flawless); store.set("dt_flawless",d.flawless); }
   [1,2,3,4,5].forEach(c=>store.set("dt_level_"+c,newLevels[c]||0));
   cycle=Number(d.cycle)||1;
   level=newLevels[cycle]||0;
@@ -1719,6 +1756,8 @@ document.body.addEventListener("click",e=>{
     const n=xc.dataset.x.slice(0,i), qq=xc.dataset.x.slice(i+1);
     markCrafted(n,qq,!craftedHas(n,qq));
     viewIndex(); return}
+  const xw=e.target.closest("[data-xw]");
+  if(xw){ toggleFlaw(xw.dataset.xw); viewIndex(); return}
   const xg=e.target.closest("[data-xg]");
   if(xg){ toggleGroup(xg.dataset.xg); viewIndex(); return}
   const xcl=e.target.closest("[data-xc]");

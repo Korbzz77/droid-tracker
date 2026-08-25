@@ -1126,7 +1126,7 @@ const BLUEPRINTS=[
   /* The shop's limited deal rolls over on the hour, which is the same instant as the stellar
      blueprint, so the two chips will always read the same time. It is kept separate because
      it is a different thing to react to and you may want warning about one and not the other. */
-  {id:"deal",    label:"Deal",     mins:[0],     col:"#2fd4c6", secs:36}
+  {id:"deal",    label:"Deal",     mins:[0],     col:"#2fd4c6", secs:10}
 ];
 /* secs is for a spawn that does not land on the minute. The deal resets five seconds past
    the hour, so counting to the hour itself ran the timer out while the old deal was still
@@ -1186,6 +1186,19 @@ function toggleAlert(id){
     ? `${b.label} alert on. You will get a warning ${BP_LEAD/1000} seconds before every spawn.`
     : `${b.label} alert off.`);
 }
+/* Stellar spawns on the hour and the deal ten seconds later, so their warnings overlap: the
+   deal's would land at :59:50 and take the banner off stellar while stellar was still due.
+   The deal is a shop reset rather than a spawn, so it gives way. The check runs every tick
+   rather than burning the alert, so a held deal still takes the banner the moment it is
+   free. In practice that means it does not appear at all in an hour when the stellar alert
+   is also armed, since the stellar banner sits until about :00:10 and the deal has reset by
+   then. That is the intended trade. A spawn still displaces a deal notice. */
+const bpRank=b=>b.id==="deal"?0:1;
+function bpCanShow(b){
+  if(!bpShown||bpShown===b.id) return true;
+  const cur=BLUEPRINTS.find(x=>x.id===bpShown);
+  return !cur||bpRank(b)>=bpRank(cur);
+}
 function hideBpAlert(){
   bpShown=null;
   const el=document.getElementById("bpAlert");
@@ -1219,7 +1232,7 @@ function tickBlueprints(){
 
     /* Alerts are checked before any DOM lookup, so they still fire while you are on BUILD,
        SELL or ROADMAP, where the tiles do not exist. */
-    if(bpAlerts[b.id] && left<=BP_LEAD && bpFired[b.id]!==at.getTime()){
+    if(bpAlerts[b.id] && left<=BP_LEAD && bpFired[b.id]!==at.getTime() && bpCanShow(b)){
       bpFired[b.id]=at.getTime();
       showBpAlert(b);
     }

@@ -192,6 +192,18 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .gcard.done .gnum{color:#d6d6e0}
 .gcard.done .gmade{background:rgba(0,0,0,.3);color:rgba(255,255,255,.62)}
 .gcard.next{box-shadow:0 0 0 3px rgba(255,255,255,.3),0 0 32px -4px var(--accent),var(--sh3)}
+/* A rebirth you already hold every droid for is finished work, whether or not you have
+   passed it, so it stops shouting alongside the ones that still want something. It keeps a
+   trace of the accent because it is still ahead of you, and the 3/3 badge still reads green.
+   The dimmer shadow is skipped on the next card, which would otherwise lose its ring. */
+.gcard.ready{background:#2a2636}
+@supports(background:color-mix(in srgb,red,blue)){
+  .gcard.ready{background:linear-gradient(158deg,
+    color-mix(in srgb,var(--accent) 26%,#2b2b3a),
+    color-mix(in srgb,var(--accent) 13%,#22222f))}
+}
+.gcard.ready:not(.next){box-shadow:var(--sh1)}
+.gcard.ready .gcost{color:#d2cabf}
 .gleft{flex:0 0 62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
 .gnum{background:#0b0b12;font-family:var(--display);border-radius:15px;width:62px;height:62px;display:grid;place-items:center;
   font-size:27px;font-weight:800;color:#fff;letter-spacing:-1px;
@@ -947,7 +959,11 @@ function tierPill(t,label){
 }
 function gameCard(rb,q){
   const m=rb.reqs.filter(x=>has(x[0],x[1])).length;
-  const state = rb.level<=level ? "done" : (rb.level===level+1 ? "next" : "");
+  /* next and ready are not alternatives: the rebirth you are about to do can also be one
+     you already hold every droid for, and it should still say it is next. */
+  const done=rb.level<=level;
+  const state=[done?"done":"", !done&&rb.level===level+1?"next":"",
+               !done&&m===rb.reqs.length?"ready":""].filter(Boolean).join(" ");
   return `<div class="gcard ${state}">
     <div class="gleft">
       <div class="gnum">${rb.level}</div>

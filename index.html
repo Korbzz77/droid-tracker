@@ -1572,15 +1572,23 @@ function cycleStats(c){
 }
 /* Droids are shared across cycles now, so resetting a cycle can only mean its rebirth
    level. Wiping what you own is a separate, clearly labelled thing. */
-function resetCycleLevel(c){
-  store.set("dt_level_"+c,0);
-  if(c===cycle) level=0;
+/* Selling is a cycle thing and the droidex is a lifetime thing, so they are separate
+   actions. Clearing your droids says nothing about what you have ever crafted, and the
+   rebirth number is a dropdown you can set directly, which is why there is no reset for it. */
+function sellAllOwned(){
+  const prev={...owned};
+  owned={}; save(); buildLvlSel(); render();
+  toast(`Sold ${Object.keys(prev).length} droid${Object.keys(prev).length===1?"":"s"}. Your droidex is untouched.`,
+    "Undo",()=>{ owned=prev; save(); render() });
 }
-function resetEverything(){
-  owned={}; level=0;
+function resetDroidex(){
+  const pc=new Set(crafted), pf=new Set(flawless);
   crafted=new Set(); store.set("dt_crafted",[]);
-  [1,2,3,4,5].forEach(c=>store.set("dt_level_"+c,0));
-  save();
+  flawless=new Set(); store.set("dt_flawless",[]);
+  render();
+  toast(`Droidex cleared. ${pc.size} crafted and ${pf.size} flawless forgotten.`,
+    "Undo",()=>{ crafted=pc; flawless=pf;
+      store.set("dt_crafted",[...pc]); store.set("dt_flawless",[...pf]); render() });
 }
 
 /* ---- backup ----
@@ -1677,8 +1685,6 @@ function renderSettings(){
   const el=document.getElementById("settings");
   el.classList.toggle("hide",!settingsOpen);
   if(!settingsOpen) return;
-  const here=cycleStats(cycle);
-  const totMade=[1,2,3,4,5].reduce((a,c)=>a+cycleStats(c).made,0);
   const touched=[1,2,3,4,5].filter(c=>{const s=cycleStats(c);return s.made||s.level});
   el.innerHTML=`
     <div class="card mt14">
@@ -1712,21 +1718,21 @@ function renderSettings(){
       </div>
 
       <div class="srow">
-        <div><div class="sname">Back to rebirth 0 on cycle ${cycle}</div>
-          <div class="mini">Sets this cycle's rebirth number back to 0. Your droids are shared with
-            the other cycles, so they are left alone. You have ${here.made} of the ${here.total}
-            qualities cycle ${cycle} asks for.</div></div>
-        <button class="rbtn ${pending==="cycle"?"armed":""}" data-reset="cycle">
-          ${pending==="cycle"?"Tap again to confirm":"Reset"}</button>
+        <div><div class="sname">Sell all owned droids</div>
+          <div class="mini">Clears all ${Object.keys(owned).length} droids you own, across every
+            cycle, the way rebirthing into a new cycle does. Your droidex and your rebirth
+            numbers are left alone, and there is an undo.</div></div>
+        <button class="rbtn ${pending==="sell"?"armed":""}" data-reset="sell">
+          ${pending==="sell"?"Tap again to confirm":"Sell all"}</button>
       </div>
 
       <div class="srow">
-        <div><div class="sname">Start over completely</div>
-          <div class="mini">Forgets all ${Object.keys(owned).length} droids you own, every
-            cycle's rebirth number, and your droidex record of ${crafted.size} crafted. This
-            cannot be undone, so back up first.</div></div>
-        <button class="rbtn ${pending==="all"?"armed":""}" data-reset="all">
-          ${pending==="all"?"Tap again to confirm":"Start over"}</button>
+        <div><div class="sname">Reset the droidex</div>
+          <div class="mini">Forgets your record of ${crafted.size} crafted and ${flawless.size}
+            flawless. Nothing else does this, because the droidex is meant to outlive every
+            cycle, so back up first. There is an undo, but only until you close the app.</div></div>
+        <button class="rbtn ${pending==="dex"?"armed":""}" data-reset="dex">
+          ${pending==="dex"?"Tap again to confirm":"Reset"}</button>
       </div>
 
       <div class="srow">
@@ -1752,8 +1758,8 @@ function renderSettings(){
   el.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{
     const kind=b.dataset.reset;
     if(pending!==kind){ pending=kind; renderSettings(); setTimeout(()=>{if(pending===kind){pending=null;renderSettings()}},4000); return }
-    if(kind==="cycle") resetCycleLevel(cycle); else resetEverything();
-    pending=null; save(); buildLvlSel(); render();
+    pending=null; renderSettings();
+    if(kind==="sell") sellAllOwned(); else resetDroidex();
   });
   document.getElementById("closeSet").onclick=()=>{settingsOpen=false;pending=null;render()};
 }
@@ -1825,7 +1831,11 @@ document.getElementById("cycleSel").innerHTML=[1,2,3,4,5]
   .map(c=>`<option value="${c}" ${c===cycle?"selected":""} >Cycle ${c}</option>`).join("");
 document.getElementById("cycleSel").onchange=e=>{cycle=+e.target.value;
   level=store.get("dt_level_"+cycle,0);
-  showOwned=false; searchQ=""; roadQ=""; applyTheme(); buildLvlSel(); save(); render(); window.scrollTo(0,0)};
+  showOwned=false; searchQ=""; roadQ=""; applyTheme(); buildLvlSel(); save(); render(); window.scrollTo(0,0);
+  /* Moving cycle usually means you sold up to get here, but not always: you might just be
+     looking. So it is an offer you can ignore rather than something that happens to you. */
+  const n=Object.keys(owned).length;
+  if(n) toast(`Cycle ${cycle}. Sold everything to get here?`,"Sell all",sellAllOwned);};
 document.getElementById("lvlSel").onchange=e=>{
   const prev={...owned};
   level=+e.target.value;

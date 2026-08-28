@@ -228,7 +228,10 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .gtags{display:block;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
   margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gtags b{margin-right:6px;font-weight:600}
-.gtags .grar{color:rgba(255,255,255,.42)}
+/* The quality word is the instruction and the rarity is context, so the rarity is a shade
+   quieter. Both are coloured, and epic sits close to galactic, so weight does the separating
+   that hue on its own would not. */
+.gtags .grar{opacity:.82;font-weight:500}
 .gb{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;border-radius:9px;
   padding:5px 9px;font-size:var(--f1);font-weight:600;letter-spacing:.2px}
 .gbi{font-style:normal;font-size:12px;opacity:.85;display:inline-flex;align-items:center}
@@ -415,6 +418,10 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cst{display:block;font-size:var(--f0);font-weight:500;letter-spacing:.3px;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* The left stripe already says whether you own one and the background already says whether
+   it is due, so rarity goes on the status line instead of taking a channel that means
+   something else. */
+.crar{margin-right:6px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
 .cst.none{color:var(--bad)}
 .cst.up{color:var(--warn);font-weight:600}
 .cst.done{color:var(--ok)}
@@ -636,6 +643,14 @@ const TC={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",
 const TXT={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",rainbow:"#ff6fa5",
   beskar:"#cfd4de",galactic:"#b975f9",stellar:"#ffd23f"};
 
+/* Rarity, deliberately shifted off the quality palette above: legendary reads orange rather
+   than gold so it cannot be mistaken for a gold quality dot, and mythic is pink rather than
+   the red that means "do not have". RARC adds the one rarity no fusion recipe ever has.
+   Every screen that names a rarity reads from here, so it lives with the other colour maps
+   rather than inside whichever screen happened to want it first. */
+const FRC={common:"#8f95a3",rare:"#3d9dff",epic:"#c05cff",legendary:"#ff9a2b",mythic:"#ff4d8d"};
+const RARC=Object.assign({iconic:"#3ad6c0"},FRC);
+
 /* ---- droid class, taken from droidex.web.app's own dataset ----
    Their chart calls B-U4D "BU-4D"; every other name matches ours exactly. */
 const DCLASS={
@@ -821,11 +836,12 @@ function viewBuild(){
   /* One row per droid, two lines tall. Quality is set through the colour swatch, which opens
      the same picker as everywhere else, so the tall strip of tier chips is no longer needed. */
   const crow=(x,later)=>{
+    const rar=`<b class="crar" style="color:${RARC[x.rar]}">${x.rar}</b>`;
     const st = x.nextNeed
-      ? (x.held ? `<span class="cst up">Have ${ABBR[x.held.t]} &rarr; ${ABBR[x.nextNeed.t]}</span>`
-                : `<span class="cst none">Do not have</span>`)
-      : (x.maxed ? `<span class="cst done">Fully upgraded</span>`
-                 : `<span class="cst past">Not needed again</span>`);
+      ? (x.held ? `<span class="cst up">${rar}Have ${ABBR[x.held.t]} &rarr; ${ABBR[x.nextNeed.t]}</span>`
+                : `<span class="cst none">${rar}Do not have</span>`)
+      : (x.maxed ? `<span class="cst done">${rar}Fully upgraded</span>`
+                 : `<span class="cst past">${rar}Not needed again</span>`);
     const need=x.nextNeed
       ? `<span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">RB ${x.nextNeed.lvl}</span>`
       : `<span class="cneed done">DONE</span>`;
@@ -981,7 +997,7 @@ function gameCard(rb,q){
           <span class="gmeta">
             <span class="gname">${n}</span>
             <span class="gtags"><b style="color:${TXT[t]}">${t}</b>
-              <b class="grar">${rar}</b></span>
+              <b class="grar" style="color:${RARC[rar]}">${rar}</b></span>
           </span>
           ${badge}
           <span class="gcheck">&#10003;</span>
@@ -1125,10 +1141,6 @@ const FUSIONS=[
   {out:"LOW-MO",  cls:"worker",    rar:"mythic",    ins:["A-LT","A-LT","LOADLIFTER"]}
 ];
 const RARORDER=["common","rare","epic","legendary","mythic"];
-/* Rarity gets its colour back on this screen only. The values are shifted off the quality
-   palette on purpose: legendary reads orange rather than gold so it cannot be mistaken for a
-   gold quality dot, and mythic is pink rather than the red used for "do not have". */
-const FRC={common:"#8f95a3",rare:"#3d9dff",epic:"#c05cff",legendary:"#ff9a2b",mythic:"#ff4d8d"};
 const canMake=f=>f.ins.every(i=>ownedTier(i));
 
 /* ---- blueprint countdowns ----
@@ -1447,8 +1459,6 @@ function viewFuse(){
 }
 
 const RAR_ORDER=["common","rare","epic","legendary","mythic","iconic"];
-/* the fusion rarity colours, plus the one rarity fusion never has to name */
-const RARC=Object.assign({iconic:"#3ad6c0"},FRC);
 
 /* A droid at seven qualities is a matrix, so lay it out as one: a row per droid, a column
    per quality. A wrapping grid split a droid's set across two rows and gave no way to scan a

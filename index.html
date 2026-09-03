@@ -180,14 +180,14 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
    which pushes the whole grid wider than its container */
 /* Deliberately the loudest screen in the app: it mirrors the in-game rebirth chart, where a
    saturated card carrying dark rows is the whole visual idea. */
-.gcard{background:var(--accent);border-radius:var(--r4);padding:10px;display:flex;gap:10px;
+.gcard{background:var(--accent);border:2px solid transparent;border-radius:var(--r4);padding:10px;display:flex;gap:10px;
   align-items:stretch;position:relative;box-shadow:var(--sh2);transition:box-shadow .2s;
   min-width:0}
 @supports(background:color-mix(in srgb,red,blue)){
   .gcard{background:linear-gradient(158deg,color-mix(in srgb,var(--accent) 86%,#fff),
     var(--accent) 62%)}
 }
-.gcard.done{background:linear-gradient(158deg,#313143,#252533)}
+.gcard.done{background:linear-gradient(158deg,#313143,#252533);border-color:transparent}
 .gcard.done .gcost{color:#bcbcca}
 .gcard.done .gnum{color:#d6d6e0}
 .gcard.done .gmade{background:rgba(0,0,0,.3);color:rgba(255,255,255,.62)}
@@ -196,13 +196,19 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
    passed it, so it stops shouting alongside the ones that still want something. It keeps a
    trace of the accent because it is still ahead of you, and the 3/3 badge still reads green.
    The dimmer shadow is skipped on the next card, which would otherwise lose its ring. */
-.gcard.ready{background:#2a2636}
+/* Three states have to be told apart at a glance, and a dark accent tint was not enough:
+   at a muted accent it landed on the same dark as done. So the difference is not shade but
+   whether the accent is filled or outlined. Filled means work to do, outlined means you
+   hold everything and have not rebirthed yet, and done drops the accent entirely. That
+   holds for any cycle colour rather than only the bright ones. */
+.gcard.ready{background:#22222f;border-color:var(--accent)}
 @supports(background:color-mix(in srgb,red,blue)){
   .gcard.ready{background:linear-gradient(158deg,
-    color-mix(in srgb,var(--accent) 26%,#2b2b3a),
-    color-mix(in srgb,var(--accent) 13%,#22222f))}
+    color-mix(in srgb,var(--accent) 15%,#23232f),
+    color-mix(in srgb,var(--accent) 7%,#1c1c27))}
 }
 .gcard.ready:not(.next){box-shadow:var(--sh1)}
+.gcard.ready .gnum{color:#fff}
 .gcard.ready .gcost{color:#d2cabf}
 .gleft{flex:0 0 62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
 .gnum{background:#0b0b12;font-family:var(--display);border-radius:15px;width:62px;height:62px;display:grid;place-items:center;
@@ -214,7 +220,8 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .grow{display:flex;align-items:center;gap:8px;background:#0b0b12;border-radius:12px;
   padding:8px;cursor:pointer;border:1.5px solid transparent;min-width:0;
   transition:background .15s,border-color .15s,transform .1s}
-.grow.have{border-color:var(--ok);background:#0c1c15}
+.grow.have{border-color:var(--ok);background:#0c1c15;
+  box-shadow:0 0 0 2px rgba(0,0,0,.5)}
 .grow.qmatch{box-shadow:0 0 0 2px var(--accent),0 0 14px -4px var(--accent)}
 .grow:active{transform:scale(.98);background:#1b1b27}
 .gdot{width:15px;height:15px;flex:0 0 15px;border-radius:50%;box-shadow:0 0 0 1.5px #0006 inset}
@@ -236,9 +243,11 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
   padding:5px 9px;font-size:var(--f1);font-weight:600;letter-spacing:.2px}
 .gbi{font-style:normal;font-size:12px;opacity:.85;display:inline-flex;align-items:center}
 .gsell{background:#0b0b12;color:#fff;border:1.5px solid #33334a;font-size:var(--f0)}
-.gcheck{flex:0 0 auto;color:var(--ok);font-weight:900;font-size:14px;width:0;overflow:hidden;
-  transition:width .16s}
-.grow.have .gcheck{width:15px}
+.gcheck{flex:0 0 auto;color:#08130c;background:var(--ok);border-radius:50%;
+  font-weight:900;font-size:11px;width:0;height:18px;overflow:hidden;
+  display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 2px rgba(0,0,0,.45);transition:width .16s}
+.grow.have .gcheck{width:18px}
 .gmade{font-size:10px;font-weight:700;color:rgba(0,0,0,.72);letter-spacing:.5px;
   background:rgba(0,0,0,.2);border-radius:7px;padding:3px 8px;font-variant-numeric:tabular-nums}
 .gmade.ok{background:#0b3a24;color:#5cf0a8}

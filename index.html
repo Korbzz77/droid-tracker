@@ -575,6 +575,10 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
     border-bottom-color:color-mix(in srgb,var(--fr) 30%,transparent)}
 }
 
+.dot.stel,.gdot.stel,.qsw.stel,.fdot.stel{
+  clip-path:polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%);
+  border-radius:0;box-shadow:none}
+.gspark{font-style:normal;font-weight:700;margin-right:1px}
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
   background:var(--card);border:1px dashed var(--line2);border-radius:var(--r3)}
@@ -636,7 +640,8 @@ const TIERS=["default","gold","diamond","rainbow","beskar","galactic","stellar"]
 const TC={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",
   rainbow:"conic-gradient(#ff5470,#ffcc33,#35d07f,#4fc3f7,#a855f7,#ff5470)",
   beskar:"repeating-linear-gradient(45deg,#e8ebf2 0 4px,#9ba1ad 4px 8px)",
-  galactic:"#a855f7",stellar:"#ffd23f"};
+  galactic:"#a855f7",
+  stellar:"radial-gradient(circle at 50% 45%,#fffdf0 0 24%,#ffd23f 58%,#f0a81a 100%)"};
 /* TC carries gradients for rainbow and beskar, which are only legal as a background.
    Text needs a flat colour, otherwise the declaration is invalid, gets dropped, and the
    label silently loses its tier colour. */
@@ -758,10 +763,14 @@ function setOwned(name,tier){
 }
 
 /* ---- render helpers ---- */
-const dot=t=>`<span class="dot" style="background:${TC[t]}"></span>`;
+/* Gold and stellar are a few degrees apart on the wheel and read as the same yellow at the
+   size these appear, which is what people kept tripping over. Hue cannot fix that, so
+   stellar changes shape instead: every swatch of it is a four point star. */
+const stel=t=>t==="stellar"?" stel":"";
+const dot=t=>`<span class="dot${stel(t)}" style="background:${TC[t]}"></span>`;
 /* the coloured dot doubles as the control for "what do I actually own of this one" */
 const qdot=(n,t,cls)=>`<button class="qbtn" data-q="${n.replace(/"/g,"&quot;")}"
-  aria-label="Set the quality you own of ${n.replace(/"/g,"&quot;")}"><span class="${cls||"dot"}"
+  aria-label="Set the quality you own of ${n.replace(/"/g,"&quot;")}"><span class="${cls||"dot"}${stel(t)}"
   style="background:${TC[t]}"></span></button>`;
 
 /* Every quality this droid is asked for in the cycle, keeping all the rebirths that ask,
@@ -843,7 +852,8 @@ function viewBuild(){
       : (x.maxed ? `<span class="cst done">${rar}Fully upgraded</span>`
                  : `<span class="cst past">${rar}Not needed again</span>`);
     const need=x.nextNeed
-      ? `<span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">RB ${x.nextNeed.lvl}</span>`
+      ? `<span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">${
+          x.nextNeed.t==="stellar"?'<b class="gspark">&#10038;</b>':""}RB ${x.nextNeed.lvl}</span>`
       : `<span class="cneed done">DONE</span>`;
     return `<div class="crow ${x.nextNeed?(x.held?"owned":""):(x.maxed?"done":"")} ${later?"later":""}">
       ${qdot(x.n,(x.held||x.nextNeed||x.L[0]).t,"gdot")}
@@ -970,8 +980,13 @@ function tierAt(name,lvl){
 }
 function tierPill(t,label){
   const dark = t==="default"||t==="galactic";
+  /* a badge cannot be star shaped while it holds a number, so the rebirth icon gives way to
+     a sparkle on stellar and carries the same signal the swatches do */
+  const icon = t==="stellar"
+    ? `<span class="gbi gspark">&#10038;</span>`
+    : `<span class="gbi"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.9-4.4"/><path d="M16.4 3.6V7h-3.4"/></svg></span>`;
   return `<span class="gb" style="background:${TC[t]};color:${dark?'#fff':'#14141c'}">
-    <span class="gbi"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.9-4.4"/><path d="M16.4 3.6V7h-3.4"/></svg></span>${label}</span>`;
+    ${icon}${label}</span>`;
 }
 function gameCard(rb,q){
   const m=rb.reqs.filter(x=>has(x[0],x[1])).length;
@@ -1317,7 +1332,7 @@ function renderSheet(){
     ${TIERS.map(t=>{
       const at=needsAt(n,t), sel=own===t;
       return `<button class="qrow ${sel?"on":""} ${at.length?"":"off"}" data-qt="${t}">
-        <span class="qsw" style="background:${TC[t]}"></span>
+        <span class="qsw${stel(t)}" style="background:${TC[t]}"></span>
         <span class="qmeta">
           <span class="qname" style="color:${TXT[t]}">${ABBR[t]}</span>
           <span class="qneed">${at.length?`needed at RB ${at.join(", ")}`:`not needed in cycle ${cycle}`}</span>
@@ -1390,7 +1405,7 @@ function viewFuse(){
         ${f.ins.map(i=>{
           const t=ownedTier(i);
           return `<span class="fin ${t?"got":""}">
-            <span class="fdot" style="background:${t?TC[t]:"#2a2a3a"}"></span>${i}
+            <span class="fdot${t?stel(t):""}" style="background:${t?TC[t]:"#2a2a3a"}"></span>${i}
             ${t?`<b>${ABBR[t]}</b>`:``}</span>`}).join(`<span class="fplus">+</span>`)}
         <span class="farrow">&rarr;</span>
         <span class="fout">${f.out}</span>

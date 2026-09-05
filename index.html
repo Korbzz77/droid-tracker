@@ -444,6 +444,16 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 /* Small classes for what used to be repeated inline style attributes. Inline styles meant
    every colour and spacing fix had to be made in two places, which is how the palette drifted
    in the first place. Tier and rarity colours stay inline: those are data, not styling. */
+/* the rarity band, wearing the same colour it wears on the droidex and in fusion */
+.brar{margin-bottom:20px}
+.brarhead{display:flex;align-items:center;gap:9px;padding:9px 12px;margin:14px 0 2px;
+  border-radius:var(--r1);background:var(--bg2);box-shadow:inset 3px 0 0 var(--fr);
+  font-size:var(--f0);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--fr)}
+.brarhead b{color:var(--txt);font-weight:700}
+@supports(background:color-mix(in srgb,red,blue)){
+  .brarhead{background:color-mix(in srgb,var(--fr) 13%,var(--card))}
+}
 .colnote{padding:10px 2px}
 .collater{padding:12px 2px 2px}
 .countline{padding-bottom:9px}
@@ -707,6 +717,10 @@ let level=store.get("dt_level_"+cycle,0);
    cycle, because that genuinely is per cycle. */
 let owned=loadOwnership();
 let view="all", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
+/* Two ways to read the same list. By rebirth answers "what is next", by rarity answers
+   "what is this tier costing me", which is the question if you plan a whole cycle at once.
+   Kept because it is a preference rather than a filter: you would not want to re-pick it. */
+let buildGroup=store.get("dt_buildgroup","level");
 let searchQ="", roadQ="", fuseQ="";
 let idxQ="", idxCls="all", idxHideDone=false, idxGaps=false;
 
@@ -868,8 +882,8 @@ function viewBuild(){
       ${qdot(x.n,(x.held||x.nextNeed||x.L[0]).t,"gdot")}
       <span class="cmeta"><span class="cname">${x.n}</span>${st}</span>${need}</div>`;
   };
-  const column=(cls)=>{
-    const mine=shown.filter(x=>DCLASS[x.n]===cls);
+  const column=(cls,list)=>{
+    const mine=list.filter(x=>DCLASS[x.n]===cls);
     const due=mine.filter(x=>x.nextNeed.lvl<=upto);
     const later=mine.filter(x=>x.nextNeed.lvl>upto);
     return `<div>
@@ -879,10 +893,19 @@ function viewBuild(){
         ${later.map(x=>crow(x,true)).join("")}`:""}
     </div>`;
   };
+  const cols=list=>`<div class="bcols">${["worker","astromech","battle"]
+    .map(c=>column(c,list)).join("")}</div>`;
+  const byRarity=()=>RAR_ORDER.filter(r=>r!=="iconic").map(r=>{
+    const inRar=shown.filter(x=>x.rar===r);
+    if(!inRar.length) return "";
+    return `<div class="brar" style="--fr:${RARC[r]}">
+      <div class="brarhead">${r}<b>${inRar.length}</b></div>${cols(inRar)}</div>`;
+  }).join("");
 
   document.getElementById("v-build").innerHTML=`
     <h2>Build list</h2>
-    <div class="sub">What cycle ${cycle} still needs, split by class. Tap a droid's
+    <div class="sub">What cycle ${cycle} still needs, ${buildGroup==="rarity"
+      ? "grouped by rarity and then by class" : "split by class"}. Tap a droid's
       <b class="hi">colour dot</b> to set the quality you own.${split}</div>
 
     <div class="btools">
@@ -895,10 +918,13 @@ function viewBuild(){
       </div>
       <div class="chips">${[1,3,5,10].map(n=>`<div class="chip ${lookahead===n?"on":""}" data-la="${n}">Next ${n}</div>`).join("")}
         <div class="chip ${lookahead===35?"on":""}" data-la="35">Rest of cycle</div></div>
+      <div class="chips">
+        <div class="chip ${buildGroup==="level"?"on":""}" data-bgrp="level">By rebirth</div>
+        <div class="chip ${buildGroup==="rarity"?"on":""}" data-bgrp="rarity">By rarity</div></div>
     </div>
 
     ${shown.length
-      ? `<div class="bcols">${["worker","astromech","battle"].map(column).join("")}</div>`
+      ? (buildGroup==="rarity" ? byRarity() : cols(shown))
       : `<div class="empty">Nothing cycle ${cycle} still needs matches
            &ldquo;${searchQ.replace(/</g,"&lt;")}&rdquo;.<br>
            You may already be done with it.</div>`}
@@ -1859,6 +1885,8 @@ document.body.addEventListener("click",e=>{
   if(xg){ toggleGroup(xg.dataset.xg); viewIndex(); return}
   const xcl=e.target.closest("[data-xc]");
   if(xcl){ idxCls=xcl.dataset.xc; viewIndex(); return}
+  const bg=e.target.closest("[data-bgrp]");
+  if(bg){ buildGroup=bg.dataset.bgrp; store.set("dt_buildgroup",buildGroup); viewBuild(); return}
   const la=e.target.closest("[data-la]");
   if(la){lookahead=+la.dataset.la; render(); return}
   const sell=e.target.closest("[data-sell]");

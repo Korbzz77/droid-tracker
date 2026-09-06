@@ -437,6 +437,10 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .cst.past{color:var(--dim2)}
 .cneed{flex:0 0 auto;font-size:var(--f0);font-weight:600;padding:4px 7px;border-radius:6px;
   white-space:nowrap}
+/* the next grade sits above the highest one the cycle ever wants, so the pair reads as
+   "this now, that eventually" without costing the row any width */
+.cneedwrap{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.cmax{font-size:var(--f0);font-weight:700;letter-spacing:.3px;white-space:nowrap;opacity:.9}
 /* one stroke icon style, sized to the text it sits with */
 .ic{width:1em;height:1em;display:inline-block;vertical-align:-.13em;flex:0 0 auto;
   fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -885,9 +889,12 @@ function viewBuild(){
                 : `<span class="cst none">${rar}Do not have</span>`)
       : (x.maxed ? `<span class="cst done">${rar}Fully upgraded</span>`
                  : `<span class="cst past">${rar}Not needed again</span>`);
+    const top=x.L[x.L.length-1];
+    const ceiling = x.nextNeed && top && top.t!==x.nextNeed.t
+      ? `<span class="cmax" style="color:${TXT[top.t]}">&uarr;${ABBR[top.t]}</span>` : "";
     const need=x.nextNeed
-      ? `<span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">${
-          x.nextNeed.t==="stellar"?'<b class="gspark">&#10038;</b>':""}RB ${x.nextNeed.lvl}</span>`
+      ? `<span class="cneedwrap"><span class="cneed" style="background:${TC[x.nextNeed.t]};color:${LIGHT[x.nextNeed.t]?"#14141c":"#fff"}">${
+          x.nextNeed.t==="stellar"?'<b class="gspark">&#10038;</b>':""}RB ${x.nextNeed.lvl}</span>${ceiling}</span>`
       : `<span class="cneed done">DONE</span>`;
     return `<div class="crow ${x.nextNeed?(x.held?"owned":""):(x.maxed?"done":"")} ${later?"later":""}">
       ${qdot(x.n,(x.held||x.nextNeed||x.L[0]).t,"gdot")}
@@ -918,7 +925,8 @@ function viewBuild(){
     <div class="sub">What cycle ${cycle} still needs, ${byRar
       ? "all of it, grouped by rarity and then by class"
       : "split by class"}. Tap a droid's
-      <b class="hi">colour dot</b> to set the quality you own.${split}</div>
+      <b class="hi">colour dot</b> to set the quality you own. An arrow under a rebirth badge
+      is the highest grade cycle ${cycle} ever wants, so you know what not to buy.${split}</div>
 
     <div class="btools">
       <div class="searchwrap">

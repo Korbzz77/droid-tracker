@@ -454,6 +454,9 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 @supports(background:color-mix(in srgb,red,blue)){
   .brarhead{background:color-mix(in srgb,var(--fr) 13%,var(--card))}
 }
+.sellall{display:flex;align-items:center;gap:12px;margin-top:22px;padding:14px;
+  background:var(--card);border-radius:var(--r2);box-shadow:var(--sh1)}
+.sellall .mini{font-weight:500;line-height:1.5}
 .colnote{padding:10px 2px}
 .collater{padding:12px 2px 2px}
 .countline{padding-bottom:9px}
@@ -715,7 +718,8 @@ let level=store.get("dt_level_"+cycle,0);
 /* Ownership is global. In the game you own one droid at one quality, and that quality
    satisfies every requirement at or below it in every cycle. Rebirth level stays per
    cycle, because that genuinely is per cycle. */
-let owned=loadOwnership();
+migrateOwnership();
+let owned=loadOwnership(cycle);
 let view="all", lookahead=3, showOwned=false, settingsOpen=false, pending=null;
 /* Two ways to read the same list. By rebirth answers "what is next", by rarity answers
    "what is this tier costing me", which is the question if you plan a whole cycle at once.
@@ -728,22 +732,37 @@ const key=(n,t)=>n+"|"+t;
 /* declared, not assigned to a const, because loadOwnership() runs before this line */
 function splitKey(k){const i=k.lastIndexOf("|");return i<1?null:[k.slice(0,i),k.slice(i+1)]}
 const rbs=()=>DATA[cycle].rebirths;
+/* A declaration, not a const: migrateOwnership() runs before this line and would hit the
+   temporal dead zone, which takes the whole script down with it. */
+function ownedKey(c){ return "dt_owned_"+c }
 const save=()=>{store.set("dt_cycle",cycle);store.set("dt_level_"+cycle,level);
-  store.set("dt_owned",owned)};
+  store.set(ownedKey(cycle),owned)};
 
-/* Progress used to live in per-cycle sets of NAME|tier keys, which meant a droid you owned
-   in cycle 1 was invisible in cycle 3. Fold those into one ownership map, best quality wins.
-   The old keys are left in storage untouched, so an older build still reads its own data. */
-function loadOwnership(){
-  const cur=store.get("dt_owned",null);
+/* Droids belong to a cycle. A super rebirth takes them with it, so nothing carries over,
+   and each cycle keeps its own map under its own key.
+
+   There was a spell where one shared map satisfied every cycle. That map only ever described
+   the cycle actually being played, so it folds into that one and the others start empty,
+   which is the truth: you cannot hold droids in a cycle you have not played. The old key is
+   left where it is, so an older build and any existing backup still read. The marker is what
+   stops the same map landing in a second cycle the next time one is opened. */
+function migrateOwnership(){
+  if(store.get("dt_owned_split",false)) return;
+  const shared=store.get("dt_owned",null);
+  if(shared&&typeof shared==="object"&&!Array.isArray(shared)
+     && !store.get(ownedKey(cycle),null)) store.set(ownedKey(cycle),shared);
+  store.set("dt_owned_split",true);
+}
+function loadOwnership(c){
+  const cur=store.get(ownedKey(c),null);
   if(cur&&typeof cur==="object"&&!Array.isArray(cur)) return cur;
+  /* older still: a per cycle set of NAME|tier keys, which was already the right shape */
   const m={};
-  [1,2,3,4,5].forEach(c=>(store.get("dt_made_"+c,[])||[]).forEach(k=>{
+  (store.get("dt_made_"+c,[])||[]).forEach(k=>{
     const s=splitKey(k); if(!s) return;
     const n=s[0],t=s[1]; if(TIERS.indexOf(t)<0) return;
     if(!m[n]||TIERS.indexOf(t)>TIERS.indexOf(m[n])) m[n]=t;
-  }));
-  store.set("dt_owned",m);
+  });
   return m;
 }
 
@@ -758,20 +777,6 @@ function autofill(L){
 function futureNeeds(name){
   const out=[];
   rbs().forEach(rb=>{ if(rb.level>level) rb.reqs.forEach(([n,t])=>{ if(n===name) out.push({lvl:rb.level,tier:t}) }) });
-  return out;
-}
-/* Used for a footnote, not for the safe/keep decision. Sorting on all five cycles at once
-   buries the sell list, because almost every droid is wanted somewhere eventually. The
-   split follows the cycle you are playing; this just says who else will want it back. */
-function allFutureNeeds(name){
-  const out=[];
-  [1,2,3,4,5].forEach(c=>{
-    const lv=store.get("dt_level_"+c,0);
-    DATA[c].rebirths.forEach(rb=>{
-      if(rb.level<=lv) return;
-      rb.reqs.forEach(([n,t])=>{ if(n===name) out.push({cycle:c,lvl:rb.level,tier:t}) });
-    });
-  });
   return out;
 }
 const oIdx=n=>{const t=owned[n];return t==null?-1:TIERS.indexOf(t)};
@@ -959,18 +964,12 @@ function viewBuild(){
 function viewSell(){
   const sellable=[],keep=[];
   Object.keys(owned).sort().forEach(n=>{
-    const f=futureNeeds(n);                                  /* this cycle, from where you are */
-    const other=allFutureNeeds(n).filter(x=>x.cycle!==cycle); /* who else wants it back */
-    if(!f.length) sellable.push({n,t:owned[n],other});
-    else keep.push({n,t:owned[n],f,other});
+    const f=futureNeeds(n);   /* this cycle, from where you are; there is no other cycle to ask */
+    if(!f.length) sellable.push({n,t:owned[n]});
+    else keep.push({n,t:owned[n],f});
   });
   const needLabel=f=>f.slice(0,3).map(y=>"RB"+y.lvl+" "+y.tier).join(", ")
     +(f.length>3?" +"+(f.length-3):"");
-  const otherLabel=o=>{
-    if(!o.length) return "";
-    const cs=[...new Set(o.map(x=>x.cycle))].sort();
-    return `<span class="dim2"> &middot; cycle ${cs.join(", ")} want${cs.length>1?"":"s"} it back</span>`;
-  };
   const row=(x,cls,pill,pillCls,note)=>`
     <div class="row tap ${cls}" data-sell="${x.n.replace(/"/g,"&quot;")}">
       <div class="fill">
@@ -994,11 +993,11 @@ function viewSell(){
 
   document.getElementById("v-sell").innerHTML=`
     <h2>Safe to sell &middot; ${sellable.length}</h2>
-    <div class="sub">Cycle ${cycle} is finished with these. Tap one to sell it, which clears it
-      everywhere. If another cycle wants it back later the row tells you, but you can always
-      buy it again.</div>
+    <div class="sub">Cycle ${cycle} is finished with these. Tap one to sell it. Droids belong to
+      the cycle you are in, so this only touches cycle ${cycle}, and you can always buy it
+      again.</div>
     ${sellable.length?`<div class="srows">${sellable.map(x=>row(x,"sellable","SELL","sell",
-        "holding "+x.t+otherLabel(x.other))).join("")}</div>`
+        "holding "+x.t)).join("")}</div>`
       :`<div class="empty">${emptyMsg}</div>`}
 
     <h2>Hold on to &middot; ${keep.length}</h2>
@@ -1008,7 +1007,23 @@ function viewSell(){
         "holding "+x.t+" &rarr; "+needLabel(x.f))).join("")}</div>`
       :`<div class="empty">${ownCount===0
           ? "Nothing owned yet."
-          : `Cycle ${cycle} is done with every droid you own. All ${ownCount} are safe to sell.`}</div>`}`;
+          : `Cycle ${cycle} is done with every droid you own. All ${ownCount} are safe to sell.`}</div>`}
+
+    ${ownCount?`<div class="sellall">
+      <div><div class="sname">Sell everything in cycle ${cycle}</div>
+        <div class="mini">Clears all ${ownCount} droids you hold in this cycle, the way a super
+          rebirth does. The other cycles and your droidex are untouched.</div></div>
+      <button class="rbtn ${pending==="sellall"?"armed":""}" id="sellAllBtn">
+        ${pending==="sellall"?"Tap again to confirm":"Sell all"}</button>
+    </div>`:""}`;
+
+  const sa=document.getElementById("sellAllBtn");
+  if(sa) sa.onclick=()=>{
+    if(pending!=="sellall"){ pending="sellall"; viewSell();
+      setTimeout(()=>{ if(pending==="sellall"){pending=null; if(view==="sell") viewSell()} },4000);
+      return }
+    pending=null; sellAllOwned();
+  };
 }
 
 /* tier a droid is required at, at a given rebirth level */
@@ -1645,8 +1660,11 @@ function viewIndex(){
 function cycleStats(c){
   const rbs=DATA[c].rebirths;
   const req=new Set(rbs.flatMap(r=>r.reqs.map(x=>x[0]+"|"+x[1])));
+  /* has() reads the cycle in hand, which is the wrong map for any other cycle */
+  const map=c===cycle?owned:loadOwnership(c);
+  const holds=(n,t)=>{const o=map[n];return o!=null&&TIERS.indexOf(o)>=TIERS.indexOf(t)};
   let m=0;
-  req.forEach(k=>{const s=splitKey(k); if(s&&has(s[0],s[1])) m++});
+  req.forEach(k=>{const s=splitKey(k); if(s&&holds(s[0],s[1])) m++});
   return {total:req.size,made:m,level:store.get("dt_level_"+c,0)};
 }
 /* Droids are shared across cycles now, so resetting a cycle can only mean its rebirth
@@ -1676,8 +1694,12 @@ function resetDroidex(){
 function exportData(){
   const levels={};
   [1,2,3,4,5].forEach(c=>levels[c]=store.get("dt_level_"+c,0));
-  return JSON.stringify({app:"droid-tycoon-tracker",v:4,
-    exported:new Date().toISOString(),cycle,owned,levels,
+  /* five maps now, one per cycle. The cycle in hand is read from memory rather than
+     storage, so an export never trails an edit that has not been saved yet. */
+  const owns={};
+  [1,2,3,4,5].forEach(c=>owns[c]= c===cycle ? {...owned} : loadOwnership(c));
+  return JSON.stringify({app:"droid-tycoon-tracker",v:5,
+    exported:new Date().toISOString(),cycle,ownedByCycle:owns,levels,
     crafted:[...crafted],flawless:[...flawless]});
 }
 function backupName(){
@@ -1714,32 +1736,45 @@ function applyBackup(text){
   try{ d=JSON.parse(text) }catch(e){ alert("That file is not readable as a backup."); return false }
   if(!d||d.app!=="droid-tycoon-tracker"){
     alert("That is not a Droid Tycoon Tracker backup."); return false }
-  const newOwned={}, newLevels={};
-  if(d.owned&&typeof d.owned==="object"){
-    Object.keys(d.owned).forEach(nm=>{ if(TIERS.indexOf(d.owned[nm])>-1) newOwned[nm]=d.owned[nm] });
+  const clean=o=>{const m={};
+    Object.keys(o||{}).forEach(nm=>{ if(TIERS.indexOf(o[nm])>-1) m[nm]=o[nm] });
+    return m};
+  const newOwned={1:{},2:{},3:{},4:{},5:{}}, newLevels={};
+  const backupCycle=Number(d.cycle)||1;
+  if(d.ownedByCycle&&typeof d.ownedByCycle==="object"){
+    [1,2,3,4,5].forEach(c=>newOwned[c]=clean(d.ownedByCycle[c]));
+    [1,2,3,4,5].forEach(c=>newLevels[c]=Number((d.levels||{})[c])||0);
+  } else if(d.owned&&typeof d.owned==="object"){
+    /* one shared map, from the spell when droids counted everywhere. It described the cycle
+       that backup was taken on, so that is where it lands, same as the migration on device. */
+    newOwned[backupCycle]=clean(d.owned);
     [1,2,3,4,5].forEach(c=>newLevels[c]=Number((d.levels||{})[c])||0);
   } else if(d.cycles){
-    /* a backup from before droids were shared across cycles: fold it in the same way */
+    /* older still, and already per cycle: keep each cycle's droids where they were */
     [1,2,3,4,5].forEach(c=>{
       const e=d.cycles[c]||{};
       newLevels[c]=Number(e.level)||0;
+      const m={};
       (Array.isArray(e.made)?e.made:[]).forEach(k=>{
         const s=splitKey(k); if(!s) return;
         const nm=s[0], t=s[1]; if(TIERS.indexOf(t)<0) return;
-        if(!newOwned[nm]||TIERS.indexOf(t)>TIERS.indexOf(newOwned[nm])) newOwned[nm]=t;
+        if(!m[nm]||TIERS.indexOf(t)>TIERS.indexOf(m[nm])) m[nm]=t;
       });
+      newOwned[c]=m;
     });
   } else { alert("That is not a Droid Tycoon Tracker backup."); return false }
-  const n=Object.keys(newOwned).length;
+  const n=[1,2,3,4,5].reduce((a,c)=>a+Object.keys(newOwned[c]).length,0);
   const when=(d.exported||"").slice(0,10);
   if(!confirm(`Restore ${n} droids${when?" from "+when:""}?\n\nThis replaces everything currently saved on this device.`)) return false;
-  owned=newOwned;
+  [1,2,3,4,5].forEach(c=>store.set(ownedKey(c),newOwned[c]));
+  store.set("dt_owned_split",true);
   if(Array.isArray(d.crafted)){ crafted=new Set(d.crafted); store.set("dt_crafted",d.crafted); }
   /* a v3 backup predates flawless, so leave what is on the device rather than wiping it */
   if(Array.isArray(d.flawless)){ flawless=new Set(d.flawless); store.set("dt_flawless",d.flawless); }
   [1,2,3,4,5].forEach(c=>store.set("dt_level_"+c,newLevels[c]||0));
-  cycle=Number(d.cycle)||1;
+  cycle=backupCycle;
   level=newLevels[cycle]||0;
+  owned=newOwned[cycle];
   save();
   return true;
 }
@@ -1768,9 +1803,10 @@ function renderSettings(){
   el.innerHTML=`
     <div class="card mt14">
       <div class="stitle">Settings</div>
-      <div class="sub ssub">Droids you own are shared across all five cycles,
-        the way they are in the game. Only the rebirth number is per cycle. Everything is stored on
-        this device only, nothing is sent anywhere. You own ${Object.keys(owned).length} droids.
+      <div class="sub ssub">Each cycle keeps its own droids, the way the game does: a super
+        rebirth takes them with it. Only the droidex outlives them. Everything is stored on
+        this device only, nothing is sent anywhere. You hold ${Object.keys(owned).length}
+        droids in cycle ${cycle}.
         Cycles started: ${touched.length?touched.map(c=>"Cycle "+c).join(", "):"none yet"}.</div>
 
       ${level>0?`
@@ -1794,15 +1830,6 @@ function renderSettings(){
           <div class="mini">Reads a backup file and replaces everything currently saved on this
             device with it.</div></div>
         <button class="sbtn" id="bkLoad">Restore</button>
-      </div>
-
-      <div class="srow">
-        <div><div class="sname">Sell all owned droids</div>
-          <div class="mini">Clears all ${Object.keys(owned).length} droids you own, across every
-            cycle, the way rebirthing into a new cycle does. Your droidex and your rebirth
-            numbers are left alone, and there is an undo.</div></div>
-        <button class="rbtn ${pending==="sell"?"armed":""}" data-reset="sell">
-          ${pending==="sell"?"Tap again to confirm":"Sell all"}</button>
       </div>
 
       <div class="srow">
@@ -1838,7 +1865,7 @@ function renderSettings(){
     const kind=b.dataset.reset;
     if(pending!==kind){ pending=kind; renderSettings(); setTimeout(()=>{if(pending===kind){pending=null;renderSettings()}},4000); return }
     pending=null; renderSettings();
-    if(kind==="sell") sellAllOwned(); else resetDroidex();
+    resetDroidex();
   });
   document.getElementById("closeSet").onclick=()=>{settingsOpen=false;pending=null;render()};
 }
@@ -1912,11 +1939,8 @@ document.getElementById("cycleSel").innerHTML=[1,2,3,4,5]
   .map(c=>`<option value="${c}" ${c===cycle?"selected":""} >Cycle ${c}</option>`).join("");
 document.getElementById("cycleSel").onchange=e=>{cycle=+e.target.value;
   level=store.get("dt_level_"+cycle,0);
-  showOwned=false; searchQ=""; roadQ=""; applyTheme(); buildLvlSel(); save(); render(); window.scrollTo(0,0);
-  /* Moving cycle usually means you sold up to get here, but not always: you might just be
-     looking. So it is an offer you can ignore rather than something that happens to you. */
-  const n=Object.keys(owned).length;
-  if(n) toast(`Cycle ${cycle}. Sold everything to get here?`,"Sell all",sellAllOwned);};
+  owned=loadOwnership(cycle);
+  showOwned=false; searchQ=""; roadQ=""; applyTheme(); buildLvlSel(); save(); render(); window.scrollTo(0,0)};
 document.getElementById("lvlSel").onchange=e=>{
   const prev={...owned};
   level=+e.target.value;

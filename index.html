@@ -457,6 +457,9 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .sellall{display:flex;align-items:center;gap:12px;margin-top:22px;padding:14px;
   background:var(--card);border-radius:var(--r2);box-shadow:var(--sh1)}
 .sellall.spent{opacity:.55}
+.sellline{margin:0 0 14px;padding:11px 16px;font-size:var(--f3);
+  border-color:rgba(255,84,112,.45);color:var(--bad)}
+.sellline.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
 .sellall .rbtn[disabled]{cursor:default;border-color:var(--line2);color:var(--dim2)}
 .sellall .mini{font-weight:500;line-height:1.5}
 .colnote{padding:10px 2px}
@@ -972,12 +975,24 @@ function sellAllCard(){
            The other cycles and your droidex are untouched.`
         : `You hold no droids in cycle ${cycle}, so there is nothing here to sell. Each cycle
            keeps its own, so check the other cycles if you expected some.`}</div></div>
-    <button class="rbtn ${pending==="sellall"?"armed":""}" ${n?"":"disabled"}>
+    <button class="rbtn ${pending==="sellall"?"armed":""}" data-sellall ${n?"":"disabled"}>
       ${pending==="sellall"?"Tap again to confirm":"Sell all"}</button>
   </div>`;
 }
+/* The roadmap is where the time goes, and its foot is thirty five cards away, so the
+   shortcut sits under the search instead. It says the count and the cycle rather than just
+   "sell all", because a bare label on something destructive is a guess. It scrolls away once
+   you are into the chart, and it costs nothing in the header or the sticky bar. */
+function sellAllLine(){
+  const n=Object.keys(owned).length;
+  if(!n) return "";
+  return `<button class="btn ghost sellline ${pending==="sellall"?"armed":""}" data-sellall>
+    ${pending==="sellall"
+      ? `Tap again to sell all ${n} in cycle ${cycle}`
+      : `Sell all ${n} droid${n===1?"":"s"} in cycle ${cycle}`}</button>`;
+}
 function bindSellAll(rootId){
-  const sa=document.querySelector("#"+rootId+" .sellall .rbtn");
+  const sa=document.querySelector("#"+rootId+" [data-sellall]");
   if(!sa) return;
   sa.onclick=()=>{
     if(pending!=="sellall"){
@@ -1110,11 +1125,12 @@ function viewAll(){
       ${q?`<div class="mini countline">${shown.length} of ${all.length}
         rebirths need a droid matching &ldquo;${esc(roadQ)}&rdquo;</div>`:""}
     </div>
+    ${sellAllLine()}
     ${shown.length
       ? `<div class="gwrap">${shown.map(rb=>gameCard(rb,q)).join("")}</div>`
       : `<div class="empty">Nothing in cycle ${cycle} needs a droid matching
            &ldquo;${esc(roadQ)}&rdquo;.<br>It may belong to one of the other cycles.</div>`}
-    ${sellAllCard()}`;
+`;
   bindSellAll("v-all");
   const si=document.getElementById("rsearch");
   if(si) si.oninput=e=>{

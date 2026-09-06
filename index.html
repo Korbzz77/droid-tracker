@@ -769,8 +769,8 @@ function loadOwnership(c){
 }
 
 /* Reaching rebirth L means you owned everything asked for along the way, so raise anything
-   short of that. It never lowers a quality and never touches droids this cycle omits,
-   because those are the same droids you own everywhere else. */
+   short of that. It never lowers a quality, and it only ever names droids this cycle asks
+   for, which is all it can speak to now that a cycle keeps its own. */
 function autofill(L){
   rbs().forEach(rb=>{ if(rb.level<=L) rb.reqs.forEach(([n,t])=>{
     if(oIdx(n)<TIERS.indexOf(t)) owned[n]=t; }) });
@@ -963,6 +963,31 @@ function viewBuild(){
     const n=document.getElementById("dsearch"); if(n) n.focus(); };
 }
 
+function sellAllCard(){
+  const n=Object.keys(owned).length;
+  return `<div class="sellall ${n?"":"spent"}">
+    <div><div class="sname">Sell everything in cycle ${cycle}</div>
+      <div class="mini">${n
+        ? `Clears all ${n} droids you hold in this cycle, the way a super rebirth does.
+           The other cycles and your droidex are untouched.`
+        : `You hold no droids in cycle ${cycle}, so there is nothing here to sell. Each cycle
+           keeps its own, so check the other cycles if you expected some.`}</div></div>
+    <button class="rbtn ${pending==="sellall"?"armed":""}" ${n?"":"disabled"}>
+      ${pending==="sellall"?"Tap again to confirm":"Sell all"}</button>
+  </div>`;
+}
+function bindSellAll(rootId){
+  const sa=document.querySelector("#"+rootId+" .sellall .rbtn");
+  if(!sa) return;
+  sa.onclick=()=>{
+    if(pending!=="sellall"){
+      pending="sellall"; render();
+      setTimeout(()=>{ if(pending==="sellall"){ pending=null; render() } },4000);
+      return }
+    pending=null; sellAllOwned();
+  };
+}
+
 function viewSell(){
   const sellable=[],keep=[];
   Object.keys(owned).sort().forEach(n=>{
@@ -1011,24 +1036,8 @@ function viewSell(){
           ? "Nothing owned yet."
           : `Cycle ${cycle} is done with every droid you own. All ${ownCount} are safe to sell.`}</div>`}
 
-    <div class="sellall ${ownCount?"":"spent"}">
-      <div><div class="sname">Sell everything in cycle ${cycle}</div>
-        <div class="mini">${ownCount
-          ? `Clears all ${ownCount} droids you hold in this cycle, the way a super rebirth does.
-             The other cycles and your droidex are untouched.`
-          : `You hold no droids in cycle ${cycle}, so there is nothing here to sell. Each cycle
-             keeps its own, so check the other cycles if you expected some.`}</div></div>
-      <button class="rbtn ${pending==="sellall"?"armed":""}" id="sellAllBtn" ${ownCount?"":"disabled"}>
-        ${pending==="sellall"?"Tap again to confirm":"Sell all"}</button>
-    </div>`;
-
-  const sa=document.getElementById("sellAllBtn");
-  if(sa) sa.onclick=()=>{
-    if(pending!=="sellall"){ pending="sellall"; viewSell();
-      setTimeout(()=>{ if(pending==="sellall"){pending=null; if(view==="sell") viewSell()} },4000);
-      return }
-    pending=null; sellAllOwned();
-  };
+    ${sellAllCard()}`;
+  bindSellAll("v-sell");
 }
 
 /* tier a droid is required at, at a given rebirth level */
@@ -1088,8 +1097,8 @@ function viewAll(){
   document.getElementById("v-all").innerHTML=`
     <h2>Cycle ${cycle} roadmap</h2>
     <div class="sub">Tap a droid's <b class="hi">colour dot</b> to set the quality you own.
-      Everything at or below it ticks itself, in all five cycles. Tapping the name instead
-      ticks just that one.</div>
+      Everything at or below it ticks itself, everywhere cycle ${cycle} asks for that droid.
+      Tapping the name instead ticks just that one.</div>
     <div class="btools">
       <div class="searchwrap">
         <span class="si"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.1"/><path d="M12.4 12.4 16.8 16.8"/></svg></span>
@@ -1104,7 +1113,9 @@ function viewAll(){
     ${shown.length
       ? `<div class="gwrap">${shown.map(rb=>gameCard(rb,q)).join("")}</div>`
       : `<div class="empty">Nothing in cycle ${cycle} needs a droid matching
-           &ldquo;${esc(roadQ)}&rdquo;.<br>It may belong to one of the other cycles.</div>`}`;
+           &ldquo;${esc(roadQ)}&rdquo;.<br>It may belong to one of the other cycles.</div>`}
+    ${sellAllCard()}`;
+  bindSellAll("v-all");
   const si=document.getElementById("rsearch");
   if(si) si.oninput=e=>{
     const pos=e.target.selectionStart;
@@ -1385,8 +1396,8 @@ function renderSheet(){
     <div class="grab"></div>
     <div class="qhead">${n}</div>
     <div class="qsub">${[cls,rar].filter(Boolean).join(" &middot; ")}${cls||rar?" &middot; ":""}What
-      quality do you own? This is shared across all five cycles, and covers every requirement
-      at or below it.</div>
+      quality do you own? It covers every requirement at or below it in cycle ${cycle}. Other
+      cycles keep their own droids.</div>
     ${TIERS.map(t=>{
       const at=needsAt(n,t), sel=own===t;
       return `<button class="qrow ${sel?"on":""} ${at.length?"":"off"}" data-qt="${t}">
@@ -1408,7 +1419,7 @@ function renderSheet(){
     setOwned(n,t);
     const covered=rbs().filter(rb=>rb.reqs.some(r=>r[0]===n&&has(r[0],r[1]))).length;
     closeSheet(); render();
-    toast(t?`${n} set to ${ABBR[t]} everywhere. Covers ${covered} rebirth${covered===1?"":"s"} in cycle ${cycle}.`
+    toast(t?`${n} set to ${ABBR[t]}. Covers ${covered} rebirth${covered===1?"":"s"} in cycle ${cycle}.`
            :`${n} cleared.`,
       "Undo",()=>{ setOwned(n,prev); render() });
   });

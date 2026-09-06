@@ -456,6 +456,8 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 }
 .sellall{display:flex;align-items:center;gap:12px;margin-top:22px;padding:14px;
   background:var(--card);border-radius:var(--r2);box-shadow:var(--sh1)}
+.sellall.spent{opacity:.55}
+.sellall .rbtn[disabled]{cursor:default;border-color:var(--line2);color:var(--dim2)}
 .sellall .mini{font-weight:500;line-height:1.5}
 .colnote{padding:10px 2px}
 .collater{padding:12px 2px 2px}
@@ -1009,13 +1011,16 @@ function viewSell(){
           ? "Nothing owned yet."
           : `Cycle ${cycle} is done with every droid you own. All ${ownCount} are safe to sell.`}</div>`}
 
-    ${ownCount?`<div class="sellall">
+    <div class="sellall ${ownCount?"":"spent"}">
       <div><div class="sname">Sell everything in cycle ${cycle}</div>
-        <div class="mini">Clears all ${ownCount} droids you hold in this cycle, the way a super
-          rebirth does. The other cycles and your droidex are untouched.</div></div>
-      <button class="rbtn ${pending==="sellall"?"armed":""}" id="sellAllBtn">
+        <div class="mini">${ownCount
+          ? `Clears all ${ownCount} droids you hold in this cycle, the way a super rebirth does.
+             The other cycles and your droidex are untouched.`
+          : `You hold no droids in cycle ${cycle}, so there is nothing here to sell. Each cycle
+             keeps its own, so check the other cycles if you expected some.`}</div></div>
+      <button class="rbtn ${pending==="sellall"?"armed":""}" id="sellAllBtn" ${ownCount?"":"disabled"}>
         ${pending==="sellall"?"Tap again to confirm":"Sell all"}</button>
-    </div>`:""}`;
+    </div>`;
 
   const sa=document.getElementById("sellAllBtn");
   if(sa) sa.onclick=()=>{

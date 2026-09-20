@@ -220,7 +220,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
 .grow{display:flex;align-items:center;gap:8px;background:#0b0b12;border-radius:12px;
   padding:8px;cursor:pointer;border:1.5px solid transparent;min-width:0;
   transition:background .15s,border-color .15s,transform .1s}
-.grow.have{border-color:var(--ok);background:#0c1c15;
+.grow.have{border-color:var(--have,var(--ok));background:var(--haveBg,#0c1c15);
   box-shadow:0 0 0 2px rgba(0,0,0,.5)}
 .grow.qmatch{box-shadow:0 0 0 2px var(--accent),0 0 14px -4px var(--accent)}
 .grow:active{transform:scale(.98);background:#1b1b27}
@@ -243,7 +243,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
   padding:5px 9px;font-size:var(--f1);font-weight:600;letter-spacing:.2px}
 .gbi{font-style:normal;font-size:12px;opacity:.85;display:inline-flex;align-items:center}
 .gsell{background:#0b0b12;color:#fff;border:1.5px solid #33334a;font-size:var(--f0)}
-.gcheck{flex:0 0 auto;color:#08130c;background:var(--ok);border-radius:50%;
+.gcheck{flex:0 0 auto;color:#08130c;background:var(--have,var(--ok));border-radius:50%;
   font-weight:900;font-size:11px;width:0;height:18px;overflow:hidden;
   display:inline-flex;align-items:center;justify-content:center;
   box-shadow:0 0 0 2px rgba(0,0,0,.45);transition:width .16s}
@@ -710,9 +710,14 @@ const DCLASS={
 const CLS_LABEL={all:"All",worker:"Worker",astromech:"Astromech",battle:"Battle"};
 const THEME={1:["#ff7a18","#170a02"],2:["#2fe0c0","#04231d"],3:["#ff2d78","#fff"],
   4:["#8b5cf6","#fff"],5:["#35d94a","#04240b"]};
+/* cycles whose accent lands too close to --ok for a green marker to read on top of it */
+const HAVE_CLASH={2:1,5:1};
 function applyTheme(){const [a,on]=THEME[cycle]||THEME[1];
   document.documentElement.style.setProperty("--accent",a);
   document.documentElement.style.setProperty("--onAccent",on);
+  const clash=HAVE_CLASH[cycle];
+  document.documentElement.style.setProperty("--have",clash?"#ffffff":"var(--ok)");
+  document.documentElement.style.setProperty("--haveBg",clash?"#16402b":"#0c1c15");
   const m=document.querySelector('meta[name="theme-color"]'); if(m)m.setAttribute("content","#0b0b12");}
 
 /* ---- DATA: cycle 1 transcribed from the in-game rebirth chart ---- */

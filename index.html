@@ -1284,14 +1284,20 @@ const canMake=f=>f.ins.every(i=>ownedTier(i));
    Spawn times come from droid-tycoon.pages.dev, which defines them as minutes past the
    hour in UTC and renders them in local time. Doing the same keeps it right in the
    half-hour offset timezones, where a UTC :00 is a local :30. */
+/* v1.32.0 moved these. Galactic no longer has a blueprint spawn of its own and kyber takes
+   its slot, stellar shifts off the hour, and mythic stays where it was. Derived from the
+   three in game countdowns read at the same instant, cross checked against our own chips,
+   which pinned the time three separate ways and put all three on the minute.
+
+   Kyber at :15 is confirmed by the community archive. Its stellar says :35, which the game
+   does not agree with, so stellar follows the game. */
 const BLUEPRINTS=[
-  {id:"stellar", label:"Stellar",  mins:[0],     col:"#ffd23f"},
-  {id:"mythic",  label:"Mythic",   mins:[55],    col:"#ff5470"},
-  {id:"galactic",label:"Galactic", mins:[15,45], col:"#b975f9"},
-  /* The shop's limited deal rolls over on the hour, which is the same instant as the stellar
-     blueprint, so the two chips will always read the same time. It is kept separate because
-     it is a different thing to react to and you may want warning about one and not the other. */
-  {id:"deal",    label:"Deal",     mins:[0],     col:"#2fd4c6", secs:10}
+  {id:"stellar", label:"Stellar", mins:[5],  col:"#ffd23f"},
+  {id:"kyber",   label:"Kyber",   mins:[15], col:"#2ee06b"},
+  {id:"mythic",  label:"Mythic",  mins:[55], col:"#ff5470"},
+  /* The shop's limited deal is its own thing to react to, so it keeps its own chip even
+     when it lands near a blueprint. */
+  {id:"deal",    label:"Deal",    mins:[0],  col:"#2fd4c6", secs:10}
 ];
 /* secs is for a spawn that does not land on the minute. The deal resets five seconds past
    the hour, so counting to the hour itself ran the timer out while the old deal was still

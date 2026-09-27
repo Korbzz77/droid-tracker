@@ -1289,10 +1289,15 @@ const canMake=f=>f.ins.every(i=>ownedTier(i));
    three in game countdowns read at the same instant, cross checked against our own chips,
    which pinned the time three separate ways and put all three on the minute.
 
-   Kyber at :15 is confirmed by the community archive. Its stellar says :35, which the game
-   does not agree with, so stellar follows the game. */
+   Stellar runs twice an hour, which is why two readings looked like a contradiction: a
+   screenshot at :44 showed it 20 minutes out, pointing at :05, and the community archive
+   showed it pointing at :35. Both were right. A later reading at :11 showing 24 minutes is
+   what rules out the once an hour version, since :05 alone would have read 54.
+
+   Kyber is once an hour at :15. A second kyber at :45 would have had the :44 screenshot
+   reading 35 seconds rather than 30 minutes, so there is no second one. */
 const BLUEPRINTS=[
-  {id:"stellar", label:"Stellar", mins:[5],  col:"#ffd23f"},
+  {id:"stellar", label:"Stellar", mins:[5,35], col:"#ffd23f"},
   {id:"kyber",   label:"Kyber",   mins:[15], col:"#2ee06b"},
   {id:"mythic",  label:"Mythic",  mins:[55], col:"#ff5470"},
   /* The shop's limited deal is its own thing to react to, so it keeps its own chip even

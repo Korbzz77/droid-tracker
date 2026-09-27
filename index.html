@@ -509,6 +509,7 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .xcls{flex:0 0 auto;width:16px;height:16px;border-radius:5px;display:grid;place-items:center;
   font-family:inherit;font-size:9px;font-weight:700;color:#14141c}
 .xcls-worker{background:#7fd16a}.xcls-astromech{background:#6fb7f5}.xcls-battle{background:#f5748c}
+.xcls-protocol{background:#e8c66a}
 .xc{justify-content:center;padding:0;background:none;border-left:1px solid var(--line);
   cursor:pointer;font-family:inherit;position:relative;transition:background .14s}
 .xc::before{content:"";width:15px;height:15px;border-radius:5px;
@@ -711,7 +712,7 @@ const DCLASS={
   "B1 HEAVY":"battle","B2 SUPER":"battle","B2 HEAVY":"battle","STRIKE-ORB":"battle",
   "HAUL-R":"battle","LNG-SHOT":"battle","B2-RP":"battle","CYCLO-GRAV":"battle",
   "OPTI-STRK":"battle","IG":"battle","KX":"battle"};
-const CLS_LABEL={all:"All",worker:"Worker",astromech:"Astromech",battle:"Battle"};
+const CLS_LABEL={all:"All",worker:"Worker",astromech:"Astromech",battle:"Battle",protocol:"Protocol"};
 const THEME={1:["#ff7a18","#170a02"],2:["#2fe0c0","#04231d"],3:["#ff2d78","#fff"],
   4:["#8b5cf6","#fff"],5:["#35d94a","#04240b"]};
 /* cycles whose accent lands too close to --ok for a green marker to read on top of it */
@@ -1184,12 +1185,22 @@ function viewAll(){
 const ICONICS=[
   {n:"BB-8",         cls:"astromech"},
   {n:"CB-23",        cls:"astromech"},
-  {n:"C-3PO",        cls:"astromech"},
+  {n:"C-3PO",        cls:"protocol"},
   {n:"R2-D2",        cls:"astromech"},
   {n:"CHOPPER",      cls:"astromech"},
   {n:"DJ R-3X",      cls:"worker"},
   {n:"MISTER BONES", cls:"battle"},
-  {n:"IG-11 MARSHAL",cls:"battle"}
+  {n:"IG-11 MARSHAL",cls:"battle"},
+  {n:"D-O",          cls:"worker"}
+];
+/* Protocol droids come from world missions rather than the rebirth chart or the fusion lab,
+   so nothing else in the app knows about them. They are ordinary droidex droids otherwise:
+   every quality, and flawless applies. */
+const PROTOCOLS=[
+  {n:"SA-5",cls:"protocol",rar:"rare"},
+  {n:"LOM", cls:"protocol",rar:"epic"},
+  {n:"PZ",  cls:"protocol",rar:"legendary"},
+  {n:"TDA", cls:"protocol",rar:"mythic"}
 ];
 let idxCache=null;
 function indexEntries(){
@@ -1197,7 +1208,8 @@ function indexEntries(){
   const rar={};
   [1,2,3,4,5].forEach(c=>DATA[c].rebirths.forEach(rb=>rb.reqs.forEach(r=>{rar[r[0]]=r[2]})));
   const regular=Object.keys(rar).sort().map(n=>({n,cls:DCLASS[n]||null,rar:rar[n]}))
-    .concat(FUSIONS.map(f=>({n:f.out,cls:f.cls,rar:f.rar})));
+    .concat(FUSIONS.map(f=>({n:f.out,cls:f.cls,rar:f.rar})))
+    .concat(PROTOCOLS);
   const out=[];
   regular.forEach(d=>TIERS.forEach(q=>out.push({n:d.n,q,cls:d.cls,rar:d.rar})));
   ICONICS.forEach(d=>out.push({n:d.n,q:"default",cls:d.cls,rar:"iconic"}));
@@ -1620,7 +1632,7 @@ function viewIndex(){
   const left=f=>all.filter(e=>!craftedHas(e.n,e.q)&&(!q||e.n.indexOf(q)>-1)&&f(e)).length;
   const nCls=v=>left(e=>v==="all"||e.cls===v);
 
-  const CLS_MARK={worker:"W",astromech:"A",battle:"B"};
+  const CLS_MARK={worker:"W",astromech:"A",battle:"B",protocol:"P"};
   const row=d=>`<div class="xr ${complete(d)?"whole":""} ${isFlaw(d.n)?"flaw":""}"
       style="--sd:-${([...d.n].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7)%53)/10}s">
       <div class="xn"><span class="xcls xcls-${d.cls}">${CLS_MARK[d.cls]||"?"}</span><span class="xnm">${d.n}</span></div>
@@ -1679,7 +1691,7 @@ function viewIndex(){
           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
         <button class="searchclr ${idxQ?"on":""}" id="xclear" aria-label="Clear search">&times;</button>
       </div>
-      <div class="chips">${["all","worker","astromech","battle"].map(v=>
+      <div class="chips">${["all","worker","astromech","battle","protocol"].map(v=>
         `<div class="chip ${idxCls===v?"on":""} ${nCls(v)?"":"done"}" data-xc="${v}">${CLS_LABEL[v]}<b>${nCls(v)}</b></div>`).join("")}
         <div class="chip ${idxHideDone?"on":""}" id="xhide">Hide finished</div>
         <div class="chip ${idxGaps?"on":""}" id="xgap">Show gaps</div></div>

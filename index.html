@@ -497,11 +497,13 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
   background:linear-gradient(90deg,var(--accent),#ffb347);
   transition:width .35s cubic-bezier(.4,0,.2,1)}
 
+.xscroll{overflow-x:auto;overscroll-behavior-x:contain;border-radius:var(--r2);
+  box-shadow:var(--sh1);background:var(--card)}
 .xtable{display:grid;
-  grid-template-columns:minmax(150px,260px) repeat(var(--cols),minmax(22px,64px)) minmax(30px,56px) minmax(28px,48px);
-  width:max-content;max-width:100%;
-  align-items:stretch;background:var(--card);border-radius:var(--r2);overflow:hidden;
-  box-shadow:var(--sh1)}
+  grid-template-columns:200px repeat(var(--cols),46px) 46px 40px;
+  width:max-content;min-width:100%;
+  align-items:stretch;background:var(--card)}
+.xn{position:sticky;left:0;z-index:3;background:var(--card)}
 .xr{display:contents}
 .xn,.xc,.xf,.xw{border-bottom:1px solid var(--line);display:flex;align-items:center;min-height:36px}
 .xn{gap:7px;padding:0 8px 0 10px;font-family:var(--display);font-weight:600;font-size:var(--f2);
@@ -579,14 +581,14 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
   .xn,.xc,.xf,.xw{min-height:40px}
 }
 @media(max-width:560px){
-  .xtable{width:auto;
-    grid-template-columns:minmax(0,1fr) repeat(var(--cols),minmax(20px,26px)) 26px}
+  .xtable{grid-template-columns:132px repeat(var(--cols),27px) 27px}
   .xf{display:none}
   .xn{padding:0 4px 0 8px;gap:5px;font-size:var(--f1)}
   .xcls{width:14px;height:14px;border-radius:4px;font-size:8px}
   .xc::before{width:13px;height:13px}
 }
 
+.xhdr .xn{background:var(--card2)}
 .xhdr .xn,.xhdr .xc,.xhdr .xf,.xhdr .xw{background:var(--card2);min-height:32px;
   font-size:var(--f0);letter-spacing:.6px;font-weight:600;color:var(--dim);cursor:default}
 .xhdr .xc::before{display:none}
@@ -599,9 +601,11 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .xgroup.shut .xchev{transform:rotate(-90deg)}
 @media(hover:hover){.xgroup:hover .xchev{color:var(--txt)}}
 .xgroup b{color:var(--txt);font-weight:700}
-.xgroup span{margin-left:auto;color:var(--dim2);font-weight:500;letter-spacing:.3px;
+.xglabel{position:sticky;left:12px;display:inline-flex;align-items:center;gap:9px;
+  color:var(--fr)}
+.xgroup .xgprog{margin-left:auto;color:var(--dim2);font-weight:500;letter-spacing:.3px;
   text-transform:none;font-variant-numeric:tabular-nums}
-.xgroup span.done{color:var(--ok)}
+.xgroup .xgprog.done{color:var(--ok)}
 @supports(background:color-mix(in srgb,red,blue)){
   .xhdr .xc{background:color-mix(in srgb,var(--tqf,var(--dim2)) 16%,var(--card2))}
   .xgroup{background:color-mix(in srgb,var(--fr) 13%,var(--card));
@@ -673,17 +677,27 @@ nav button:hover{color:var(--txt)}
 
 <script>
 const TIERS=["default","gold","diamond","rainbow","beskar","galactic","stellar","kyber"];
+/* The three kyber colours are collected separately but they are not rungs on the ladder: a
+   blue one does not satisfy a green one, and a rebirth only ever asks for kyber. So they
+   belong to the droidex and nowhere else. TIERS stays what you can own and what a rebirth
+   can demand; DEX_Q is what the droidex counts. 83 droids at eleven of these, plus the nine
+   iconics, is the 922 the game shows. */
+const DEX_Q=TIERS.concat(["kgreen","kblue","kpurple"]);
 const TC={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",
   rainbow:"conic-gradient(#ff5470,#ffcc33,#35d07f,#4fc3f7,#a855f7,#ff5470)",
   beskar:"repeating-linear-gradient(45deg,#e8ebf2 0 4px,#9ba1ad 4px 8px)",
   galactic:"#a855f7",
   stellar:"radial-gradient(circle at 50% 45%,#fffdf0 0 24%,#ffd23f 58%,#f0a81a 100%)",
-  kyber:"linear-gradient(155deg,#c9ffd8 0 18%,#2ee06b 52%,#0a9c46 100%)"};
+  kyber:"linear-gradient(155deg,#c9ffd8 0 18%,#2ee06b 52%,#0a9c46 100%)",
+  kgreen:"linear-gradient(155deg,#c9ffd8 0 18%,#2ee06b 52%,#0a9c46 100%)",
+  kblue:"linear-gradient(155deg,#cfeaff 0 18%,#2ea8f0 52%,#0a5f9c 100%)",
+  kpurple:"linear-gradient(155deg,#e8d6ff 0 18%,#a855f7 52%,#5f1ba8 100%)"};
 /* TC carries gradients for rainbow and beskar, which are only legal as a background.
    Text needs a flat colour, otherwise the declaration is invalid, gets dropped, and the
    label silently loses its tier colour. */
 const TXT={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",rainbow:"#ff6fa5",
-  beskar:"#cfd4de",galactic:"#b975f9",stellar:"#ffd23f",kyber:"#4ff08c"};
+  beskar:"#cfd4de",galactic:"#b975f9",stellar:"#ffd23f",kyber:"#4ff08c",
+  kgreen:"#4ff08c",kblue:"#5cc4ff",kpurple:"#c98cff"};
 
 /* Rarity, deliberately shifted off the quality palette above: legendary reads orange rather
    than gold so it cannot be mistaken for a gold quality dot, and mythic is pink rather than
@@ -843,7 +857,8 @@ const dueAbove=(entry,lv)=>{
   const ahead=entry.lvls.filter(l=>l>lv);
   return ahead.length?Math.min(...ahead):null;
 };
-const ABBR={default:"BASE",gold:"GOLD",diamond:"DIA",rainbow:"RBOW",beskar:"BESK",galactic:"GAL",stellar:"STEL",kyber:"KYBR"};
+const ABBR={default:"BASE",gold:"GOLD",diamond:"DIA",rainbow:"RBOW",beskar:"BESK",galactic:"GAL",stellar:"STEL",kyber:"KYBR",
+  kgreen:"KY-G",kblue:"KY-B",kpurple:"KY-P"};
 const LIGHT={gold:1,diamond:1,rainbow:1,beskar:1,stellar:1,kyber:1};
 
 /* ---- what quality you own of a droid ----
@@ -1211,7 +1226,7 @@ function indexEntries(){
     .concat(FUSIONS.map(f=>({n:f.out,cls:f.cls,rar:f.rar})))
     .concat(PROTOCOLS);
   const out=[];
-  regular.forEach(d=>TIERS.forEach(q=>out.push({n:d.n,q,cls:d.cls,rar:d.rar})));
+  regular.forEach(d=>DEX_Q.forEach(q=>out.push({n:d.n,q,cls:d.cls,rar:d.rar})));
   ICONICS.forEach(d=>out.push({n:d.n,q:"default",cls:d.cls,rar:"iconic"}));
   idxCache=out;
   return out;
@@ -1637,7 +1652,7 @@ function viewIndex(){
   const total=all.length, done=all.filter(e=>craftedHas(e.n,e.q)).length;
   const pct=Math.round(done/total*100);
   const sets=droids.filter(complete).length;
-  const flawAble=droids.filter(d=>d.qs.length===TIERS.length);
+  const flawAble=droids.filter(d=>d.qs.length===DEX_Q.length);
   const flawTotal=flawAble.length, flawDone=flawAble.filter(d=>isFlaw(d.n)).length;
 
   const left=f=>all.filter(e=>!craftedHas(e.n,e.q)&&(!q||e.n.indexOf(q)>-1)&&f(e)).length;
@@ -1647,7 +1662,7 @@ function viewIndex(){
   const row=d=>`<div class="xr ${complete(d)?"whole":""} ${isFlaw(d.n)?"flaw":""}"
       style="--sd:-${([...d.n].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7)%53)/10}s">
       <div class="xn"><span class="xcls xcls-${d.cls}">${CLS_MARK[d.cls]||"?"}</span><span class="xnm">${d.n}</span></div>
-      ${TIERS.map(qq=>{
+      ${DEX_Q.map(qq=>{
         const st=`--tq:${TC[qq]};--tqf:${TXT[qq]}`;
         if(d.qs.indexOf(qq)<0) return `<div class="xc none" style="${st}">&middot;</div>`;
         const got=craftedHas(d.n,qq);
@@ -1655,7 +1670,7 @@ function viewIndex(){
           style="${st}" aria-label="${d.n} ${ABBR[qq]}"></button>`;
       }).join("")}
       <div class="xf ${d.qs.length-rowDone(d)===1?"close":""}">${rowDone(d)}/${d.qs.length}</div>
-      ${d.qs.length<TIERS.length
+      ${d.qs.length<DEX_Q.length
         ? `<div class="xw none">&middot;</div>`
         : `<button class="xw ${isFlaw(d.n)?"got":""}" data-xw="${d.n.replace(/"/g,"&quot;")}"
             aria-pressed="${isFlaw(d.n)}" aria-label="${d.n} flawless"><span class="xws">&#10038;</span></button>`}
@@ -1670,8 +1685,8 @@ function viewIndex(){
        nothing under it, so searching opens everything for as long as the query lasts */
     const shut=!q && idxClosed.has(r);
     body+=`<button class="xgroup ${shut?"shut":""}" data-xg="${r}" style="--fr:${RARC[r]}"
-      aria-expanded="${!shut}"><svg class="ic xchev" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8 10 12 14 8"/></svg>${r}
-      <b>${inRar.length}</b><span class="${ct-cd?"":"done"}">${ct-cd?(ct-cd)+" left":"complete"}</span></button>`;
+      aria-expanded="${!shut}"><span class="xglabel"><svg class="ic xchev" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8 10 12 14 8"/></svg>${r}
+      <b>${inRar.length}</b></span><span class="xgprog ${ct-cd?"":"done"}">${ct-cd?(ct-cd)+" left":"complete"}</span></button>`;
     if(!shut) body+=inRar.map(row).join("");
   });
 
@@ -1709,15 +1724,15 @@ function viewIndex(){
     </div>
 
     ${visible.length?`
-      <div class="xtable ${idxGaps?"gaps":""}" style="--cols:${TIERS.length}">
+      <div class="xscroll"><div class="xtable ${idxGaps?"gaps":""}" style="--cols:${DEX_Q.length}">
         <div class="xr xhdr">
           <div class="xn">Droid</div>
-          ${TIERS.map(qq=>`<div class="xc lbl" style="--tqf:${TXT[qq]};color:${TXT[qq]}">${ABBR[qq]}</div>`).join("")}
+          ${DEX_Q.map(qq=>`<div class="xc lbl" style="--tqf:${TXT[qq]};color:${TXT[qq]}">${ABBR[qq]}</div>`).join("")}
           <div class="xf lbl">Set</div>
           <div class="xw lbl">&#10038;</div>
         </div>
         ${body}
-      </div>`
+      </div></div>`
       :`<div class="empty">No droid matches those filters.</div>`}`;
 
   const si=document.getElementById("xsearch");

@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&display=swap">
 <title>Droid Tycoon Tracker &mdash; rebirths, droidex and fusion</title>
-<meta name="description" content="Free offline tracker for Star Wars: Droid Tycoon in Fortnite. All 40 rebirths across six cycles, the full 1000 entry droidex with kyber colours and flawless, fusion recipes, and blueprint spawn timers.">
+<meta name="description" content="Free offline tracker for Star Wars: Droid Tycoon in Fortnite. All 40 rebirths across six cycles, the full 910 entry droidex with kyber colours and flawless, fusion recipes, and blueprint spawn timers.">
 <link rel="canonical" href="https://korbzz77.github.io/droid-tracker/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Droid Tycoon Tracker">
@@ -692,9 +692,10 @@ const TIERS=["default","gold","diamond","rainbow","beskar","galactic","stellar",
 /* The three kyber colours are collected separately but they are not rungs on the ladder: a
    blue one does not satisfy a green one, and a rebirth only ever asks for kyber. So they
    belong to the droidex and nowhere else. TIERS stays what you can own and what a rebirth
-   can demand; DEX_Q is what the droidex counts. 90 droids at eleven of these, plus the ten
-   iconics, is 1000. */
-const DEX_Q=TIERS.concat(["kgreen","kblue","kpurple"]);
+   can demand; DEX_Q is what the droidex counts. It has no plain kyber column: every kyber is
+   one of the three colours, so a fourth box only repeated the green one. 90 droids at ten
+   of these, plus the ten iconics, is 910. */
+const DEX_Q=TIERS.filter(t=>t!=="kyber").concat(["kgreen","kblue","kpurple"]);
 const TC={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",
   rainbow:"conic-gradient(#ff5470,#ffcc33,#35d07f,#4fc3f7,#a855f7,#ff5470)",
   beskar:"repeating-linear-gradient(45deg,#e8ebf2 0 4px,#9ba1ad 4px 8px)",

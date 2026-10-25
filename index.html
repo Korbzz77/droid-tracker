@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&display=swap">
 <title>Droid Tycoon Tracker &mdash; rebirths, droidex and fusion</title>
-<meta name="description" content="Free offline tracker for Star Wars: Droid Tycoon in Fortnite. All 40 rebirths across six cycles, the full 910 entry droidex with kyber colours and flawless, fusion recipes, and blueprint spawn timers.">
+<meta name="description" content="Free offline tracker for Star Wars: Droid Tycoon in Fortnite. All 40 rebirths across six cycles, the full 1000 entry droidex with kyber colours, scourge and flawless, fusion recipes, and blueprint spawn timers.">
 <link rel="canonical" href="https://korbzz77.github.io/droid-tracker/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Droid Tycoon Tracker">
@@ -630,6 +630,9 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .dot.kybr,.gdot.kybr,.qsw.kybr,.fdot.kybr{
   clip-path:polygon(50% 0%,100% 27%,100% 73%,50% 100%,0% 73%,0% 27%);
   border-radius:0;box-shadow:none}
+.dot.scrg,.gdot.scrg,.qsw.scrg,.fdot.scrg{
+  clip-path:polygon(50% 0%,62% 26%,93% 18%,78% 48%,100% 72%,66% 72%,50% 100%,34% 72%,0% 72%,22% 48%,7% 18%,38% 26%);
+  border-radius:0;box-shadow:none}
 .gspark{font-style:normal;font-weight:700;margin-right:1px}
 .hide{display:none}
 .empty{color:var(--dim);text-align:center;padding:38px 16px;font-size:var(--f3);line-height:1.6;
@@ -688,14 +691,19 @@ nav button:hover{color:var(--txt)}
 
 
 <script>
-const TIERS=["default","gold","diamond","rainbow","beskar","galactic","stellar","kyber"];
+const TIERS=["default","gold","diamond","rainbow","beskar","galactic","stellar","kyber","scourge"];
+/* Scourge (v1.36.0) sits above kyber. It is a finish of its own rather than a flag on gold:
+   the game checks a rebirth as "this finish or higher" and gives scourge the highest finish
+   id, so one scourge droid clears a requirement for any quality. Nothing can be upgraded
+   into it, it never rolls flawless, and iconics never take it. */
 /* The three kyber colours are collected separately but they are not rungs on the ladder: a
    blue one does not satisfy a green one, and a rebirth only ever asks for kyber. So they
    belong to the droidex and nowhere else. TIERS stays what you can own and what a rebirth
    can demand; DEX_Q is what the droidex counts. It has no plain kyber column: every kyber is
-   one of the three colours, so a fourth box only repeated the green one. 90 droids at ten
-   of these, plus the ten iconics, is 910. */
-const DEX_Q=TIERS.filter(t=>t!=="kyber").concat(["kgreen","kblue","kpurple"]);
+   one of the three colours, so a fourth box only repeated the green one. Scourge goes after
+   the colours so the chart still reads in ladder order. 90 droids at eleven of these, plus the
+   ten iconics, is 1000. */
+const DEX_Q=TIERS.filter(t=>t!=="kyber"&&t!=="scourge").concat(["kgreen","kblue","kpurple","scourge"]);
 const TC={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",
   rainbow:"conic-gradient(#ff5470,#ffcc33,#35d07f,#4fc3f7,#a855f7,#ff5470)",
   beskar:"repeating-linear-gradient(45deg,#e8ebf2 0 4px,#9ba1ad 4px 8px)",
@@ -704,13 +712,14 @@ const TC={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",
   kyber:"linear-gradient(155deg,#c9ffd8 0 18%,#2ee06b 52%,#0a9c46 100%)",
   kgreen:"linear-gradient(155deg,#c9ffd8 0 18%,#2ee06b 52%,#0a9c46 100%)",
   kblue:"linear-gradient(155deg,#cfeaff 0 18%,#2ea8f0 52%,#0a5f9c 100%)",
-  kpurple:"linear-gradient(155deg,#e8d6ff 0 18%,#a855f7 52%,#5f1ba8 100%)"};
+  kpurple:"linear-gradient(155deg,#e8d6ff 0 18%,#a855f7 52%,#5f1ba8 100%)",
+  scourge:"radial-gradient(circle at 50% 42%,#f3d2ff 0 14%,#b43cff 52%,#5c0f8a 100%)"};
 /* TC carries gradients for rainbow and beskar, which are only legal as a background.
    Text needs a flat colour, otherwise the declaration is invalid, gets dropped, and the
    label silently loses its tier colour. */
 const TXT={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",rainbow:"#ff6fa5",
   beskar:"#cfd4de",galactic:"#b975f9",stellar:"#ffd23f",kyber:"#4ff08c",
-  kgreen:"#4ff08c",kblue:"#5cc4ff",kpurple:"#c98cff"};
+  kgreen:"#4ff08c",kblue:"#5cc4ff",kpurple:"#c98cff",scourge:"#e7a6ff"};
 
 /* Rarity, deliberately shifted off the quality palette above: legendary reads orange rather
    than gold so it cannot be mistaken for a gold quality dot, and mythic is pink rather than
@@ -847,8 +856,9 @@ function setOwned(name,tier){
 /* ---- render helpers ---- */
 /* Gold and stellar are a few degrees apart on the wheel and read as the same yellow at the
    size these appear, which is what people kept tripping over. Hue cannot fix that, so
-   stellar changes shape instead: every swatch of it is a four point star. */
-const stel=t=>t==="stellar"?" stel":(t==="kyber"?" kybr":"");
+   stellar changes shape instead: every swatch of it is a four point star. Scourge is the
+   same problem against galactic and kyber purple, so it is a spiked burst. */
+const stel=t=>t==="stellar"?" stel":(t==="kyber"?" kybr":(t==="scourge"?" scrg":""));
 const dot=t=>`<span class="dot${stel(t)}" style="background:${TC[t]}"></span>`;
 /* the coloured dot doubles as the control for "what do I actually own of this one" */
 const qdot=(n,t,cls)=>`<button class="qbtn" data-q="${n.replace(/"/g,"&quot;")}"
@@ -874,7 +884,7 @@ const dueAbove=(entry,lv)=>{
   return ahead.length?Math.min(...ahead):null;
 };
 const ABBR={default:"BASE",gold:"GOLD",diamond:"DIA",rainbow:"RBOW",beskar:"BESK",galactic:"GAL",stellar:"STEL",kyber:"KYBR",
-  kgreen:"KY-G",kblue:"KY-B",kpurple:"KY-P"};
+  kgreen:"KY-G",kblue:"KY-B",kpurple:"KY-P",scourge:"SCRG"};
 const LIGHT={gold:1,diamond:1,rainbow:1,beskar:1,stellar:1,kyber:1};
 
 /* ---- what quality you own of a droid ----
@@ -1495,13 +1505,13 @@ function renderSheet(){
     <div class="qsub">${[cls,rar].filter(Boolean).join(" &middot; ")}${cls||rar?" &middot; ":""}What
       quality do you own? It covers every requirement at or below it in cycle ${cycle}. Other
       cycles keep their own droids.</div>
-    ${TIERS.map(t=>{
-      const at=needsAt(n,t), sel=own===t;
-      return `<button class="qrow ${sel?"on":""} ${at.length?"":"off"}" data-qt="${t}">
+    ${TIERS.filter(t=>t!=="scourge"||!ICONICS.some(d=>d.n===n)).map(t=>{
+      const at=needsAt(n,t), sel=own===t, wild=t==="scourge";
+      return `<button class="qrow ${sel?"on":""} ${at.length||wild?"":"off"}" data-qt="${t}">
         <span class="qsw${stel(t)}" style="background:${TC[t]}"></span>
         <span class="qmeta">
           <span class="qname" style="color:${TXT[t]}">${ABBR[t]}</span>
-          <span class="qneed">${at.length?`needed at RB ${at.join(", ")}`:`not needed in cycle ${cycle}`}</span>
+          <span class="qneed">${wild?"counts for every quality":at.length?`needed at RB ${at.join(", ")}`:`not needed in cycle ${cycle}`}</span>
         </span>
         ${sel?`<span class="qtick">&#10003;</span>`:""}</button>`}).join("")}
     <button class="qrow qnone ${own?"":"on"}" data-qt="">

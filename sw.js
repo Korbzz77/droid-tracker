@@ -1,6 +1,6 @@
 /* Droid Tycoon Tracker service worker.
    Bump CACHE when you deploy a change, otherwise iPads keep serving the old copy. */
-const CACHE = "droid-tracker-v75";
+const CACHE = "droid-tracker-v76";
 const ASSETS = [
   "./",
   "./index.html",

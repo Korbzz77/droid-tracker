@@ -84,6 +84,16 @@ select,button{font-family:inherit;font-size:var(--f4)}
 h2{font-size:var(--f1);font-family:var(--display);letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);
   margin:28px 0 10px;font-weight:600}
 .sub{color:var(--dim);font-size:var(--f2);font-weight:400;line-height:1.6;margin:-4px 0 12px}
+h2.hh{display:flex;align-items:center;gap:9px}
+.hbtn{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);
+  background:var(--card2);color:var(--dim);font-family:var(--display);font-size:var(--f1);
+  font-weight:700;line-height:1;padding:0;cursor:pointer;display:grid;place-items:center;
+  letter-spacing:0;position:relative}
+/* the circle is small on purpose, so the tap area is padded out to a fingertip around it */
+.hbtn::after{content:"";position:absolute;inset:-11px}
+.hbtn.on{background:var(--accent);border-color:var(--accent);color:var(--onAccent)}
+.hgot{background:none;border:0;padding:0 2px;margin-left:2px;color:var(--accent);font-weight:700;
+  font-size:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .card{background:var(--card);border:0;border-radius:var(--r3);
   padding:15px;margin-bottom:12px;box-shadow:var(--sh2)}
 
@@ -378,6 +388,21 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
   .hbp{flex:1;justify-content:center}
   .spacer{order:1}
 }
+/* On a phone the logo and the three controls did not fit one line, so the gear dropped to
+   a row of its own and the header ate a quarter of the screen. Everything tightens a little
+   here so it is logo and controls, timers, tabs: three rows, each shorter than before. */
+@media(max-width:520px){
+  header{padding:calc(env(safe-area-inset-top) + 8px) 10px 8px}
+  .hrow{gap:6px}
+  .logo{font-size:var(--f3);letter-spacing:.2px}
+  .sel{padding:8px 24px 8px 9px;background-position:right 7px center;font-size:var(--f1)}
+  .gear{padding:8px 9px;font-size:15px}
+  .hbps{margin-top:7px;gap:5px}
+  .hbp{min-height:32px;padding:0 6px;gap:5px}
+  nav{margin-top:7px}
+  nav button{padding:10px 6px}
+}
+@media(max-width:350px){ .logo span{display:none} }
 
 /* fusion */
 .fgrid{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:6px}
@@ -407,9 +432,11 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
    missing one is an empty dashed outline with a faded dot, one you own is filled and
    ticked. Two greys a few steps apart was not readable at a glance. */
 .fin{display:inline-flex;align-items:center;gap:6px;background:transparent;
-  border:1px dashed var(--line2);border-radius:8px;padding:5px 9px;
-  font-size:var(--f1);font-weight:500;color:var(--dim2);white-space:nowrap}
-.fin .fdot{opacity:.3}
+  border:1px dashed #5a5a6c;border-radius:8px;padding:5px 9px;
+  font-size:var(--f1);font-weight:500;color:var(--dim);white-space:nowrap}
+/* a missing ingredient is an empty ring, which reads as "not here" without having to be
+   so faint that the name beside it disappears too */
+.fin .fdot{background:transparent!important;box-shadow:0 0 0 1.5px #77778a inset}
 .fin.got{background:var(--card3);border:1px solid transparent;color:var(--txt);font-weight:600}
 .fin.got .fdot{opacity:1}
 .fin.got::after{content:"✓";color:var(--ok);font-weight:700;font-size:11px;margin-left:2px}
@@ -426,7 +453,10 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 
 /* compact build rows, grouped into a column per droid class */
 .bcols{display:grid;grid-template-columns:1fr;gap:0 16px;align-items:start}
-@media(min-width:820px){.bcols{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* Three columns need about 300px each before "LEGENDARY Do not have" stops being cut off,
+   which an iPad held upright does not have. Two there, three once it is turned. */
+@media(min-width:640px){.bcols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:940px){.bcols{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .bcolhead{position:sticky;top:calc(var(--hh,64px) + 1px);z-index:14;
   background:rgba(8,8,14,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   font-size:var(--f0);letter-spacing:1.4px;text-transform:uppercase;font-weight:600;
@@ -436,14 +466,17 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .crow{display:flex;align-items:center;gap:9px;background:var(--card);
   border:1px solid transparent;border-radius:var(--r1);padding:8px 9px;margin-top:7px;
   min-width:0;box-shadow:var(--sh1)}
-.crow.later{background:var(--bg2);opacity:.62}
+/* later rows step back by losing their card, not by fading: at 62% the names fell under
+   readable contrast on a dim screen */
+.crow.later{background:var(--bg2);box-shadow:none;border-color:var(--line)}
+.crow.later .cname{color:var(--dim)}
 /* Owning a droid and needing to upgrade it is a completely different job from not having
    one at all, so the row carries a stripe and a lit dot, not just a differently coloured
    word. The dot used to show the next needed tier even when you owned nothing, which made
    an empty row look identical to a filled one. */
 .crow.owned{background:rgba(255,204,51,.07);box-shadow:inset 3px 0 0 var(--warn),var(--sh1)}
 .crow.done{box-shadow:inset 3px 0 0 rgba(53,208,127,.45),var(--sh1)}
-.crow:not(.owned):not(.done) .gdot{opacity:.26}
+.crow:not(.owned):not(.done) .gdot{opacity:.5}
 .crow.owned .cname{color:var(--txt)}
 .cmeta{flex:1;min-width:0}
 .cname{display:block;font-family:var(--display);font-weight:600;font-size:var(--f2);letter-spacing:.2px;
@@ -914,6 +947,25 @@ function chipCost(rar,from,to){
 const fmtChips=n=>n>=1e6?(n/1e6).toFixed(n%1e6?1:0)+"M"
   : n>=10000?(n/1000).toFixed(n%1000?1:0)+"K" : n.toLocaleString("en-AU");
 
+/* ---- screen help ----
+   Each screen opens with a paragraph explaining itself, which is right the first time and
+   three lines of scrolling every time after. So it shows until you dismiss it once, then
+   lives behind the ? beside the heading. Remembered per screen, since reading the roadmap's
+   says nothing about whether you have read the index's. */
+let helpSeen=store.get("dt_help_seen",{})||{}, helpOpen={};
+function helpHead(v,title,body){
+  const open=!helpSeen[v]||!!helpOpen[v];
+  return `<h2 class="hh"><span>${title}</span><button class="hbtn ${open?"on":""}" data-help="${v}"
+      aria-expanded="${open}" aria-label="${open?"Hide":"Show"} the help for this screen">?</button></h2>
+    ${open?`<div class="sub">${body} <button class="hgot" data-help="${v}">${helpSeen[v]?"Hide":"Got it"}</button></div>`:""}`;
+}
+function toggleHelp(v){
+  const open=!helpSeen[v]||!!helpOpen[v];
+  if(open){ helpSeen[v]=true; store.set("dt_help_seen",helpSeen); helpOpen[v]=false }
+  else helpOpen[v]=true;
+  render();
+}
+
 /* ---- render helpers ---- */
 /* Gold and stellar are a few degrees apart on the wheel and read as the same yellow at the
    size these appear, which is what people kept tripping over. Hue cannot fix that, so
@@ -1062,12 +1114,11 @@ function viewBuild(){
   }).join("");
 
   document.getElementById("v-build").innerHTML=`
-    <h2>Build list</h2>
-    <div class="sub">What cycle ${cycle} still needs, ${byRar
+    ${helpHead("build",`Build list`,`What cycle ${cycle} still needs, ${byRar
       ? "all of it, grouped by rarity and then by class"
       : "split by class"}. Tap a droid's
       <b class="hi">colour dot</b> to set the quality you own. An arrow under a rebirth badge
-      is the highest grade cycle ${cycle} ever wants, so you know what not to buy.${split}</div>
+      is the highest grade cycle ${cycle} ever wants, so you know what not to buy.${split}`)}
 
     <div class="btools">
       <div class="searchwrap">
@@ -1186,10 +1237,9 @@ function viewSell(){
        The first frees up once you pass rebirth ${freesAt}.`;
 
   document.getElementById("v-sell").innerHTML=`
-    <h2>Safe to sell &middot; ${sellable.length}</h2>
-    <div class="sub">Cycle ${cycle} is finished with these. Tap one to sell it. Droids belong to
+    ${helpHead("sell",`Safe to sell &middot; ${sellable.length}`,`Cycle ${cycle} is finished with these. Tap one to sell it. Droids belong to
       the cycle you are in, so this only touches cycle ${cycle}, and you can always buy it
-      again.</div>
+      again.`)}
     ${sellable.length?`<div class="srows">${sellable.map(x=>row(x,"sellable","SELL","sell",
         "holding "+x.t)).join("")}</div>`
       :`<div class="empty">${emptyMsg}</div>`}
@@ -1264,10 +1314,9 @@ function viewAll(){
   const shown=q?all.filter(rb=>rb.reqs.some(r=>r[0].indexOf(q)>-1)):all;
   const esc=s=>s.replace(/</g,"&lt;");
   document.getElementById("v-all").innerHTML=`
-    <h2>Cycle ${cycle} roadmap</h2>
-    <div class="sub">Tap a droid's <b class="hi">colour dot</b> to set the quality you own.
+    ${helpHead("all",`Cycle ${cycle} roadmap`,`Tap a droid's <b class="hi">colour dot</b> to set the quality you own.
       Everything at or below it ticks itself, everywhere cycle ${cycle} asks for that droid.
-      Tapping the name instead ticks just that one.</div>
+      Tapping the name instead ticks just that one.`)}
     <div class="btools">
       <div class="searchwrap">
         <span class="si"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.1"/><path d="M12.4 12.4 16.8 16.8"/></svg></span>
@@ -1725,14 +1774,13 @@ function viewFuse(){
   };
 
   document.getElementById("v-fuse").innerHTML=`
-    <h2>Fusion recipes</h2>
-    <div class="sub">Three droids go into the Workshop's fusion machine. Match one of the
+    ${helpHead("fuse",`Fusion recipes`,`Three droids go into the Workshop's fusion machine. Match one of the
       combinations below and you get that exact droid; anything else that qualifies gives you a
       random droid one rarity up. Either way it comes out at the
       <b class="hi">lowest quality</b> you put in, so never throw a base one in with two good
       ones. A fusion droid then <b class="hi">counts for each droid that went into it</b> on
       the rebirth chart, at its own quality or lower. Tap a recipe's
-      <b class="hi">colour dot</b> to record one you hold, and clear the three you used up.</div>
+      <b class="hi">colour dot</b> to record one you hold, and clear the three you used up.`)}
 
     <div class="btools">
       <div class="searchwrap">
@@ -1854,11 +1902,10 @@ function viewIndex(){
   });
 
   document.getElementById("v-index").innerHTML=`
-    <h2>Droidex</h2>
-    <div class="sub">Every droid at every quality, and whether you have ever crafted it. A
+    ${helpHead("index",`Droidex`,`Every droid at every quality, and whether you have ever crafted it. A
       diamond does not count as a gold here, and selling never removes anything. Every number
       on a filter is how many you still need. The sparkle at the end of a row is flawless,
-      which the game counts once per droid rather than once per quality.</div>
+      which the game counts once per droid rather than once per quality.`)}
 
     <div class="xhead">
       <div class="xstats">
@@ -2175,6 +2222,8 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{view=b.dataset
 document.getElementById("gearBtn").onclick=()=>{settingsOpen=!settingsOpen;pending=null;render();window.scrollTo(0,0)};
 document.getElementById("bpAlert").onclick=hideBpAlert;
 document.body.addEventListener("click",e=>{
+  const hp=e.target.closest("[data-help]");
+  if(hp){ toggleHelp(hp.dataset.help); return }
   const bpb=e.target.closest("[data-bp]");
   if(bpb){ toggleAlert(bpb.dataset.bp); return }
   const qb=e.target.closest(".qbtn");

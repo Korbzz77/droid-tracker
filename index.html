@@ -278,6 +278,13 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
   border-radius:var(--r1);padding:10px 14px;font-weight:600;font-size:var(--f2);cursor:pointer;
   font-family:inherit;transition:background .15s,transform .1s}
 .sbtn:active{transform:scale(.96);background:var(--card3)}
+.sbtn.on{background:var(--accent);border-color:var(--accent);color:var(--onAccent);font-weight:700}
+.sbtn:disabled{opacity:.45}
+.segs{flex:0 0 auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+/* three buttons beside a paragraph squeeze the paragraph to a ribbon on a phone, so this
+   row lets its control drop underneath */
+.srow.wrap{flex-wrap:wrap}
+.srow.wrap>div:first-child{flex:1 1 240px}
 a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 
 /* non-blocking confirmation, sits above the nav and gets out of the way on its own */
@@ -447,6 +454,10 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
    it is due, so rarity goes on the status line instead of taking a channel that means
    something else. */
 .crar{margin-right:6px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.cchip{display:block;font-size:var(--f0);font-weight:600;letter-spacing:.3px;margin-top:2px;
+  color:var(--dim);white-space:nowrap}
+.chipline{font-size:var(--f1);color:var(--dim);font-weight:500;line-height:1.5;padding-bottom:10px}
+.chipline b{color:var(--txt);font-weight:700}
 .cst.none{color:var(--bad)}
 .cst.up{color:var(--warn);font-weight:600}
 .cst.done{color:var(--ok)}
@@ -882,6 +893,27 @@ function setOwned(name,tier){
   save();
 }
 
+/* ---- upgrade chips ----
+   Chips for ONE step up the ladder, by the droid's own rarity: base to gold first, stellar
+   to kyber last. SRB Control, the Droidex calculator and DroidFusion's sheet agree on the
+   first six steps; the kyber step is SRB Control's, with Droidex confirming both ends of it.
+   Nothing upgrades into scourge, and a fusion droid cannot be upgraded at all. */
+const CHIP={
+  common:   [10,25,40,80,120,180,240],
+  rare:     [30,60,100,250,400,750,1000],
+  epic:     [120,180,240,2000,5000,8000,12000],
+  legendary:[400,1200,2500,6000,16000,24000,30000],
+  mythic:   [4000,8000,14000,30000,60000,90000,110000]
+};
+function chipCost(rar,from,to){
+  const a=TIERS.indexOf(from), b=TIERS.indexOf(to), c=CHIP[rar];
+  if(!c||a<0||b<=a||b>c.length) return 0;
+  let t=0; for(let i=a;i<b;i++) t+=c[i];
+  return t;
+}
+const fmtChips=n=>n>=1e6?(n/1e6).toFixed(n%1e6?1:0)+"M"
+  : n>=10000?(n/1000).toFixed(n%1000?1:0)+"K" : n.toLocaleString("en-AU");
+
 /* ---- render helpers ---- */
 /* Gold and stellar are a few degrees apart on the wheel and read as the same yellow at the
    size these appear, which is what people kept tripping over. Hue cannot fix that, so
@@ -968,6 +1000,22 @@ function viewBuild(){
     own ? `${own} you already own that just need${own===1?"s":""} upgrading` : null
   ].filter(Boolean).join(", ") + ".";
 
+  /* What the upgrades add up to. Only droids you hold count, because a droid you do not
+     have has to be bought or crafted before a chip can be spent on it. The first figure is
+     the window you are looking at and the second is the whole cycle, each taken to the
+     highest quality asked for in that stretch rather than just the next step. */
+  const chipsTo=(x,lim)=>{
+    if(!x.held) return 0;
+    let hi=-1;
+    x.L.forEach(e=>{ if(e.lvls.some(l=>l>level&&l<=lim)&&!has(x.n,e.t)) hi=Math.max(hi,TIERS.indexOf(e.t)) });
+    return hi<0?0:chipCost(x.rar,x.held.t,TIERS[hi]);
+  };
+  const chipNear=active.reduce((t,x)=>t+chipsTo(x,upto),0);
+  const chipAll=active.reduce((t,x)=>t+chipsTo(x,deep),0);
+  const chipLine=!chipAll ? "" : `<div class="chipline">Upgrade chips for the droids you hold: ${
+    upto<deep ? `<b>${fmtChips(chipNear)}</b> to reach rebirth ${upto}, ` : ""}<b>${fmtChips(chipAll)}</b>
+    to finish cycle ${cycle}. Droids you still have to buy are not counted.</div>`;
+
   /* One row per droid, two lines tall. Quality is set through the colour swatch, which opens
      the same picker as everywhere else, so the tall strip of tier chips is no longer needed. */
   const crow=(x,later)=>{
@@ -978,6 +1026,9 @@ function viewBuild(){
                 : `<span class="cst none">${rar}Do not have</span>`)
       : (x.maxed ? `<span class="cst done">${rar}${x.cov?"Covered by "+x.cov.f:"Fully upgraded"}</span>`
                  : `<span class="cst past">${rar}Not needed again</span>`);
+    /* only your own droid can be upgraded, so the price is from what you hold, not from
+       whatever a fusion happens to be covering */
+    const chips=x.held&&x.nextNeed?chipCost(x.rar,x.held.t,x.nextNeed.t):0;
     const top=x.L[x.L.length-1];
     const ceiling = x.nextNeed && top && top.t!==x.nextNeed.t
       ? `<span class="cmax" style="color:${TXT[top.t]}">&uarr;${ABBR[top.t]}</span>` : "";
@@ -987,7 +1038,8 @@ function viewBuild(){
       : `<span class="cneed done">DONE</span>`;
     return `<div class="crow ${x.nextNeed?(x.held?"owned":""):(x.maxed?"done":"")} ${later?"later":""}">
       ${qdot(x.n,(x.held||x.nextNeed||x.L[0]).t,"gdot")}
-      <span class="cmeta"><span class="cname">${x.n}</span>${st}</span>${need}</div>`;
+      <span class="cmeta"><span class="cname">${x.n}</span>${st}${chips
+        ?`<span class="cchip">${fmtChips(chips)} chips</span>`:""}</span>${need}</div>`;
   };
   const column=(cls,list)=>{
     const mine=list.filter(x=>DCLASS[x.n]===cls);
@@ -1032,6 +1084,7 @@ function viewBuild(){
         `<div class="chip ${lookahead===n?"on":""}" data-la="${n}">Next ${n}</div>`).join("")}
         <div class="chip ${lookahead>=deep?"on":""}" data-la="${deep}">Rest of cycle</div></div>`}
     </div>
+    ${chipLine}
 
     ${shown.length
       ? (byRar ? byRarity() : cols(shown))
@@ -1404,7 +1457,11 @@ const fmtGap=ms=>{
   return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
 };
 const fmtAt=d=>d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
-const BP_LEAD=20000;                       /* how far ahead to warn */
+/* How far ahead to warn. Twenty seconds is enough if you are standing at the Sandcrawler
+   and nothing like enough if you are across the map, so it is a choice. */
+const BP_LEADS=[[20000,"20 sec"],[60000,"1 min"],[120000,"2 min"]];
+let BP_LEAD=(v=>BP_LEADS.some(x=>x[0]===v)?v:20000)(store.get("dt_bp_lead",20000));
+const leadWords=()=>BP_LEAD<60000?(BP_LEAD/1000)+" seconds":(BP_LEAD/60000)+" minute"+(BP_LEAD===60000?"":"s");
 let bpAlerts=store.get("dt_bp_alerts",{}); /* which spawns you want warning about */
 let bpFired={};                            /* spawn instants already announced */
 let bpShown=null;                          /* blueprint currently on the banner */
@@ -1437,11 +1494,12 @@ function toggleAlert(id){
   if(bpAlerts[id]){ delete bpAlerts[id]; if(bpShown===id) hideBpAlert(); }
   else { bpAlerts[id]=true; unlockAudio(); }
   store.set("dt_bp_alerts",bpAlerts);
+  syncWake();
   const b=BLUEPRINTS.find(x=>x.id===id);
   paintBlueprintChips();
   tickBlueprints();
   toast(bpAlerts[id]
-    ? `${b.label} alert on. You will get a warning ${BP_LEAD/1000} seconds before every spawn.`
+    ? `${b.label} alert on. You will get a warning ${leadWords()} before every spawn.`
     : `${b.label} alert off.`);
 }
 /* Stellar spawns on the hour and the deal ten seconds later, so their warnings overlap: the
@@ -1515,15 +1573,36 @@ function tickBlueprints(){
     const justGone=left>BP_LEAD;   /* the spawn passed and the clock rolled to the next one */
     if(el) el.innerHTML=`<div class="fill">
       <div class="bat">Blueprint spawn</div>
-      <div class="bmain">${b.label} ${justGone?"is up now":`in ${secs} second${secs===1?"":"s"}`}</div>
+      <div class="bmain">${b.label} ${justGone?"is up now":(secs>=60?`in ${fmtGap(left)}`:`in ${secs} second${secs===1?"":"s"}`)}</div>
     </div><div class="bclose">Dismiss</div>`;
-    if(justGone && !bpGoneAt) bpGoneAt=now.getTime();
+    /* With a long lead the warning beep is a minute or two old by the time it matters, so
+       the spawn itself gets one too. At twenty seconds that would just be noise. */
+    if(justGone && !bpGoneAt){ bpGoneAt=now.getTime(); if(BP_LEAD>20000) beep(3); }
     if(bpGoneAt && now.getTime()-bpGoneAt>10000){ bpGoneAt=null; hideBpAlert(); }
     if(!justGone) bpGoneAt=null;
   }
 }
 let bpGoneAt=null;
 setInterval(tickBlueprints,1000);
+
+/* ---- keep the screen awake ----
+   An alert can only fire while the app is on screen, and an iPad left beside the game dims
+   and locks long before the next kyber. The lock is only held while an alert is armed, so
+   it costs no battery the rest of the time. The browser drops it whenever the app goes to
+   the background, which is why it is asked for again each time the app comes back. */
+const WAKE_OK="wakeLock" in navigator;
+let wakePref=!!store.get("dt_awake",false), wakeLock=null;
+async function syncWake(){
+  const want=WAKE_OK&&wakePref&&Object.keys(bpAlerts).length>0&&document.visibilityState==="visible";
+  try{
+    if(want&&!wakeLock){
+      wakeLock=await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release",()=>{ wakeLock=null });
+    }else if(!want&&wakeLock){ const w=wakeLock; wakeLock=null; await w.release(); }
+  }catch(e){ wakeLock=null }
+}
+document.addEventListener("visibilitychange",syncWake);
+syncWake();
 
 /* ---- quality picker ----
    Every tier is offered, not just the ones this cycle asks for, so a galactic A-LT can be
@@ -1997,6 +2076,25 @@ function renderSettings(){
         <button class="sbtn" id="fillBtn">Fill in</button>
       </div>`:""}
 
+      <div class="srow wrap">
+        <div><div class="sname">Blueprint alert warning</div>
+          <div class="mini">How long before a spawn an armed timer warns you. Tap a timer at
+            the top of the screen to arm it. At one or two minutes it beeps again when the
+            blueprint is actually up.</div></div>
+        <div class="segs">${BP_LEADS.map(([ms,lab])=>
+          `<button class="sbtn ${BP_LEAD===ms?"on":""}" data-lead="${ms}">${lab}</button>`).join("")}</div>
+      </div>
+
+      <div class="srow">
+        <div><div class="sname">Keep the screen awake</div>
+          <div class="mini">${WAKE_OK
+            ? `Stops this device dimming and locking while an alert is armed, since an alert
+               can only fire with the app on screen. Off whenever no alert is armed.`
+            : `This browser cannot hold the screen awake, so set the device's auto-lock to
+               Never while you play if you rely on alerts.`}</div></div>
+        <button class="sbtn ${wakePref&&WAKE_OK?"on":""}" id="wakeBtn" ${WAKE_OK?"":"disabled"}>${wakePref&&WAKE_OK?"On":"Off"}</button>
+      </div>
+
       <div class="srow">
         <div><div class="sname">Back up progress</div>
           <div class="mini">Saves every cycle to a file you keep. Worth doing occasionally:
@@ -2038,6 +2136,15 @@ function renderSettings(){
     toast(`Filled in up to rebirth ${level}. ${gained} new droid${gained===1?"":"s"}.`,
       "Undo",()=>{ owned=prev; save(); render() });
   };
+  el.querySelectorAll("[data-lead]").forEach(b=>b.onclick=()=>{
+    BP_LEAD=+b.dataset.lead; store.set("dt_bp_lead",BP_LEAD);
+    renderSettings(); toast(`Alerts now warn ${leadWords()} before a spawn.`);
+  });
+  const wb=document.getElementById("wakeBtn");
+  if(wb) wb.onclick=()=>{ wakePref=!wakePref; store.set("dt_awake",wakePref); syncWake(); renderSettings();
+    toast(wakePref ? (Object.keys(bpAlerts).length ? "Screen will stay awake while an alert is armed."
+                                                   : "Screen will stay awake once you arm an alert.")
+                   : "Screen can sleep as normal.") };
   document.getElementById("bkSave").onclick=saveBackup;
   document.getElementById("bkCopy").onclick=copyBackup;
   document.getElementById("bkLoad").onclick=loadBackup;

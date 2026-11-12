@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&display=swap">
 <title>Droid Tycoon Tracker &mdash; rebirths, droidex and fusion</title>
-<meta name="description" content="Free offline tracker for Star Wars: Droid Tycoon in Fortnite. All 40 rebirths across six cycles, the full 1000 entry droidex with kyber colours, scourge and flawless, fusion recipes, and blueprint spawn timers.">
+<meta name="description" content="Free offline tracker for Star Wars: Droid Tycoon in Fortnite. All 40 rebirths across six cycles, the full 1001 entry droidex with kyber colours, scourge and flawless, fusion recipes, and blueprint spawn timers.">
 <link rel="canonical" href="https://korbzz77.github.io/droid-tracker/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Droid Tycoon Tracker">
@@ -251,6 +251,7 @@ nav button.on{background:var(--accent);color:var(--onAccent)}
    quieter. Both are coloured, and epic sits close to galactic, so weight does the separating
    that hue on its own would not. */
 .gtags .grar{opacity:.82;font-weight:500}
+.gtags .gvia{color:#fff;opacity:.92;font-weight:700;white-space:nowrap}
 .gb{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;border-radius:9px;
   padding:5px 9px;font-size:var(--f1);font-weight:600;letter-spacing:.2px}
 .gbi{font-style:normal;font-size:12px;opacity:.85;display:inline-flex;align-items:center}
@@ -412,6 +413,9 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
   font-size:var(--f1);font-weight:700;color:#14141c;background:var(--fr,var(--accent));
   white-space:nowrap}
 .fnote{font-size:var(--f0);color:var(--dim2);font-weight:500;margin-top:8px;line-height:1.5}
+.fnote.fcov{color:var(--ok)}
+.fown{font-size:var(--f0);font-weight:700;letter-spacing:.5px}
+.fhead .qbtn{margin-right:-2px}
 
 /* compact build rows, grouped into a column per droid class */
 .bcols{display:grid;grid-template-columns:1fr;gap:0 16px;align-items:start}
@@ -702,7 +706,7 @@ const TIERS=["default","gold","diamond","rainbow","beskar","galactic","stellar",
    can demand; DEX_Q is what the droidex counts. It has no plain kyber column: every kyber is
    one of the three colours, so a fourth box only repeated the green one. Scourge goes after
    the colours so the chart still reads in ladder order. 90 droids at eleven of these, plus the
-   ten iconics, is 1000. */
+   eleven iconics, is 1001. */
 const DEX_Q=TIERS.filter(t=>t!=="kyber"&&t!=="scourge").concat(["kgreen","kblue","kpurple","scourge"]);
 const TC={default:"#9aa0ae",gold:"#f0b429",diamond:"#4fc3f7",
   rainbow:"conic-gradient(#ff5470,#ffcc33,#35d07f,#4fc3f7,#a855f7,#ff5470)",
@@ -834,7 +838,7 @@ function loadOwnership(c){
    for, which is all it can speak to now that a cycle keeps its own. */
 function autofill(L){
   rbs().forEach(rb=>{ if(rb.level<=L) rb.reqs.forEach(([n,t])=>{
-    if(oIdx(n)<TIERS.indexOf(t)) owned[n]=t; }) });
+    if(cIdx(n)<TIERS.indexOf(t)) owned[n]=t; }) });
   save();
 }
 function futureNeeds(name){
@@ -844,8 +848,33 @@ function futureNeeds(name){
 }
 const oIdx=n=>{const t=owned[n];return t==null?-1:TIERS.indexOf(t)};
 const ownedTier=n=>owned[n]||null;
-/* owning a higher quality satisfies every requirement below it */
-const has=(n,t)=>oIdx(n)>=TIERS.indexOf(t);
+/* Game v1.38.0: a fusion droid counts toward the rebirth requirement of each droid that
+   went into it, so an X-ONK stands in for KX and for GONK. It counts at its own quality or
+   lower, the same rule as any other droid, and it cannot be upgraded, so what it covers is
+   fixed the day it is fused. FUSE_OF is built beside the recipes further down, which is
+   fine because nothing here runs until the first render. */
+function fuseCover(n){
+  let best=null;
+  (FUSE_OF[n]||[]).forEach(f=>{ const t=owned[f];
+    if(t!=null&&(!best||TIERS.indexOf(t)>TIERS.indexOf(best.t))) best={f,t} });
+  return best;
+}
+/* the droid itself, with no help from a fusion */
+const hasOwn=(n,t)=>oIdx(n)>=TIERS.indexOf(t);
+const cIdx=n=>{const v=fuseCover(n);return Math.max(oIdx(n),v?TIERS.indexOf(v.t):-1)};
+/* owning a higher quality satisfies every requirement below it, and so does a fusion */
+const has=(n,t)=>cIdx(n)>=TIERS.indexOf(t);
+/* the fusion droid doing the covering, when the droid itself would fall short */
+const via=(n,t)=>!hasOwn(n,t)&&has(n,t)?fuseCover(n):null;
+const fusionOf=n=>FUSIONS.find(f=>f.out===n)||null;
+/* the rebirths ahead that a fusion droid is carrying on its own */
+function fuseNeeds(f){
+  const fu=fusionOf(f), ti=TIERS.indexOf(owned[f]), out=[];
+  if(!fu||ti<0) return out;
+  rbs().forEach(rb=>{ if(rb.level>level) rb.reqs.forEach(([n,t])=>{
+    if(fu.ins.indexOf(n)>-1&&TIERS.indexOf(t)<=ti&&!hasOwn(n,t)) out.push({lvl:rb.level,tier:t,n}) }) });
+  return out;
+}
 function setOwned(name,tier){
   if(tier==null) delete owned[name]; else owned[name]=tier;
   /* owning a quality proves you crafted that exact one, and only that one */
@@ -912,6 +941,8 @@ function droidInfo(n){
   const top=L[L.length-1];
   return {n,L,rar:L[0].rar,
     held:owned[n]?{t:owned[n]}:null,
+    /* a fusion droid only gets the credit when it reaches further than your own one does */
+    cov:(fc=>fc&&TIERS.indexOf(fc.t)>oIdx(n)?fc:null)(fuseCover(n)),
     maxed:has(n,top.t),
     nextNeed:ahead.find(x=>!has(n,x.t))};
 }
@@ -942,9 +973,10 @@ function viewBuild(){
   const crow=(x,later)=>{
     const rar=`<b class="crar" style="color:${RARC[x.rar]}">${x.rar}</b>`;
     const st = x.nextNeed
-      ? (x.held ? `<span class="cst up">${rar}Have ${ABBR[x.held.t]} &rarr; ${ABBR[x.nextNeed.t]}</span>`
+      ? (x.cov ? `<span class="cst up">${rar}${x.cov.f} ${ABBR[x.cov.t]} &rarr; ${ABBR[x.nextNeed.t]}</span>`
+        : x.held ? `<span class="cst up">${rar}Have ${ABBR[x.held.t]} &rarr; ${ABBR[x.nextNeed.t]}</span>`
                 : `<span class="cst none">${rar}Do not have</span>`)
-      : (x.maxed ? `<span class="cst done">${rar}Fully upgraded</span>`
+      : (x.maxed ? `<span class="cst done">${rar}${x.cov?"Covered by "+x.cov.f:"Fully upgraded"}</span>`
                  : `<span class="cst past">${rar}Not needed again</span>`);
     const top=x.L[x.L.length-1];
     const ceiling = x.nextNeed && top && top.t!==x.nextNeed.t
@@ -1071,11 +1103,13 @@ function bindSellAll(rootId){
 function viewSell(){
   const sellable=[],keep=[];
   Object.keys(owned).sort().forEach(n=>{
-    const f=futureNeeds(n);   /* this cycle, from where you are; there is no other cycle to ask */
+    /* this cycle, from where you are; there is no other cycle to ask. A fusion droid is
+       never on the chart itself, so what keeps it is whatever it is covering. */
+    const f=futureNeeds(n).concat(fuseNeeds(n));
     if(!f.length) sellable.push({n,t:owned[n]});
     else keep.push({n,t:owned[n],f});
   });
-  const needLabel=f=>f.slice(0,3).map(y=>"RB"+y.lvl+" "+y.tier).join(", ")
+  const needLabel=f=>f.slice(0,3).map(y=>"RB"+y.lvl+" "+(y.n?y.n+" ":"")+y.tier).join(", ")
     +(f.length>3?" +"+(f.length-3):"");
   const row=(x,cls,pill,pillCls,note)=>`
     <div class="row tap ${cls}" data-sell="${x.n.replace(/"/g,"&quot;")}">
@@ -1111,7 +1145,7 @@ function viewSell(){
     <div class="sub">Cycle ${cycle} still wants these. Tap one to sell it anyway, and undo if you
       change your mind.</div>
     ${keep.length?`<div class="srows">${keep.map(x=>row(x,"","KEEP","keep",
-        "holding "+x.t+" &rarr; "+needLabel(x.f))).join("")}</div>`
+        "holding "+x.t+(fusionOf(x.n)?" &rarr; covers ":" &rarr; ")+needLabel(x.f))).join("")}</div>`
       :`<div class="empty">${ownCount===0
           ? "Nothing owned yet."
           : `Cycle ${cycle} is done with every droid you own. All ${ownCount} are safe to sell.`}</div>`}
@@ -1152,7 +1186,7 @@ function gameCard(rb,q){
     </div>
     <div class="grows">
       ${rb.reqs.map(([n,t,rar,nx])=>{
-        const have=has(n,t);
+        const have=has(n,t), by=via(n,t);
         const badge = nx
           ? tierPill(tierAt(n,nx)||t, nx)
           : `<span class="gb gsell"><span class="gbi"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M10.2 3.4H16v5.8l-6.3 6.3a1.2 1.2 0 0 1-1.7 0l-4.1-4.1a1.2 1.2 0 0 1 0-1.7z"/></svg></span>SELL</span>`;
@@ -1161,7 +1195,7 @@ function gameCard(rb,q){
           <span class="gmeta">
             <span class="gname">${n}</span>
             <span class="gtags"><b style="color:${TXT[t]}">${t}</b>
-              <b class="grar" style="color:${RARC[rar]}">${rar}</b></span>
+              <b class="grar" style="color:${RARC[rar]}">${rar}</b>${by?`<b class="gvia">via ${by.f}</b>`:""}</span>
           </span>
           ${badge}
           <span class="gcheck">&#10003;</span>
@@ -1234,7 +1268,10 @@ const ICONICS=[
   {n:"MISTER BONES", cls:"battle"},
   {n:"IG-11 MARSHAL",cls:"battle"},
   {n:"D-O",          cls:"worker"},
-  {n:"WG-22",        cls:"battle"}
+  {n:"WG-22",        cls:"battle"},
+  /* v1.37.0, the Scourge Boss Fight event. Class is a best guess until someone reads it off
+     the droidex. */
+  {n:"SCOURGE PRIME",cls:"battle"}
 ];
 /* Protocol droids come from world missions rather than the rebirth chart or the fusion lab,
    so nothing else in the app knows about them. They are ordinary droidex droids otherwise:
@@ -1322,6 +1359,8 @@ const FUSIONS=[
 ];
 const RARORDER=["common","rare","epic","legendary","mythic"];
 const canMake=f=>f.ins.every(i=>ownedTier(i));
+const FUSE_OF={};
+FUSIONS.forEach(f=>f.ins.forEach(i=>{ const a=FUSE_OF[i]=FUSE_OF[i]||[]; if(a.indexOf(f.out)<0) a.push(f.out) }));
 
 /* ---- blueprint countdowns ----
    Spawn times come from droid-tycoon.pages.dev, which defines them as minutes past the
@@ -1497,21 +1536,28 @@ function needsAt(name,tier){
 function renderSheet(){
   const el=document.getElementById("sheet");
   if(!qOpen){ el.classList.remove("on"); document.getElementById("sheetBg").classList.remove("on"); return }
-  const n=qOpen, own=ownedTier(n), L=ladder(n);
-  const rar=L.length?L[0].rar:"", cls=DCLASS[n]?CLS_LABEL[DCLASS[n]]:"";
+  const n=qOpen, own=ownedTier(n), L=ladder(n), fu=fusionOf(n);
+  const rar=L.length?L[0].rar:(fu?fu.rar:""),
+        cls=DCLASS[n]?CLS_LABEL[DCLASS[n]]:(fu&&fu.cls?CLS_LABEL[fu.cls]:"");
+  const parts=fu?[...new Set(fu.ins)]:[];
+  /* a fusion droid is never asked for by name, so its rows say what it would stand in for */
+  const coversAt=t=>rbs().filter(rb=>rb.reqs.some(r=>parts.indexOf(r[0])>-1&&r[1]===t)).map(rb=>rb.level);
   el.innerHTML=`
     <div class="grab"></div>
     <div class="qhead">${n}</div>
-    <div class="qsub">${[cls,rar].filter(Boolean).join(" &middot; ")}${cls||rar?" &middot; ":""}What
+    <div class="qsub">${[cls,rar].filter(Boolean).join(" &middot; ")}${cls||rar?" &middot; ":""}${fu
+      ? `What quality did it come out at? It counts for ${parts.join(", ")} at that quality or
+         lower in cycle ${cycle}, and it cannot be upgraded.`
+      : `What
       quality do you own? It covers every requirement at or below it in cycle ${cycle}. Other
-      cycles keep their own droids.</div>
+      cycles keep their own droids.`}</div>
     ${TIERS.filter(t=>t!=="scourge"||!ICONICS.some(d=>d.n===n)).map(t=>{
-      const at=needsAt(n,t), sel=own===t, wild=t==="scourge";
+      const at=fu?coversAt(t):needsAt(n,t), sel=own===t, wild=t==="scourge";
       return `<button class="qrow ${sel?"on":""} ${at.length||wild?"":"off"}" data-qt="${t}">
         <span class="qsw${stel(t)}" style="background:${TC[t]}"></span>
         <span class="qmeta">
           <span class="qname" style="color:${TXT[t]}">${ABBR[t]}</span>
-          <span class="qneed">${wild?"counts for every quality":at.length?`needed at RB ${at.join(", ")}`:`not needed in cycle ${cycle}`}</span>
+          <span class="qneed">${wild?"counts for every quality":at.length?`${fu?"stands in at":"needed at"} RB ${at.join(", ")}`:(fu?`nothing asked for at this quality`:`not needed in cycle ${cycle}`)}</span>
         </span>
         ${sel?`<span class="qtick">&#10003;</span>`:""}</button>`}).join("")}
     <button class="qrow qnone ${own?"":"on"}" data-qt="">
@@ -1524,7 +1570,10 @@ function renderSheet(){
   el.querySelectorAll("[data-qt]").forEach(b=>b.onclick=()=>{
     const t=b.dataset.qt||null, prev=ownedTier(n);
     setOwned(n,t);
-    const covered=rbs().filter(rb=>rb.reqs.some(r=>r[0]===n&&has(r[0],r[1]))).length;
+    const ti=TIERS.indexOf(t);
+    const covered=rbs().filter(rb=>rb.reqs.some(r=>fu
+      ? parts.indexOf(r[0])>-1&&TIERS.indexOf(r[1])<=ti
+      : r[0]===n&&has(r[0],r[1]))).length;
     closeSheet(); render();
     toast(t?`${n} set to ${ABBR[t]}. Covers ${covered} rebirth${covered===1?"":"s"} in cycle ${cycle}.`
            :`${n} cleared.`,
@@ -1570,9 +1619,12 @@ function viewFuse(){
     const haveAll=f.ins.every(i=>ownedTier(i));
     return `<div class="fcard ${haveAll?"ready":""}" style="--fr:${FRC[f.rar]}">
       <div class="fhead">
+        ${(t=>`<button class="qbtn" data-q="${f.out}" aria-label="Set the quality you own of ${f.out}"><span
+          class="gdot${t?stel(t):""}" style="background:${t?TC[t]:"#2a2a3a"}"></span></button>`)(ownedTier(f.out))}
         <span class="fname">${f.out}</span>
         <span class="frar">${f.rar}</span>
         ${f.cls?`<span class="fcls">${CLS_LABEL[f.cls]}</span>`:``}
+        ${ownedTier(f.out)?`<span class="fown" style="color:${TXT[ownedTier(f.out)]}">HAVE ${ABBR[ownedTier(f.out)]}</span>`:``}
         <span class="bspace"></span>
         ${haveAll?`<span class="fready">Ready</span>`
                  :`<span class="fhave">${f.ins.filter(i=>ownedTier(i)).length} of 3</span>`}
@@ -1586,6 +1638,8 @@ function viewFuse(){
         <span class="farrow">&rarr;</span>
         <span class="fout">${f.out}</span>
       </div>
+      ${ownedTier(f.out)?`<div class="fnote fcov">Counts for ${[...new Set(f.ins)].join(", ")} at
+        ${ABBR[ownedTier(f.out)]} or lower on the rebirth chart.</div>`:``}
       ${dupes.length?`<div class="fnote">needs ${dupes.map(d=>counts[d]+"&times; "+d).join(", ")},
         and this tracker does not count copies</div>`:``}
     </div>`;
@@ -1597,7 +1651,9 @@ function viewFuse(){
       combinations below and you get that exact droid; anything else that qualifies gives you a
       random droid one rarity up. Either way it comes out at the
       <b class="hi">lowest quality</b> you put in, so never throw a base one in with two good
-      ones.</div>
+      ones. A fusion droid then <b class="hi">counts for each droid that went into it</b> on
+      the rebirth chart, at its own quality or lower. Tap a recipe's
+      <b class="hi">colour dot</b> to record one you hold, and clear the three you used up.</div>
 
     <div class="btools">
       <div class="searchwrap">
@@ -2023,7 +2079,10 @@ document.body.addEventListener("click",e=>{
       const n=s[0], t=s[1], i=TIERS.indexOf(t);
       /* One droid, one quality. Ticking means you own at least this much; unticking means
          you own less than this, so drop to the quality just below rather than to nothing. */
-      setOwned(n, has(n,t) ? (i>0?TIERS[i-1]:null) : t);
+      /* a tick held up by a fusion droid is not this droid's to untick */
+      const by=via(n,t);
+      if(by){ toast(`${n} is covered by your ${ABBR[by.t]} ${by.f}. Change that on FUSION.`); return }
+      setOwned(n, hasOwn(n,t) ? (i>0?TIERS[i-1]:null) : t);
       render();
     }
     return}
@@ -2045,9 +2104,10 @@ document.body.addEventListener("click",e=>{
   if(la){lookahead=+la.dataset.la; render(); return}
   const sell=e.target.closest("[data-sell]");
   if(sell){
-    const n=sell.dataset.sell, prev=owned[n], f=futureNeeds(n);
+    const n=sell.dataset.sell, prev=owned[n], f=futureNeeds(n), fz=fuseNeeds(n);
     setOwned(n,null); render();
-    const warn=f.length ? ` Cycle ${cycle} wants it again at rebirth ${f[0].lvl}.` : "";
+    const warn=f.length ? ` Cycle ${cycle} wants it again at rebirth ${f[0].lvl}.`
+      : fz.length ? ` It was covering ${fz[0].n} for rebirth ${fz[0].lvl}.` : "";
     toast(`${n} sold.${warn}`,"Undo",()=>{ setOwned(n,prev); render() });
     return}
 });

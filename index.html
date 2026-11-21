@@ -1784,7 +1784,9 @@ function toast(msg,actLabel,actFn){
 /* ---- stash ----
    What is physically in your base, with copies and qualities, kept apart from the per cycle
    ownership that drives rebirths. Recipes read from it when "My stash" is picked. */
-const STASH_Q=TIERS.filter(t=>t!=="scourge");
+/* scourge included: the game ranks it as the highest finish, so the fusion rule (the output
+   takes the lowest finish put in) treats it like any other step on the ladder */
+const STASH_Q=TIERS;
 let stash=store.get("dt_stash",{});
 let fuseSrc=store.get("dt_fusesrc","stash");
 let stashOpen=store.get("dt_stashopen",true);

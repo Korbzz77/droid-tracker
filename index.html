@@ -1353,7 +1353,9 @@ function viewAll(){
 /* ---- the droidex ----
    The in-game index counts 79 regular droids at every quality plus 8 iconic
    droids that exist at default only. The 79 is exactly the 62 the rebirth chart asks for plus
-   the 17 fusion droids, which is how the numbers were confirmed.
+   the 17 fusion droids, which is how the numbers were confirmed. Since v1.40.0 the game
+   shows 112 droids and counts flawless out of 101: 90 regulars plus 11 new fusions, and the
+   11 iconics.
 
    This is a different idea of ownership from the rest of the app. Elsewhere a higher quality
    satisfies everything below it, because that is what a rebirth requirement cares about. Here
@@ -1371,9 +1373,8 @@ const ICONICS=[
   {n:"IG-11 MARSHAL",cls:"battle"},
   {n:"D-O",          cls:"worker"},
   {n:"WG-22",        cls:"battle"},
-  /* v1.37.0, the Scourge Boss Fight event. Class is a best guess until someone reads it off
-     the droidex. */
-  {n:"SCOURGE PRIME",cls:"battle"}
+  /* v1.37.0, the Scourge Boss Fight event. The droidex catalog files it under protocol. */
+  {n:"SCOURGE PRIME",cls:"protocol"}
 ];
 /* Protocol droids come from world missions rather than the rebirth chart or the fusion lab,
    so nothing else in the app knows about them. They are ordinary droidex droids otherwise:
@@ -1457,7 +1458,20 @@ const FUSIONS=[
   {out:"LUG-G",   cls:"worker",    rar:"mythic",    ins:["LOADLIFTER","ID10","R5"]},
   {out:"AXI-POD", cls:"astromech", rar:"mythic",    ins:["R7","BDX EXPLORER","RIC"]},
   {out:"SRV-O",   cls:"battle",    rar:"mythic",    ins:["RIC-1200","B1 HEAVY","B1 HEAVY"]},
-  {out:"LOW-MO",  cls:"worker",    rar:"mythic",    ins:["A-LT","A-LT","LOADLIFTER"]}
+  {out:"LOW-MO",  cls:"worker",    rar:"mythic",    ins:["A-LT","A-LT","LOADLIFTER"]},
+  /* v1.40.0, eleven more, the first commons and the first protocol fusion. Recipes match
+     srbcontrol.com/fusion-recipes (checked 21 Nov 2026); classes from the droidex catalog. */
+  {out:"ION PROBE",  cls:"worker",    rar:"common",    ins:["MOUSE","MOUSE","ID10"]},
+  {out:"QUAD SENTRY",cls:"astromech", rar:"common",    ins:["R5","R5","ID10"]},
+  {out:"LFT-3R",     cls:"battle",    rar:"common",    ins:["IMPERIAL PROBE","IMPERIAL PROBE","GONK"]},
+  {out:"STRD-3",     cls:"worker",    rar:"epic",      ins:["SENATE HOVERCAM","SENATE HOVERCAM","MPH"]},
+  {out:"BI-BIT",     cls:"astromech", rar:"epic",      ins:["R9","R9","EGL"]},
+  {out:"TOR-Q",      cls:"battle",    rar:"legendary", ins:["KT","KT","B2-RP"]},
+  {out:"HV-EE",      cls:"astromech", rar:"legendary", ins:["JO9-4MN","BB9","BB9"]},
+  {out:"AX-L",       cls:"battle",    rar:"mythic",    ins:["MPH","IG","IG"]},
+  {out:"MO-TRO",     cls:"astromech", rar:"mythic",    ins:["A-LT","A-LT","ECG"]},
+  {out:"SKM-MR",     cls:"astromech", rar:"mythic",    ins:["A-LT","A-LT","SNOW MOUSE"]},
+  {out:"KL-NK",      cls:"protocol",  rar:"mythic",    ins:["PZ","PZ","RIC"]}
 ];
 const RARORDER=["common","rare","epic","legendary","mythic"];
 const canMake=f=>f.ins.every(i=>ownedTier(i));

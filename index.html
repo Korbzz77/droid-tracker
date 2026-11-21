@@ -450,6 +450,43 @@ a.sbtn{text-decoration:none;display:inline-flex;align-items:center}
 .fnote.fcov{color:var(--ok)}
 .fown{font-size:var(--f0);font-weight:700;letter-spacing:.5px}
 .fhead .qbtn{margin-right:-2px}
+/* stash prototype */
+.fsrc{align-items:center;margin-bottom:10px}
+.fsrc .mini{margin-right:2px}
+.stash{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);
+  padding:10px 12px;margin-bottom:12px;box-shadow:var(--sh1)}
+.sttop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sttop .chip{padding:6px 12px;font-size:var(--f1)}
+.sttoggle{background:none;border:0;color:var(--txt);font-family:var(--display);font-weight:700;
+  font-size:var(--f4);cursor:pointer;padding:4px 2px}
+.stgrid{display:grid;grid-template-columns:1fr;gap:6px;margin-top:10px}
+.sthead{grid-column:1/-1;color:var(--fr);font-weight:700;font-size:var(--f0);letter-spacing:.8px;
+  text-transform:uppercase;margin:8px 0 0}
+.strow{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:10px;
+  background:var(--card2);border:1px solid transparent}
+.strow.has{border-color:rgba(53,208,127,.45)}
+.stname{display:flex;align-items:baseline;gap:8px;min-width:0}
+.stname b{font-weight:700;font-size:var(--f2);white-space:nowrap}
+.stname span{font-size:var(--f0);color:var(--dim2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stqs{display:flex;flex-wrap:wrap;gap:5px}
+.stq{display:inline-flex;align-items:stretch;border-radius:8px;background:var(--card3);overflow:hidden}
+.stq.on{background:rgba(53,208,127,.2)}
+.stadd{display:inline-flex;align-items:center;gap:5px;background:none;border:0;color:var(--dim);
+  font:inherit;font-size:var(--f0);font-weight:600;letter-spacing:.4px;padding:6px 8px;cursor:pointer}
+.stq.on .stadd{color:var(--txt)}
+.stadd b{font-variant-numeric:tabular-nums;color:var(--ok);font-weight:800}
+.stsub{background:rgba(0,0,0,.25);border:0;color:var(--txt);font:inherit;font-weight:700;padding:0 9px;cursor:pointer}
+.sfuse{display:flex;align-items:center;gap:10px;margin-top:9px}
+.smakes{font-size:var(--f1);color:var(--dim)}
+.smakes b{font-weight:800;letter-spacing:.4px}
+.sxfuse{margin-left:auto;background:var(--ok);color:#06210f;border:0;border-radius:99px;padding:7px 14px;
+  font:inherit;font-weight:700;font-size:var(--f1);cursor:pointer}
+.okc{color:var(--ok)}
+@media(min-width:900px){
+  .strow{flex-direction:row;align-items:center;gap:12px}
+  .stname{flex:0 0 260px;flex-direction:column;align-items:flex-start;gap:1px}
+  .stname span{max-width:100%}
+}
 
 /* compact build rows, grouped into a column per droid class */
 .bcols{display:grid;grid-template-columns:1fr;gap:0 16px;align-items:start}
@@ -1744,7 +1781,186 @@ function toast(msg,actLabel,actFn){
   toastT=setTimeout(hideToast, actLabel?8000:3500);
 }
 
+/* ---- stash ----
+   What is physically in your base, with copies and qualities, kept apart from the per cycle
+   ownership that drives rebirths. Recipes read from it when "My stash" is picked. */
+const STASH_Q=TIERS.filter(t=>t!=="scourge");
+let stash=store.get("dt_stash",{});
+let fuseSrc=store.get("dt_fusesrc","stash");
+let stashOpen=store.get("dt_stashopen",true);
+let stashHave=Object.keys(stash).length>0;
+const saveStash=()=>store.set("dt_stash",stash);
+function ingRar(n){
+  for(const c of CYCLES) for(const rb of DATA[c].rebirths) for(const r of rb.reqs) if(r[0]===n) return r[2];
+  const p=PROTOCOLS.find(x=>x.n===n); return p?p.rar:"common";
+}
+const INGREDS=[...new Set(FUSIONS.flatMap(f=>f.ins))].map(n=>({n,rar:ingRar(n),
+  used:FUSIONS.filter(f=>f.ins.indexOf(n)>-1).map(f=>f.out)}));
+const stN=(n,q)=>(stash[n]&&stash[n][q])||0;
+const stTot=n=>Object.values(stash[n]||{}).reduce((a,b)=>a+b,0);
+function stAdd(n,q,d){
+  const m=stash[n]=stash[n]||{};
+  m[q]=Math.max(0,(m[q]||0)+d);
+  if(!m[q]) delete m[q];
+  if(!Object.keys(m).length) delete stash[n];
+  saveStash();
+}
+/* Best output first: the fusion comes out at the lowest quality put in, so try the highest
+   output quality the stash can reach, and fill each slot with the cheapest copy that still
+   reaches it, which keeps the better copies for later. */
+function planFuse(f,st){
+  for(let qi=STASH_Q.length-1;qi>=0;qi--){
+    const took={}, use=[]; let ok=true;
+    for(const n of f.ins){
+      let got=null;
+      for(let j=qi;j<STASH_Q.length;j++){
+        const q=STASH_Q[j], k=n+"|"+q;
+        if(((st[n]||{})[q]||0)-(took[k]||0)>0){ took[k]=(took[k]||0)+1; got=q; break }
+      }
+      if(!got){ ok=false; break }
+      use.push([n,got]);
+    }
+    if(ok) return {q:STASH_Q[qi],use};
+  }
+  return null;
+}
+function timesFuse(f){
+  const st=JSON.parse(JSON.stringify(stash)); let n=0, p;
+  while(n<99&&(p=planFuse(f,st))){ p.use.forEach(([d,q])=>{st[d][q]--}); n++ }
+  return n;
+}
+const needOf=f=>{const need={}; f.ins.forEach(i=>need[i]=(need[i]||0)+1); return need};
+const missN=f=>{const need=needOf(f); return Object.keys(need).reduce((a,n)=>a+Math.max(0,need[n]-stTot(n)),0)};
+const fuseToggle=()=>`<div class="chips fsrc"><span class="mini">Recipes from</span>
+  <button class="chip ${fuseSrc==="stash"?"on":""}" data-fsrc="stash">My stash</button>
+  <button class="chip ${fuseSrc==="cycle"?"on":""}" data-fsrc="cycle">Cycle ${cycle} droids</button></div>`;
+function stashPanel(){
+  const q=fuseQ.trim().toUpperCase();
+  const tot=Object.keys(stash).reduce((a,n)=>a+stTot(n),0);
+  const rows=INGREDS.filter(d=>(!q||d.n.indexOf(q)>-1||d.used.some(u=>u.indexOf(q)>-1))&&(!stashHave||q||stTot(d.n)));
+  const body=RARORDER.filter(r=>rows.some(d=>d.rar===r)).map(r=>`<div class="sthead" style="--fr:${FRC[r]}">${r}</div>`+
+    rows.filter(d=>d.rar===r).sort((a,b)=>a.n<b.n?-1:1).map(d=>`<div class="strow ${stTot(d.n)?"has":""}">
+      <div class="stname"><b>${d.n}</b><span>for ${d.used.join(", ")}</span></div>
+      <div class="stqs">${STASH_Q.map(t=>{const c=stN(d.n,t);
+        return `<span class="stq ${c?"on":""}"><button class="stadd" data-st="${d.n}|${t}" aria-label="Add a ${ABBR[t]} ${d.n}"><span
+          class="fdot${stel(t)}" style="background:${TC[t]}"></span>${ABBR[t]}${c?`<b>${c}</b>`:""}</button>${
+          c?`<button class="stsub" data-stsub="${d.n}|${t}" aria-label="Remove a ${ABBR[t]} ${d.n}">&minus;</button>`:""}</span>`}).join("")}</div>
+    </div>`).join("")).join("");
+  return `<section class="stash">
+    <div class="sttop">
+      <button class="sttoggle" data-sttoggle>${stashOpen?"&#9662;":"&#9656;"} Your stash</button>
+      <span class="mini">${tot} droid${tot===1?"":"s"} in your base</span>
+      <span class="bspace"></span>
+      <button class="chip" data-sthave>${stashHave?`Add droids (show all ${INGREDS.length})`:`Only what I have`}</button>
+      <button class="chip" data-stseed>Add my cycle ${cycle} droids</button>
+      <button class="chip" data-stclear>Clear</button>
+    </div>
+    ${stashOpen?`<div class="stgrid">${body||`<div class="empty">Nothing in your stash matches.</div>`}</div>`:""}
+  </section>`;
+}
+const sCard=f=>{
+  const p=planFuse(f,stash), need=needOf(f), names=Object.keys(need);
+  const times=p?timesFuse(f):0;
+  const miss=names.filter(n=>stTot(n)<need[n]).map(n=>{const s=need[n]-stTot(n);
+    return (need[n]>1&&stTot(n)?`${s} more `:(s>1?`${s}&times; `:""))+n});
+  return `<div class="fcard ${p?"ready":""}" style="--fr:${FRC[f.rar]}">
+    <div class="fhead">
+      <span class="fname">${f.out}</span>
+      <span class="frar">${f.rar}</span>
+      ${f.cls?`<span class="fcls">${CLS_LABEL[f.cls]}</span>`:``}
+      <span class="bspace"></span>
+      ${p?`<span class="fready">Can fuse${times>1?" &times;"+times:""}</span>`
+         :`<span class="fhave">${missN(f)} short</span>`}
+    </div>
+    <div class="fins">
+      ${names.map(n=>{const t=stTot(n), ok=t>=need[n];
+        const qs=p?p.use.filter(u=>u[0]===n).map(u=>u[1]):[];
+        return `<span class="fin ${ok?"got":""}"><span class="fdot${qs[0]?stel(qs[0]):""}"
+          style="background:${qs[0]?TC[qs[0]]:"#2a2a3a"}"></span>${need[n]>1?need[n]+"&times; ":""}${n}${
+          qs.length?` <b>${[...new Set(qs)].map(q=>ABBR[q]).join("/")}</b>`:(t?` <b>HAVE ${t}</b>`:"")}</span>`}).join(`<span class="fplus">+</span>`)}
+      <span class="farrow">&rarr;</span>
+      <span class="fout">${f.out}</span>
+    </div>
+    ${p?`<div class="sfuse"><span class="smakes">Makes a <b style="color:${TXT[p.q]}">${ABBR[p.q]}</b> ${f.out}</span>
+        <button class="sxfuse" data-fused="${f.out}">Fused it</button></div>`
+       :`<div class="fnote">Still need ${miss.join(", ")}</div>`}
+  </div>`;
+};
+function bindFuse(){
+  const v=document.getElementById("v-fuse");
+  v.onclick=e=>{
+    const b=e.target.closest("[data-fsrc],[data-st],[data-stsub],[data-sttoggle],[data-sthave],[data-stseed],[data-stclear],[data-fused]");
+    if(!b) return;
+    const keep=window.scrollY, ds=b.dataset, prev=JSON.parse(JSON.stringify(stash));
+    const undo=()=>{ stash=prev; saveStash(); viewFuse() };
+    if(ds.fsrc){ fuseSrc=ds.fsrc; store.set("dt_fusesrc",fuseSrc) }
+    else if(ds.st){ const [n,q]=splitKey(ds.st); stAdd(n,q,1) }
+    else if(ds.stsub){ const [n,q]=splitKey(ds.stsub); stAdd(n,q,-1) }
+    else if("sttoggle" in ds){ stashOpen=!stashOpen; store.set("dt_stashopen",stashOpen) }
+    else if("sthave" in ds){ stashHave=!stashHave }
+    else if("stseed" in ds){
+      let k=0;
+      INGREDS.forEach(d=>{const t=owned[d.n]; if(t&&STASH_Q.indexOf(t)>-1&&!stN(d.n,t)){ stAdd(d.n,t,1); k++ }});
+      toast(k?`Added ${k} droid${k===1?"":"s"} you hold in cycle ${cycle}`:`Nothing new to add from cycle ${cycle}`,k?"Undo":null,undo);
+    }
+    else if("stclear" in ds){ stash={}; saveStash(); toast("Stash cleared","Undo",undo) }
+    else if(ds.fused){
+      const f=fusionOf(ds.fused), p=planFuse(f,stash);
+      if(p){ p.use.forEach(([n,q])=>stAdd(n,q,-1));
+        toast(`Fused a ${ABBR[p.q]} ${f.out}. Its three ingredients are out of your stash.`,"Undo",undo) }
+    }
+    viewFuse(); window.scrollTo(0,keep);
+  };
+  const si=document.getElementById("fsearch");
+  if(si) si.oninput=e=>{
+    const pos=e.target.selectionStart;
+    fuseQ=e.target.value; viewFuse();
+    const n=document.getElementById("fsearch");
+    if(n){ n.focus(); try{ n.setSelectionRange(pos,pos) }catch(err){} }
+  };
+  const cb=document.getElementById("fclear");
+  if(cb) cb.onclick=()=>{ fuseQ=""; viewFuse();
+    const n=document.getElementById("fsearch"); if(n) n.focus(); };
+}
+function viewStash(){
+  const q=fuseQ.trim().toUpperCase();
+  const esc=s=>s.replace(/</g,"&lt;");
+  const hit=f=>!q||f.out.indexOf(q)>-1||f.ins.some(i=>i.indexOf(q)>-1);
+  const shown=FUSIONS.filter(hit);
+  const canNow=shown.filter(f=>planFuse(f,stash));
+  const rest=shown.filter(f=>!planFuse(f,stash));
+  const empty=!Object.keys(stash).length;
+  const allCan=FUSIONS.filter(f=>planFuse(f,stash)).length;
+  document.getElementById("v-fuse").innerHTML=`
+    ${helpHead("fuse",`Fusion recipes`,`Add what is sitting in your base to <b class="hi">your stash</b>,
+      copies and quality included, and the recipes you can make right now rise to the top with the
+      quality they will come out at. <b class="hi">Fused it</b> takes the three ingredients back out.
+      The stash is separate from your cycle progress, so it can hold droids your cycle never asks for.`)}
+    ${fuseToggle()}
+    <div class="btools">
+      <div class="searchwrap">
+        <span class="si"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.1"/><path d="M12.4 12.4 16.8 16.8"/></svg></span>
+        <input class="search" id="fsearch" type="search" inputmode="search"
+          placeholder="Find a recipe or an ingredient" value="${fuseQ.replace(/"/g,"&quot;")}"
+          autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+        <button class="searchclr ${fuseQ?"on":""}" id="fclear" aria-label="Clear search">&times;</button>
+      </div>
+      <div class="mini countline">${empty?`Tap a quality in your stash to add a droid`
+        :`<b class="okc">${allCan}</b> of ${FUSIONS.length} recipes can fuse from your stash`}</div>
+    </div>
+    ${canNow.length?`<h2 class="okc">Can fuse now &middot; ${canNow.length}</h2>
+      <div class="fgrid">${canNow.map(sCard).join("")}</div>`:``}
+    ${stashPanel()}
+    ${rest.length?RARORDER.filter(r=>rest.some(f=>f.rar===r)).map(r=>{
+      const inRar=rest.filter(f=>f.rar===r).sort((a,b)=>missN(a)-missN(b));
+      return `<h2 class="frhead" style="--fr:${FRC[r]}">${r} &middot; ${inRar.length}</h2>
+      <div class="fgrid">${inRar.map(sCard).join("")}</div>`}).join("")
+      :(shown.length?``:`<div class="empty">No recipe matches &ldquo;${esc(fuseQ)}&rdquo;.</div>`)}`;
+  bindFuse();
+}
+
 function viewFuse(){
+  if(fuseSrc==="stash") return viewStash();
   const q=fuseQ.trim().toUpperCase();
   const esc=s=>s.replace(/</g,"&lt;");
   const hit=f=>!q||f.out.indexOf(q)>-1||f.ins.some(i=>i.indexOf(q)>-1);
@@ -1795,6 +2011,7 @@ function viewFuse(){
       ones. A fusion droid then <b class="hi">counts for each droid that went into it</b> on
       the rebirth chart, at its own quality or lower. Tap a recipe's
       <b class="hi">colour dot</b> to record one you hold, and clear the three you used up.`)}
+    ${fuseToggle()}
 
     <div class="btools">
       <div class="searchwrap">
@@ -1834,16 +2051,7 @@ function viewFuse(){
       fusion, matching the note on your sheet. Class is still unknown for ARM-CORE, SRV-O and
       LOW-MO.</div>`;
 
-  const si=document.getElementById("fsearch");
-  if(si) si.oninput=e=>{
-    const pos=e.target.selectionStart;
-    fuseQ=e.target.value; viewFuse();
-    const n=document.getElementById("fsearch");
-    if(n){ n.focus(); try{ n.setSelectionRange(pos,pos) }catch(err){} }
-  };
-  const cb=document.getElementById("fclear");
-  if(cb) cb.onclick=()=>{ fuseQ=""; viewFuse();
-    const n=document.getElementById("fsearch"); if(n) n.focus(); };
+  bindFuse();
 }
 
 const RAR_ORDER=["common","rare","epic","legendary","mythic","iconic"];
@@ -2019,7 +2227,7 @@ function exportData(){
   CYCLES.forEach(c=>owns[c]= c===cycle ? {...owned} : loadOwnership(c));
   return JSON.stringify({app:"droid-tycoon-tracker",v:5,
     exported:new Date().toISOString(),cycle,ownedByCycle:owns,levels,
-    crafted:[...crafted],flawless:[...flawless]});
+    crafted:[...crafted],flawless:[...flawless],stash});
 }
 function backupName(){
   const d=new Date(), p=n=>String(n).padStart(2,"0");
@@ -2091,6 +2299,8 @@ function applyBackup(text){
   if(Array.isArray(d.crafted)){ crafted=new Set(d.crafted); store.set("dt_crafted",d.crafted); }
   /* a v3 backup predates flawless, so leave what is on the device rather than wiping it */
   if(Array.isArray(d.flawless)){ flawless=new Set(d.flawless); store.set("dt_flawless",d.flawless); }
+  /* the stash arrived after v5 backups did, so an older file leaves the one on the device alone */
+  if(d.stash&&typeof d.stash==="object"&&!Array.isArray(d.stash)){ stash=d.stash; saveStash(); }
   CYCLES.forEach(c=>store.set("dt_level_"+c,newLevels[c]||0));
   cycle=backupCycle;
   level=newLevels[cycle]||0;
